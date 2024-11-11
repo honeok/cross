@@ -29,8 +29,13 @@ cd "$local_update_path" || exit
 rm -fr *
 
 # 从中心服务器下载最新更新包
-sshpass -p "$center_passwd" scp -o StrictHostKeyChecking=no "root@$center_host:$remote_update_source" "$local_update_path/" \
-    && _green "从中心拉取Updategame.tar.gz成功！" || { _red "下载失败，请检查网络连接或密码"; exit 1; }
+if command -v sshpass &> /dev/null; then
+    sshpass -p "$center_passwd" scp -o StrictHostKeyChecking=no "root@$center_host:$remote_update_source" "$local_update_path/" \
+        && _green "从中心拉取Updategame.tar.gz成功！" || { _red "下载失败，请检查网络连接或密码"; exit 1; }
+else
+    _red "sshpass未安装，请先安装sshpass"
+    exit 1
+fi
 
 tar xvf "$local_update_path/updategame.tar.gz" \
     && _green "解压成功" || { _red "解压失败"; exit 1; }
