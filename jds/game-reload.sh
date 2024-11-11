@@ -21,7 +21,7 @@ center_host="10.46.96.254"
 center_passwd="c4h?itwj5ENi"
 
 # 二次确认
-echo -e "${yellow}注意: 当前项目为 ${project_name}，确认无误后按任意键继续${white}"
+echo -e "${yellow}注意: 当前项目为${project_name}，确认无误后按任意键继续${white}"
 read -n 1 -s -r -p ""
 echo ""
 
@@ -39,9 +39,15 @@ for i in {1..5}; do
     dest_dir="/data/server$i/game"
     _yellow "正在处理server$i"
 
+    if [ ! -d "$dest_dir" ]; then
+        _red "目录${dest_dir}不存在，跳过server${i}更新！"
+        continue
+    fi
+
     \cp -fr "$local_update_path/app/"* "$dest_dir/"
 
-    cd "$dest_dir" || continue
+    cd "$dest_dir" || exit
     ./server.sh reload
-    _green "server$i 更新成功！"
+    _green "server${i}更新成功！"
+    echo "-------------------"
 done
