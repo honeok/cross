@@ -18,7 +18,7 @@ project_name="CBT4"
 local_update_path="/data/update"
 remote_update_source="/data/update/updategame.tar.gz"
 center_host="10.46.96.254"
-center_passwd="c4h?itwj5ENi"
+center_passwd="xxxxxxxxxx"
 
 ## 二次确认
 echo -e "${yellow}注意: 当前项目为${project_name}，确认无误后按任意键继续${white}"
