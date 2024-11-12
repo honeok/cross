@@ -5,8 +5,8 @@
 
 ## set -x
 
+app_name="p8_app_server"
 logbak="/data/logbak"
-
 if [ ! -d "$logbak" ]; then
     mkdir "$logbak" -p
 fi
@@ -17,7 +17,7 @@ restart_service() {
     local server_path=$2
 
     # 检查服务是否运行
-    if ! pgrep -f "$server_path" > /dev/null; then
+    if ! pgrep -f "$server_path/$app_name" > /dev/null; then
         # 服务没有运行，进行重启操作
         log_message "$service_name-已重启"
         cd $server_path
