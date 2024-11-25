@@ -6,6 +6,7 @@
 ## export LANG=en_US.UTF-8
 ## set -x
 
+server_range=$(seq 1 5)   ## Game服务器范围
 base_path="/data/server"
 app_name="p8_app_server"
 
@@ -30,13 +31,13 @@ check_server() {
     local server_name=$1
     local server_dir=$2
 
-    ## 检查服务器进程是否在运行
+    ## 检查服务器进程是否在运行，如果没有，则进行重启操作
     if ! pgrep -f "$server_dir/$app_name" > /dev/null 2>&1; then
         ## 服务没有运行进行重启操作
-        cd "$server_dir" || return
+        cd "$server_dir" || return              ## 进入服务器目录，如果失败则退出
         [[ -f nohup.txt ]] && cp -f nohup.txt "/data/logback/nohup_${server_name}_$(date -u '+%Y%m%d%H%M%S' -d '+8 hours').txt" && rm -f nohup.txt
         ./server.sh start &
-        send_message "[${server_name} Restart]"
+        send_message "[${server_name} Restart]" ## 发送重启通知
         echo "$(date -u '+%Y-%m-%d %H:%M:%S' -d '+8 hours') [ERROR] $server_name Restart" >> /data/tool/control.txt &
     else
         echo "$(date -u '+%Y-%m-%d %H:%M:%S' -d '+8 hours') [INFO] $server_name Running" >> /data/tool/control.txt &
@@ -45,8 +46,8 @@ check_server() {
 
 ## Main
 while :; do
-    ## 检查server1到server5
-    for i in {1..5}; do
+    ## 检查server
+    for i in $server_range; do
         server_name="server${i}"
         server_dir="${base_path}${i}/game"
         check_server "${server_name}" "${server_dir}"
