@@ -15,7 +15,7 @@ fi
 
 ## 根据区服编号匹配服务器IP
 if (( server_number >= 1 && server_number <= 5 )); then
-    server_ip="192.168.1.1"
+    server_ip="10.46.99.216"
 elif (( server_number >= 6 && server_number <= 10 )); then
     server_ip="192.168.1.2"
 else
