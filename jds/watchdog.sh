@@ -7,7 +7,6 @@
 # https://github.com/honeok/shell/blob/master/jds/watchdog.sh
 
 #export LANG=en_US.UTF-8
-#set -x # Debug
 set -e
 
 openserver_time=$(date -u -d '+8 hours' +"%Y-%m-%dT%H:00:00")
