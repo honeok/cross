@@ -10,13 +10,14 @@
 #set -x # Debug
 set -e
 
+openserver_time=$(date -u -d '+8 hours' +"%Y-%m-%dT%H:00:00")
+
 [ "$(id -u)" -ne "0" ] && exit 1
 if [ "$(cd -P -- "$(dirname -- "$0")" && pwd -P)" != "/root" ]; then
     cd /root >/dev/null 2>&1
 fi
 
-openserver_time=$(date -u -d '+8 hours' +"%Y-%m-%dT%H:00:00")
-server_password=$(cat ~/password.txt)
+[ -f /root/password.txt ] && server_password=$(cat /root/password.txt) || exit 1
 
 ## 确保只有一个进程
 watchdog_pid="/tmp/watchdog.pid"
