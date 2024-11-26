@@ -23,8 +23,8 @@ fi
 ## 打印分隔线
 separator() { printf "%-70s\n" "-" | sed 's/\s/-/g'; }
 
-trace_area_gz=("深圳电信" "深圳联通" "深圳移动")
-trace_ip_gz=("58.60.188.222" "210.21.196.6" "120.196.165.24")
+trace_area_sz=("深圳电信" "深圳联通" "深圳移动")
+trace_ip_sz=("58.60.188.222" "210.21.196.6" "120.196.165.24")
 
 trace_area_sh=("上海电信" "上海联通" "上海移动")
 trace_ip_sh=("202.96.209.133" "210.22.97.1" "211.136.112.200")
@@ -50,7 +50,7 @@ perform_trace() {
     done
 }
 
-perform_trace trace_area_gz trace_ip_gz
+perform_trace trace_area_sz trace_ip_sz
 perform_trace trace_area_sh trace_ip_sh
 perform_trace trace_area_bj trace_ip_bj
 perform_trace trace_area_cd trace_ip_cd
