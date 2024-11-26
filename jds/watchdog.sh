@@ -8,18 +8,17 @@
 
 #export LANG=en_US.UTF-8
 #set -x # Debug
-set -o errexit
+set -e
 
-openserver_time=$(date -u -d '+8 hours' +"%Y-%m-%dT%H:00:00")
-server_password="c4h?itwj5ENi"
-
-## 确保工作路径在/root
-cur_dir="$(cd -P -- "$(dirname -- "$0")" && pwd -P)"
-if [ "$cur_dir" != "/root" ]; then
+[ "$(id -u)" -ne "0" ] && exit 1
+if [ "$(cd -P -- "$(dirname -- "$0")" && pwd -P)" != "/root" ]; then
     cd /root >/dev/null 2>&1
 fi
 
-## 脚本PID判断确保只有一个进程
+openserver_time=$(date -u -d '+8 hours' +"%Y-%m-%dT%H:00:00")
+server_password=$(cat ~/password.txt)
+
+## 确保只有一个进程
 watchdog_pid="/tmp/watchdog.pid"
 if [ -f "$watchdog_pid" ] && kill -0 $(cat "$watchdog_pid") 2>/dev/null; then
     exit 1
@@ -37,7 +36,7 @@ _exit() {
     exit 0
 }
 
-## 输入参数校验
+## 入参校验
 if [[ ${#} -ne 1 || ! $1 =~ ^[0-9]+$ ]]; then
     _exit
 else
