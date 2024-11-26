@@ -2,7 +2,7 @@
 #
 # Description: The most convenient route tracing.
 #
-# Copyright (C) 2024 honeok <https://www.honeok.com/>
+# Copyright (C) 2024 honeok <https://www.honeok.com>
 # Blog: www.honeok.com
 # Script: https://github.com/honeok/shell/blob/master/BestTrace.sh
 
