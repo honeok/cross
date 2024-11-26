@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Description: Automatically traces multiple IP addresses using nexttrace.
+# Description: The most convenient route tracing.
 #
 # Copyright (C) 2024 honeok <yihaohey@gmail.com>
 # Blog: www.honeok.com
