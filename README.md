@@ -24,6 +24,6 @@ bash <(curl -sL raw.githubusercontent.com/honeok/shell/master/BestTrace.sh)
 ### 示例用法：
 
 ```shell
-bash <(curl -sL raw.githubusercontent.com/honeok/shell/master/BestTrace.sh)
+bash <(curl -sL raw.githubusercontent.com/honeok/shell/master/BestTrace.sh) sz
 ```
 
