@@ -41,7 +41,7 @@ separator
 ## 遍历和执行追踪
 trace_ips() {
     local -n areas=$1    # 引用传入的地区数组
-    local -n ips=$2      # 引用传入的 IP 数组
+    local -n ips=$2      # 引用传入的IP数组
 
     for i in "${!areas[@]}"; do
         _yellow "${areas[i]} ${ips[i]}"
