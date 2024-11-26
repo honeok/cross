@@ -36,7 +36,6 @@ trace_area_cd=("成都电信" "成都联通" "成都移动" "成都教育网")
 trace_ip_cd=("61.139.2.69" "119.6.6.6" "211.137.96.205" "202.112.14.151")
 
 clear
-separator
 
 ## 遍历和执行追踪
 perform_trace() {
@@ -44,13 +43,45 @@ perform_trace() {
     local -n ips=$2
 
     for i in "${!areas[@]}"; do
+        separator
         _yellow "${areas[i]} ${ips[i]}"
         nexttrace -M "${ips[i]}"
-        separator
     done
 }
 
-perform_trace trace_area_sz trace_ip_sz
-perform_trace trace_area_sh trace_ip_sh
-perform_trace trace_area_bj trace_ip_bj
-perform_trace trace_area_cd trace_ip_cd
+## 主执行逻辑
+case "$1" in
+    sz)
+        perform_trace trace_area_sz trace_ip_sz
+        ;;
+    sh)
+        perform_trace trace_area_sh trace_ip_sh
+        ;;
+    bj)
+        perform_trace trace_area_bj trace_ip_bj
+        ;;
+    cd)
+        perform_trace trace_area_cd trace_ip_cd
+        ;;
+    *)
+        if [ -z "$1" ]; then
+            perform_trace trace_area_sz trace_ip_sz
+            perform_trace trace_area_sh trace_ip_sh
+            perform_trace trace_area_bj trace_ip_bj
+            perform_trace trace_area_cd trace_ip_cd
+        else
+            _red "错误：无效的参数！"
+            echo "$(cat <<EOF
+该脚本接受以下参数来执行路由追踪：
+  sz   # 深圳三网回程
+  sh   # 上海三网回程
+  bj   # 北京三网回程
+  cd   # 成都四网回程
+
+如果没有传参，脚本将默认执行所有区域的路由追踪：
+  ./BestTrace.sh
+EOF
+            )"
+        fi
+        ;;
+esac
