@@ -1,42 +1,56 @@
 #!/usr/bin/env bash
 #
-# Description: A BestTrace Script by honeok
+# Description: Automatically traces multiple IP addresses using nexttrace.
 #
 # Copyright (C) 2024 honeok <yihaohey@gmail.com>
 # Blog: www.honeok.com
 # Github: https://github.com/honeok/shell/blob/master/BestTrace.sh
 
-yellow='\033[1;33m'       # 黄色
-red='\033[1;31m'          # 红色
-green='\033[1;32m'        # 绿色
-blue='\033[1;34m'         # 蓝色
-cyan='\033[1;36m'         # 青色
-white='\033[0m'           # 白色
+yellow='\033[1;33m'
+red='\033[1;31m'
+green='\033[1;32m'
+white='\033[0m'
 
-_yellow() { echo -e ${yellow}$@${white}; }
-_red() { echo -e ${red}$@${white}; }
-_green() { echo -e ${green}$@${white}; }
-_blue() { echo -e ${blue}$@${white}; }
-_cyan() { echo -e ${cyan}$@${white}; }
-_orange() { echo -e ${orange}$@${white}; }
+_yellow() { echo -e "${yellow}$@${white}"; }
+_red() { echo -e "${red}$@${white}"; }
+_green() { echo -e "${green}$@${white}"; }
 
-if [ ! -f "/usr/local/bin/nexttrace" ]; then
-    curl nxtrace.org/nt | bash
+if ! command -v nexttrace >/dev/null 2>&1 && [ ! -f "/usr/local/bin/nexttrace" ]; then
+	_yellow "Nexttrace正在安装！"
+    curl -s nxtrace.org/nt | bash || { _red "Nexttrace安装失败！"; exit 1; }
 fi
 
-next() {
-    printf "%-70s\n" "-" | sed 's/\s/-/g'
-}
+## 打印分隔线
+separator() { printf "%-70s\n" "-" | sed 's/\s/-/g'; }
+
+trace_area_gz=("广州电信" "广州联通" "广州移动")
+trace_ip_gz=("58.60.188.222" "210.21.196.6" "120.196.165.24")
+
+trace_area_sh=("上海电信" "上海联通" "上海移动")
+trace_ip_sh=("202.96.209.133" "210.22.97.1" "211.136.112.200")
+
+trace_area_bj=("北京电信" "北京联通" "北京移动")
+trace_ip_bj=("219.141.140.10", "202.106.195.68", "221.179.155.161")
+
+trace_area_cd=("成都电信" "成都联通" "成都移动")
+trace_ip_cd=("61.139.2.69" "119.6.6.6" "211.137.96.205")
 
 clear
-next
+separator
 
-ip_list=(219.141.147.210 202.96.209.133 58.60.188.222 202.106.50.1 210.22.97.1 210.21.196.6 221.179.155.161 211.136.112.200 120.196.165.24 202.112.14.151)
-ip_addr=(北京电信 上海电信 深圳电信 北京联通 上海联通 深圳联通 北京移动 上海移动 深圳移动 成都教育网)
+## 遍历和执行追踪
+trace_ips() {
+    local -n areas=$1    # 引用传入的地区数组
+    local -n ips=$2      # 引用传入的 IP 数组
 
-for i in {0..9}
-do
-    echo ${ip_addr[$i]}
-    nexttrace -M ${ip_list[$i]}
-    next
-done
+    for i in "${!areas[@]}"; do
+        _green "路由追踪：${ips[i]} ${areas[i]}"
+        nexttrace -M "${ips[i]}"
+        separator
+    done
+}
+
+trace_ips trace_area_gz trace_ip_gz
+trace_ips trace_area_sh trace_ip_sh
+trace_ips trace_area_bj trace_ip_bj
+trace_ips trace_area_cd trace_ip_cd
