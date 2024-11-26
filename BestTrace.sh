@@ -39,9 +39,9 @@ clear
 separator
 
 ## 遍历和执行追踪
-trace_ips() {
-    local -n areas=$1    # 引用传入的地区数组
-    local -n ips=$2      # 引用传入的IP数组
+perform_trace() {
+    local -n areas=$1
+    local -n ips=$2
 
     for i in "${!areas[@]}"; do
         _yellow "${areas[i]} ${ips[i]}"
@@ -50,7 +50,7 @@ trace_ips() {
     done
 }
 
-trace_ips trace_area_gz trace_ip_gz
-trace_ips trace_area_sh trace_ip_sh
-trace_ips trace_area_bj trace_ip_bj
-trace_ips trace_area_cd trace_ip_cd
+perform_trace trace_area_gz trace_ip_gz
+perform_trace trace_area_sh trace_ip_sh
+perform_trace trace_area_bj trace_ip_bj
+perform_trace trace_area_cd trace_ip_cd
