@@ -18,7 +18,7 @@ if [ -f "$watchdog_pid" ] && kill -0 $(cat "$watchdog_pid") 2>/dev/null; then
 fi
 echo $$ > "$watchdog_pid"
 
-# 终止信号捕获，意外中断时能优雅地处理
+## 终止信号捕获，意外中断时能优雅地处理
 trap _exit SIGINT SIGQUIT SIGTERM SIGHUP
 
 _exit() {
