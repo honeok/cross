@@ -22,7 +22,6 @@ echo $$ > "$watchdog_pid"
 trap _exit SIGINT SIGQUIT SIGTERM SIGHUP
 
 _exit() {
-    # 终止信号捕获
     if [ -f "$watchdog_pid" ]; then
         rm -f "$watchdog_pid"
     fi
