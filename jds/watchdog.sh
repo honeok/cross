@@ -1,26 +1,52 @@
 #!/usr/bin/env bash
-## Author: honeok
-## Blog: www.honeok.com
-## Github: https://github.com/honeok
-## Edit: 2024.11.26 01:20
+#
+# Copyright (C) 2024 honeok <yihaohey@gmail.com>
+# Blog: www.honeok.com
+# Description: Automatic server activation
+# Github: https://github.com/honeok
+
+# export LANG=en_US.UTF-8
+# set -x
 
 openserver_time=$(date -u -d '+8 hours' +"%Y-%m-%dT%H:00:00")
 server_password="c4h?itwj5ENi"
 
-## 检查输入参数
-if [[ ${#} -ne 1 || ! $1 =~ ^[0-9]+$ ]]; then
+## =============== 防止脚本重复执行 ===============
+cd /root >/dev/null 2>&1
+watchdog_pid="/tmp/watchdog.pid"
+if [ -f "$watchdog_pid" ] && kill -0 $(cat "$watchdog_pid") 2>/dev/null; then
     exit 1
+fi
+echo $$ > "$watchdog_pid"
+
+## =============== 脚本退出执行相关 ===============
+# 终止信号捕获，意外中断时能优雅地处理
+trap _exit SIGINT SIGQUIT SIGTERM SIGHUP
+
+_exit() {
+    # 终止信号捕获
+    if [ -f "$watchdog_pid" ]; then
+        rm -f "$watchdog_pid"
+    fi
+
+    exit 0
+}
+
+## 输入参数校验
+if [[ ${#} -ne 1 || ! $1 =~ ^[0-9]+$ ]]; then
+    _exit
 else
     server_number=$1
 fi
 
 ## 根据区服编号匹配服务器IP
+server_ip=""
 if (( server_number >= 1 && server_number <= 5 )); then
     server_ip="10.46.99.216"
 elif (( server_number >= 6 && server_number <= 10 )); then
     server_ip="192.168.1.2"
 else
-    exit 1
+    _exit
 fi
 
 send_message() {
@@ -31,19 +57,19 @@ send_message() {
 
     curl -s -X POST "https://api.honeok.com/api/log" \
         -H "Content-Type: application/json" \
-        -d "{\"action\":\"$action\",\"timestamp\":\"$(date -u '+%Y-%m-%d %H:%M:%S' -d '+8 hours')\",\"country\":\"$country\",\"os_info\":\"$os_info\",\"cpu_arch\":\"$cpu_arch\"}" &>/dev/null &
+        -d "{\"action\":\"$action\",\"timestamp\":\"$(date -u '+%Y-%m-%d %H:%M:%S' -d '+8 hours')\",\"country\":\"$country\",\"os_info\":\"$os_info\",\"cpu_arch\":\"$cpu_arch\"}" >/dev/null 2>&1 &
 }
 
 ## 检查并安装 sshpass
-if ! command -v sshpass &>/dev/null; then
-    if command -v dnf &>/dev/null; then
+if ! command -v sshpass >/dev/null 2>&1; then
+    if command -v dnf >/dev/null 2>&1; then
         dnf update -y && dnf install epel-release -y && dnf install sshpass -y
-    elif command -v yum &>/dev/null; then
+    elif command -v yum >/dev/null 2>&1; then
         yum update -y && yum install epel-release -y && yum install sshpass -y
-    elif command -v apt &>/dev/null; then
+    elif command -v apt >/dev/null 2>&1; then
         apt update -y && apt install sshpass -y
     else
-        exit 1
+        _exit
     fi
 fi
 
@@ -69,6 +95,8 @@ fi && \
 ## SSH执行远程命令
 if sshpass -p "$server_password" ssh -o StrictHostKeyChecking=no root@$server_ip "$remote_command"; then
     send_message "[server${server_number} 已开服]"
+    _exit
 else
     send_message "[server${server_number} 开服失败]"
+    _exit
 fi
