@@ -11,7 +11,6 @@
 openserver_time=$(date -u -d '+8 hours' +"%Y-%m-%dT%H:00:00")
 server_password="c4h?itwj5ENi"
 
-## =============== 防止脚本重复执行 ===============
 cd /root >/dev/null 2>&1
 watchdog_pid="/tmp/watchdog.pid"
 if [ -f "$watchdog_pid" ] && kill -0 $(cat "$watchdog_pid") 2>/dev/null; then
