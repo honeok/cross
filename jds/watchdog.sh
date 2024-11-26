@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #
-## Copyright (C) 2024 honeok <yihaohey@gmail.com>
-## Blog: www.honeok.com
-## Description: Automatic server activation
-## Github: https://github.com/honeok
+# Copyright (C) 2024 honeok <yihaohey@gmail.com>
+# Blog: www.honeok.com
+# Description: Automatic server activation
+# Github: https://github.com/honeok
 
 # export LANG=en_US.UTF-8
 # set -x
