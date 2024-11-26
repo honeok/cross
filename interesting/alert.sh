@@ -1,8 +1,12 @@
-#!/bin/bash
-# Author: honeok
+#!/usr/bin/env bash
+#
+# Description: weather forecast
+#
+# Copyright (C) 2023 - 2024 honeok <yihaohey@gmail.com>
 # Blog: https://www.honeok.com
-# echo "*/1 * * * * ${PWD}/weather_alert.sh >/dev/null 2>&1" | crontab -
-##############################
+# https://github.com/honeok/shell/blob/master/interesting/alert.sh
+#
+# usage: echo "*/1 * * * * ${PWD}/weather_alert.sh >/dev/null 2>&1" | crontab -
 
 ######## == 功能 == ##########
 # 天气通知: 每天早上8点发送成都天气信息
