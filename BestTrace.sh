@@ -4,8 +4,21 @@
 #
 # Copyright (C) 2024 honeok <yihaohey@gmail.com>
 # Blog: www.honeok.com
-# Description: Automatic server activation
-# Github: https://github.com/honeok/Shell
+# Github: https://github.com/honeok/shell/blob/master/BestTrace.sh
+
+yellow='\033[1;33m'       # 黄色
+red='\033[1;31m'          # 红色
+green='\033[1;32m'        # 绿色
+blue='\033[1;34m'         # 蓝色
+cyan='\033[1;36m'         # 青色
+white='\033[0m'           # 白色
+
+_yellow() { echo -e ${yellow}$@${white}; }
+_red() { echo -e ${red}$@${white}; }
+_green() { echo -e ${green}$@${white}; }
+_blue() { echo -e ${blue}$@${white}; }
+_cyan() { echo -e ${cyan}$@${white}; }
+_orange() { echo -e ${orange}$@${white}; }
 
 if [ ! -f "/usr/local/bin/nexttrace" ]; then
     curl nxtrace.org/nt | bash
@@ -23,7 +36,7 @@ ip_addr=(北京电信 上海电信 深圳电信 北京联通 上海联通 深圳
 
 for i in {0..9}
 do
-	echo ${ip_addr[$i]}
-	nexttrace -M ${ip_list[$i]}
-	next
+    echo ${ip_addr[$i]}
+    nexttrace -M ${ip_list[$i]}
+    next
 done
