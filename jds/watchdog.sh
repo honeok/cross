@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #
-# Copyright (C) 2024 honeok <yihaohey@gmail.com>
-# Blog: www.honeok.com
-# Description: Automatic server activation
-# Github: https://github.com/honeok
+## Copyright (C) 2024 honeok <yihaohey@gmail.com>
+## Blog: www.honeok.com
+## Description: Automatic server activation
+## Github: https://github.com/honeok
 
 # export LANG=en_US.UTF-8
 # set -x
@@ -22,6 +22,7 @@ echo $$ > "$watchdog_pid"
 trap _exit SIGINT SIGQUIT SIGTERM SIGHUP
 
 _exit() {
+    # 删除PID文件
     if [ -f "$watchdog_pid" ]; then
         rm -f "$watchdog_pid"
     fi
@@ -88,11 +89,20 @@ else \
 fi && \
 ./server.sh reload || exit 1"
 
-## SSH执行远程命令
-if sshpass -p "$server_password" ssh -o StrictHostKeyChecking=no root@$server_ip "$remote_command"; then
-    send_message "[server${server_number} 已开服]"
-    _exit
-else
-    send_message "[server${server_number} 开服失败]"
-    _exit
-fi
+## 执行远程命令，retry三次
+for (( i=1; i<=3; i++ )); do
+    if sshpass -p "$server_password" ssh -o StrictHostKeyChecking=no root@$server_ip "$remote_command"; then
+        send_message "[server${server_number} 已开服]"
+        _exit
+    fi
+
+    # 如果是最后一次失败，发送失败消息并退出
+    if (( i == 3 )); then
+        send_message "[server${server_number} 开服失败]"
+        _exit
+    fi
+
+    sleep 5
+done
+
+_exit
