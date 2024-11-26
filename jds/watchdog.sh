@@ -27,7 +27,6 @@ _exit() {
     if [ -f "$watchdog_pid" ]; then
         rm -f "$watchdog_pid"
     fi
-
     exit 0
 }
 
