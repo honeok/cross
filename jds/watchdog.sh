@@ -6,17 +6,19 @@
 # Blog: www.honeok.com
 # https://github.com/honeok/shell/blob/master/jds/watchdog.sh
 
-#export LANG=en_US.UTF-8
-#set -x
+# export LANG=en_US.UTF-8
+# set -x
 
 openserver_time=$(date -u -d '+8 hours' +"%Y-%m-%dT%H:00:00")
+# open_server_time=$(curl -s "https://timeapi.io/api/Time/current/zone?timeZone=Asia/Shanghai" | grep -oP '"dateTime":\s*"\K[^"]+' | sed 's/\.[0-9]*//g' | sed 's/:[0-9]*:[0-9]*$/:00:00/')
+beijing_time=$(curl -s "https://timeapi.io/api/Time/current/zone?timeZone=Asia/Shanghai" | grep -oP '"dateTime":\s*"\K[^"]+' | sed 's/\.[0-9]*//g' | sed 's/T/ /')
 
 [ "$(id -u)" -ne "0" ] && exit 1
 if [ "$(cd -P -- "$(dirname -- "$0")" && pwd -P)" != "/root" ]; then
     cd /root >/dev/null 2>&1
 fi
 
-[ -f /root/password.txt ] && server_password=$(cat /root/password.txt) || exit 1
+[ -f /root/password.txt ] && [ -s /root/password.txt ] && server_password=$(cat /root/password.txt) || exit 1
 
 ## 确保只有一个进程
 watchdog_pid="/tmp/watchdog.pid"
@@ -36,7 +38,7 @@ _exit() {
     exit 0
 }
 
-## 入参校验
+## 脚本入参校验
 if [[ ${#} -ne 1 || ! $1 =~ ^[0-9]+$ ]]; then
     _exit
 else
@@ -64,7 +66,7 @@ send_message() {
         -d "{\"action\":\"$action\",\"timestamp\":\"$(date -u '+%Y-%m-%d %H:%M:%S' -d '+8 hours')\",\"country\":\"$country\",\"os_info\":\"$os_info\",\"cpu_arch\":\"$cpu_arch\"}" >/dev/null 2>&1 &
 }
 
-## 检查并安装 sshpass
+## 检查并安装sshpass
 if ! command -v sshpass >/dev/null 2>&1; then
     if command -v dnf >/dev/null 2>&1; then
         dnf update -y && dnf install epel-release -y && dnf install sshpass -y
@@ -77,13 +79,15 @@ if ! command -v sshpass >/dev/null 2>&1; then
     fi
 fi
 
-## 远程命令，修改开服时间重读Login
+## 构建远程命令，修改开服时间重读Login
 remote_command="\
 ## 进入游戏目录，修改开服时间
 cd /data/server${server_number}/game || exit 1 && \
 [ -f lua/config/profile.lua ] || exit 1 && \
 sed -i '/^\s*local open_server_time\s*=/s|\"[^\"]*\"|\"'"$openserver_time"'\"|' lua/config/profile.lua || exit 1 && \
 grep -q '^\s*local open_server_time\s*=\s*\"'"$openserver_time"'\"' lua/config/profile.lua || exit 1 && \
+# 检查文件是否在过去1分钟内被修改
+if ! find lua/config/profile.lua -mmin -1 >/dev/null 2>&1; then exit 1; fi && \
 ./server.sh reload || exit 1 && \
 
 ## 进入登录目录，修改白名单
@@ -91,25 +95,37 @@ cd /data/server/login || exit 1 && \
 if [ -f etc/white_list.txt ]; then \
     sed -i '/^\s*'"${server_number}"'\s*$/d' etc/white_list.txt || exit 1 && \
     ! grep -q '^\s*'"${server_number}"'\s*$' etc/white_list.txt || exit 1; \
+    # 检查文件是否在过去1分钟内被修改
+    if ! find etc/white_list.txt -mmin -1 >/dev/null 2>&1; then exit 1; fi && \
 else \
     exit 1; \
 fi && \
 ./server.sh reload || exit 1"
 
-## 执行远程命令，retry三次
+## 尝试执行远程命令，最多重试三次
 for (( i=1; i<=3; i++ )); do
-    if sshpass -p "$server_password" ssh -o StrictHostKeyChecking=no root@$server_ip "$remote_command"; then
-        send_message "[server${server_number} 已开服]"
+    # 执行远程命令，捕获错误信息
+    output=$(sshpass -p "$server_password" ssh -o StrictHostKeyChecking=no root@$server_ip "$remote_command" 2>&1)
+    exit_code=$?
+
+    if [ $exit_code -eq 0 ]; then
+        # 如果远程命令执行成功，发送已开服消息
+        send_message "[server${server_number}已开服]"
+        echo "${beijing_time} [SUCCESS] server${server_number}已开服" >> watchdog.log 2>&1
         _exit
     fi
 
     # 如果是最后一次失败，发送失败消息并退出
     if (( i == 3 )); then
-        send_message "[server${server_number} 开服失败]"
+        send_message "[server${server_number}开服失败]"
+        echo "${beijing_time} [ERROR] server${server_number}开服失败，错误信息: $output" >> watchdog.log 2>&1
         _exit
     fi
 
-    sleep 5
-done
+    # 使用指数退避策略增加等待时间
+    sleep_time=$(( 5 * i ))  # 逐步增加等待时间：5秒、10秒、15秒
+    echo "${beijing_time} [WARNING] 第${i}次尝试失败，错误信息: ${output}，等待${sleep_time}秒后重试" >> watchdog.log 2>&1
 
-_exit
+    # 暂停等待后重试
+    sleep $sleep_time
+done
