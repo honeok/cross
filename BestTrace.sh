@@ -2,9 +2,9 @@
 #
 # Description: The most convenient route tracing.
 #
-# Copyright (C) 2024 honeok <www.honeok.com>
+# Copyright (C) 2024 honeok <https://www.honeok.com/>
 # Blog: www.honeok.com
-# Github: https://github.com/honeok/shell/blob/master/BestTrace.sh
+# Script: https://github.com/honeok/shell/blob/master/BestTrace.sh
 
 yellow='\033[1;33m'
 red='\033[1;31m'
