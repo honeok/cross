@@ -1,17 +1,25 @@
 #!/usr/bin/env bash
 #
+# Description: Automatic server activation
+#
 # Copyright (C) 2024 honeok <yihaohey@gmail.com>
 # Blog: www.honeok.com
-# Description: Automatic server activation
-# Github: https://github.com/honeok
+# https://github.com/honeok/shell/blob/master/jds/watchdog.sh
 
-# export LANG=en_US.UTF-8
-# set -x
+#export LANG=en_US.UTF-8
+#set -x # Debug
+set -o errexit
 
 openserver_time=$(date -u -d '+8 hours' +"%Y-%m-%dT%H:00:00")
 server_password="c4h?itwj5ENi"
 
-cd /root >/dev/null 2>&1
+## 确保工作路径在/root
+cur_dir="$(cd -P -- "$(dirname -- "$0")" && pwd -P)"
+if [ "$cur_dir" != "/root" ]; then
+    cd /root >/dev/null 2>&1
+fi
+
+## 脚本PID判断确保只有一个进程
 watchdog_pid="/tmp/watchdog.pid"
 if [ -f "$watchdog_pid" ] && kill -0 $(cat "$watchdog_pid") 2>/dev/null; then
     exit 1

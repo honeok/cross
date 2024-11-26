@@ -18,7 +18,7 @@ _red() { echo -e "${red}$@${white}"; }
 _green() { echo -e "${green}$@${white}"; }
 
 if ! command -v nexttrace >/dev/null 2>&1 && [ ! -f "/usr/local/bin/nexttrace" ]; then
-	_yellow "Nexttrace正在安装！"
+    _yellow "Nexttrace正在安装！"
     curl -s nxtrace.org/nt | bash || { _red "Nexttrace安装失败！"; exit 1; }
 fi
 
