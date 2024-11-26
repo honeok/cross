@@ -44,7 +44,7 @@ trace_ips() {
     local -n ips=$2      # 引用传入的 IP 数组
 
     for i in "${!areas[@]}"; do
-        _green "路由追踪：${ips[i]} ${areas[i]}"
+        _yellow "${areas[i]} ${ips[i]}"
         nexttrace -M "${ips[i]}"
         separator
     done
