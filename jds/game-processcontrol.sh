@@ -10,15 +10,18 @@
 # export LANG=en_US.UTF-8
 # set -x
 
-server_range=$(seq 1 5)   ## Game服务器范围
+server_range=$(seq 1 5)   # Game服务器范围
+
+beijing_time=$(date -d @$(($(curl -sL https://acs.m.taobao.com/gw/mtop.common.getTimestamp/ | awk -F'"t":"' '{print $2}' | cut -d '"' -f1) / 1000)) +"%Y-%m-%d %H:%M:%S")
 base_path="/data/server"
 app_name="p8_app_server"
 
-## 创建日志备份目录
+# 日志备份目录校验
 if [[ ! -d /data/logback ]];then
     mkdir -p /data/logback
 fi
 
+# API回调
 send_message() {
     local action="$1"
     local country=$(curl -s ipinfo.io/country || echo "unknown")
@@ -27,10 +30,10 @@ send_message() {
 
     curl -s -X POST "https://api.honeok.com/api/log" \
         -H "Content-Type: application/json" \
-        -d "{\"action\":\"$action\",\"timestamp\":\"$(date -u '+%Y-%m-%d %H:%M:%S' -d '+8 hours')\",\"country\":\"$country\",\"os_info\":\"$os_info\",\"cpu_arch\":\"$cpu_arch\"}" >/dev/null 2>&1 &
+        -d "{\"action\":\"$action\",\"timestamp\":\"${beijing_time}\",\"country\":\"$country\",\"os_info\":\"$os_info\",\"cpu_arch\":\"$cpu_arch\"}" >/dev/null 2>&1 &
 }
 
-## 检查并重启服务器
+# 服务器运行状态校验
 check_server() {
     local server_name=$1
     local server_dir=$2
@@ -42,9 +45,9 @@ check_server() {
         [[ -f nohup.txt ]] && cp -f nohup.txt "/data/logback/nohup_${server_name}_$(date -u '+%Y%m%d%H%M%S' -d '+8 hours').txt" && rm -f nohup.txt
         ./server.sh start &
         send_message "[${server_name} Restart]" # 发送重启通知
-        echo "$(date -u '+%Y-%m-%d %H:%M:%S' -d '+8 hours') [ERROR] $server_name Restart" >> /data/tool/control.txt &
+        echo "${beijing_time} [ERROR] $server_name Restart" >> /data/tool/control.txt &
     else
-        echo "$(date -u '+%Y-%m-%d %H:%M:%S' -d '+8 hours') [INFO] $server_name Running" >> /data/tool/control.txt &
+        echo "${beijing_time} [INFO] $server_name Running" >> /data/tool/control.txt &
     fi
 }
 
