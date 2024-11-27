@@ -10,10 +10,12 @@
 
 yellow='\033[1;33m'
 red='\033[1;31m'
+green='\033[1;32m'
 white='\033[0m'
 
 _yellow() { echo -e "${yellow}$@${white}"; }
 _red() { echo -e "${red}$@${white}"; }
+_green() { echo -e ${green}$@${white}; }
 
 ip_address() {
     local ipv4_services=("ipv4.ip.sb" "api.ipify.org" "checkip.amazonaws.com" "ipinfo.io/ip")
@@ -41,6 +43,7 @@ ip_address() {
 
 if ! command -v nexttrace >/dev/null 2>&1 && [ ! -f "/usr/local/bin/nexttrace" ]; then
     curl -s nxtrace.org/nt | bash || { _red "Nexttrace安装失败"; exit 1; }
+    # bash <(curl -sL ${github_proxy}raw.githubusercontent.com/nxtrace/NTrace-core/main/nt_install.sh) ||  { _red "Nexttrace安装失败"; exit 1; }
 fi
 
 separator() { printf "%-70s\n" "-" | sed 's/\s/-/g'; }
@@ -113,35 +116,35 @@ else
 fi
 
 case "$1" in
-    hlj)
+    -hlj)
         $trace_type_v4 && perform_trace trace_area_hlj trace_ip_hlj_v4
         $trace_type_v6 && perform_trace trace_area_hlj trace_ip_hlj_v6
         ;;
-    nmg)
+    -nmg)
         $trace_type_v4 && perform_trace trace_area_nmg trace_ip_nmg_v4
         $trace_type_v6 && perform_trace trace_area_nmg trace_ip_nmg_v6
         ;;
-    bj)
+    -bj)
         $trace_type_v4 && perform_trace trace_area_bj trace_ip_bj_v4
         $trace_type_v6 && perform_trace trace_area_bj trace_ip_bj_v6
         ;;
-    js)
+    -js)
         $trace_type_v4 && perform_trace trace_area_js trace_ip_js_v4
         $trace_type_v6 && perform_trace trace_area_js trace_ip_js_v6
         ;;
-    sd)
+    -sd)
         $trace_type_v4 && perform_trace trace_area_sd trace_ip_sd_v4
         $trace_type_v6 && perform_trace trace_area_sd trace_ip_sd_v6
         ;;
-    sh)
+    -sh)
         $trace_type_v4 && perform_trace trace_area_sh trace_ip_sh_v4
         $trace_type_v6 && perform_trace trace_area_sh trace_ip_sh_v6
         ;;
-    sc)
+    -sc)
         $trace_type_v4 && perform_trace trace_area_sc trace_ip_sc_v4
         $trace_type_v6 && perform_trace trace_area_sc trace_ip_sc_v6
         ;;
-    gd)
+    -gd)
         $trace_type_v4 && perform_trace trace_area_gd trace_ip_gd_v4
         $trace_type_v6 && perform_trace trace_area_gd trace_ip_gd_v6
         ;;
@@ -156,22 +159,34 @@ case "$1" in
             $trace_type_v6 && perform_trace trace_area_bj trace_ip_bj_v6
             $trace_type_v6 && perform_trace trace_area_sc trace_ip_sc_v6
         else
-            _red "错误：无效的参数！"
+            _red "错误：无效的参数，参数${1}不被支持！"
             echo -e "
 支持的参数：
-  hlj  # 黑龙江三网回程
-  nmg  # 内蒙古三网回程
-  bj   # 北京三网回程
-  js   # 江苏三网回程
-  sd   # 山东三网回程
-  sh   # 上海三网回程
-  sc   # 四川三网回程
-  gd   # 广东三网回程
+  -hlj  # 黑龙江三网回程
+  -nmg  # 内蒙古三网回程
+  -bj   # 北京三网回程
+  -js   # 江苏三网回程
+  -sd   # 山东三网回程
+  -sh   # 上海三网回程
+  -sc   # 四川三网回程
+  -gd   # 广东三网回程
 
 如果没有传参默认执行广东上海北京四川三网回程：
   ./BestTrace.sh
-  ./BestTrace.sh hlj      # 黑龙江
+  ./BestTrace.sh -hlj      # 黑龙江
+
+附加参数：
+  -d  # 检测后删除nexttrace
+  ./BestTrace.sh -hlj -d
 "
         fi
         ;;
 esac
+
+# $2入参校验，检测并删除nexttrace
+if [ "$2" == "-d" ]; then
+    separator
+    for file in /usr/local/bin/nexttrace /usr/bin/nexttrace; do
+        [[ -f $file ]] && rm -f "$file" && _green "已成功删除nexttrace！"
+    done
+fi
