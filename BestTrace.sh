@@ -188,8 +188,10 @@ case "$1" in
   ./BestTrace.sh -hlj      # 黑龙江
 
 附加参数：
-  -d  # 检测后删除nexttrace
-  ./BestTrace.sh -hlj -d
+  -d 用途：删除已安装的nexttrace文件
+  示例：
+    ./BestTrace.sh -hlj -d   # 执行回程测试后删除nexttrace
+    ./BestTrace.sh -d        # 单独执行卸载操作（如需移除已安装的 nexttrace）
 "
         fi
         ;;
