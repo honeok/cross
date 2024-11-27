@@ -1,13 +1,13 @@
 ## TeamSpeak服务器一键脚本
 
 ```shell
-bash <(curl -sL raw.githubusercontent.com/honeok/shell/master/interesting/ts.sh)
+bash <(curl -sL raw.githubusercontent.com/honeok/cross/master/interesting/ts.sh)
 ```
 
 ## BestTrace路由追踪
 
 ```shell
-bash <(curl -sL raw.githubusercontent.com/honeok/shell/master/BestTrace.sh)
+bash <(curl -sL raw.githubusercontent.com/honeok/cross/master/BestTrace.sh)
 ```
 
 ### 参数说明：
@@ -28,6 +28,6 @@ bash <(curl -sL raw.githubusercontent.com/honeok/shell/master/BestTrace.sh)
 ### 示例用法：
 
 ```shell
-bash <(curl -sL raw.githubusercontent.com/honeok/shell/master/BestTrace.sh) hlj
+bash <(curl -sL raw.githubusercontent.com/honeok/cross/master/BestTrace.sh) hlj
 ```
 
