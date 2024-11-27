@@ -23,7 +23,7 @@ bash <(curl -sL raw.githubusercontent.com/honeok/cross/master/BestTrace.sh)
 - `sd`：山东
 - `sh`：上海
 - `sc`：四川
-- `gd`：广东三网回程
+- `gd`：广东
 
 ### 示例用法：
 
