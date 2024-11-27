@@ -8,6 +8,8 @@
 
 # set -x
 
+server_range=$(seq 1 5)   # Game服务器范围
+
 yellow='\033[1;33m'
 red='\033[1;31m'
 green='\033[1;32m'
@@ -41,7 +43,7 @@ done
 _green "login和gate服务器已停止"
 
 # 并行处理game
-for i in {1..5}; do
+for i in $server_range; do
     (
         _yellow "正在处理server$i"
         cd /data/server$i/game/
