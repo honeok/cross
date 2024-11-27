@@ -1,8 +1,14 @@
-#!/bin/bash
+#!/usr/bin/env bash
+#
+# Description: Process monitoring alarm
+#
+# Copyright (C) 2024 honeok <yihaohey@gmail.com>
+# Blog: www.honeok.com
+# https://github.com/honeok/cross/blob/master/jds/procmon.sh
 
 # 设置警报API的URL
 bark_url="x"
-title="p8_CN_测试服务器告警"
+title="p8_Game告警"
 
 # 获取内存占用超过30%的前10个进程
 memory_alert=$(ps -eo pid,comm,%mem,%cpu --sort=-%mem | awk 'NR>1 && $3+0 > 30 {printf "进程: %s (PID: %s) 占用内存: %.1f%%\n", $2, $1, $3+0}')
