@@ -7,7 +7,6 @@
 # Twitter: https://twitter.com/hone0k
 # https://github.com/honeok/cross/blob/master/BestTrace.sh
 #
-# Fork from zq: https://github.com/zq/shell/blob/master/autoBestTrace.sh || wget -qO- git.io/besttrace | bash
 
 yellow='\033[1;33m'
 red='\033[1;31m'
