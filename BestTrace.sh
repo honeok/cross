@@ -6,7 +6,6 @@
 # Blog: https://www.honeok.com
 # Twitter: https://twitter.com/hone0k
 # https://github.com/honeok/cross/blob/master/BestTrace.sh
-#
 
 yellow='\033[1;33m'
 red='\033[1;31m'
@@ -41,14 +40,45 @@ ip_address() {
     done
 }
 
-if ! command -v nexttrace >/dev/null 2>&1 && [ ! -f "/usr/local/bin/nexttrace" ]; then
-    curl -s nxtrace.org/nt | bash || { _red "Nexttrace安装失败"; exit 1; }
-    # bash <(curl -sL raw.githubusercontent.com/nxtrace/NTrace-core/main/nt_install.sh) ||  { _red "Nexttrace安装失败"; exit 1; }
+if ! command -v nexttrace >/dev/null 2>&1 && [ ! -f "/usr/local/bin/nexttrace" ] && [ ! -f "/usr/bin/nexttrace" ]; then
+    # bash <(curl -sL raw.githubusercontent.com/nxtrace/NTrace-core/main/nt_install.sh) || { echo "Nexttrace安装失败"; exit 1; }
+    bash <(curl -sL nxtrace.org/nt) || { _red "Nexttrace安装失败"; exit 1; }
 fi
 
 separator() { printf "%-70s\n" "-" | sed 's/\s/-/g'; }
 
-## ===== 卸载逻辑 =====
+supported_params=$(cat <<EOF
+支持的参数：
+  -nmg  # 内蒙古
+  -hlj  # 黑龙江
+  -xj   # 新疆
+  -tj   # 天津
+  -bj   # 北京
+  -ln   # 辽宁
+  -hb   # 河北
+  -sd   # 山东
+  -js   # 江苏
+  -zj   # 浙江
+  -fj   # 福建
+  -ah   # 安徽
+  -jx   # 江西
+  -xz   # 西藏
+  -sc   # 四川
+  -sh   # 上海
+  -gd   # 广东
+
+默认执行广东、上海、北京、四川三网回程：
+  ./BestTrace.sh
+
+指定参数示例：
+  ./BestTrace.sh -h         # 帮助命令
+  ./BestTrace.sh -d         # 单独删除 nexttrace
+  ./BestTrace.sh -nmg       # 测试内蒙古
+  ./BestTrace.sh -nmg -d    # 测试后删除 nexttrace
+EOF
+)
+
+# 卸载逻辑
 uninstall_nexttrace(){
     separator
     for file in /usr/local/bin/nexttrace /usr/bin/nexttrace; do
@@ -56,9 +86,7 @@ uninstall_nexttrace(){
     done
 }
 
-## 全国各省份三网TCP-Ping IPV4 IPv6地址
-# https://www.nodeseek.com/post-68572-1
-# https://www.nodeseek.com/post-129987-1
+# https://www.nodeseek.com/post-68572-1 https://www.nodeseek.com/post-129987-1
 trace_area_nmg=("内蒙古电信" "内蒙古联通" "内蒙古移动")
 trace_ip_nmg_v4=("nm-ct-v4.ip.zstaticcdn.com" "nm-cu-v4.ip.zstaticcdn.com" "nm-cm-v4.ip.zstaticcdn.com")
 trace_ip_nmg_v6=("nm-ct-v6.ip.zstaticcdn.com" "nm-cu-v6.ip.zstaticcdn.com" "nm-cm-v6.ip.zstaticcdn.com")
@@ -113,7 +141,7 @@ trace_ip_gd_v6=("gd-ct-v6.ip.zstaticcdn.com" "gd-cu-v6.ip.zstaticcdn.com" "gd-cm
 
 clear
 
-## ===== 遍历IP解析并trace =====
+# 遍历IP解析并trace
 perform_trace() {
     local -n areas=$1
     local -n ips=$2
@@ -219,6 +247,9 @@ case "$1" in
         $trace_type_v4 && perform_trace trace_area_gd trace_ip_gd_v4
         $trace_type_v6 && perform_trace trace_area_gd trace_ip_gd_v6
         ;;
+    -h)
+        echo -e "$supported_params"
+        ;;
     -d)
         uninstall_nexttrace
         ;;
@@ -234,34 +265,7 @@ case "$1" in
             $trace_type_v6 && perform_trace trace_area_sc trace_ip_sc_v6
         else
             _red "错误：无效的参数，参数${1}不被支持！"
-            echo -e "
-支持的参数：
-  -nmg  # 内蒙古
-  -hlj  # 黑龙江
-  -xj   # 新疆
-  -tj   # 天津
-  -bj   # 北京
-  -ln   # 辽宁
-  -hb   # 河北
-  -sd   # 山东
-  -js   # 江苏
-  -zj   # 浙江
-  -fj   # 福建
-  -ah   # 安徽
-  -jx   # 江西
-  -xz   # 西藏
-  -sc   # 四川
-  -sh   # 上海
-  -gd   # 广东
-
-默认执行广东、上海、北京、四川三网回程：
-  ./BestTrace.sh
-
-指定参数示例：
-  ./BestTrace.sh -nmg       # 测试内蒙古
-  ./BestTrace.sh -nmg -d    # 测试后删除 nexttrace
-  ./BestTrace.sh -d         # 单独删除 nexttrace
-"
+            echo -e "$supported_params"
         fi
         ;;
 esac
