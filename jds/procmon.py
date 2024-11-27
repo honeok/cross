@@ -5,8 +5,8 @@ import time
 import os
 
 # Bark API 回调接口
-bark_url = "https://api.honeok.de/x"
-title = "P8_CN_测试服务器告警"
+bark_url = "x"
+title = "p8_Game告警"
 
 # 告警记录文件
 alert_file = "/root/alert_time.txt"
