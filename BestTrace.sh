@@ -49,6 +49,14 @@ fi
 
 separator() { printf "%-70s\n" "-" | sed 's/\s/-/g'; }
 
+## ===== 卸载逻辑 =====
+uninstall_nexttrace(){
+    separator
+    for file in /usr/local/bin/nexttrace /usr/bin/nexttrace; do
+        [[ -f $file ]] && rm -f "$file" && _green "已成功删除nexttrace！"
+    done
+}
+
 ## 全国各省份三网TCP-Ping IPV4 IPv6地址
 # https://www.nodeseek.com/post-68572-1
 # https://www.nodeseek.com/post-129987-1
@@ -79,7 +87,7 @@ trace_ip_gd_v6=("gd-ct-v6.ip.zstaticcdn.com" "gd-cu-v6.ip.zstaticcdn.com" "gd-cm
 
 clear
 
-## 遍历和执行追踪
+## ===== 遍历IP解析并trace =====
 perform_trace() {
     local -n areas=$1
     local -n ips=$2
@@ -149,6 +157,9 @@ case "$1" in
         $trace_type_v4 && perform_trace trace_area_gd trace_ip_gd_v4
         $trace_type_v6 && perform_trace trace_area_gd trace_ip_gd_v6
         ;;
+    -d)
+        uninstall_nexttrace
+        ;;
     *)
         if [ -z "$1" ]; then
             $trace_type_v4 && perform_trace trace_area_gd trace_ip_gd_v4
@@ -184,10 +195,6 @@ case "$1" in
         ;;
 esac
 
-# $2入参校验，检测并删除nexttrace
 if [ "$2" == "-d" ]; then
-    separator
-    for file in /usr/local/bin/nexttrace /usr/bin/nexttrace; do
-        [[ -f $file ]] && rm -f "$file" && _green "已成功删除nexttrace！"
-    done
+    uninstall_nexttrace
 fi
