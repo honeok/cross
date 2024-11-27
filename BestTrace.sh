@@ -82,7 +82,7 @@ EOF
 uninstall_nexttrace(){
     separator
     for file in /usr/local/bin/nexttrace /usr/bin/nexttrace; do
-        [[ -f $file ]] && rm -f "$file" && _green "已成功删除nexttrace！"
+        [[ -f $file ]] && rm -f "$file" && _green "nexttrace已成功删除"
     done
 }
 
