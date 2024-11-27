@@ -4,6 +4,7 @@
 #
 # Copyright (C) 2024 honeok <yihaohey@gmail.com>
 # Blog: https://www.honeok.com
+# Twitter: https://twitter.com/hone0k
 # https://github.com/honeok/cross/blob/master/BestTrace.sh
 #
 # Fork from zq: https://github.com/zq/shell/blob/master/autoBestTrace.sh || wget -qO- git.io/besttrace | bash
