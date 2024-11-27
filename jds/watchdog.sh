@@ -12,10 +12,10 @@
 ## ========== 系统预检 ==========
 os_name=$(grep ^ID= /etc/*release | awk -F'=' '{print $2}' | sed 's/"//g')
 if [[ "$os_name" != "debian" && "$os_name" != "ubuntu" && "$os_name" != "centos" && "$os_name" != "rocky" && "$os_name" != "alma" ]]; then
-    exit 1
+    _exit
 fi
 
-[ "$(id -u)" -ne "0" ] && exit 1
+[ "$(id -u)" -ne "0" ] && _exit
 
 if [ "$(cd -P -- "$(dirname -- "$0")" && pwd -P)" != "/root" ]; then
     cd /root >/dev/null 2>&1
