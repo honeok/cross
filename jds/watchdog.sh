@@ -9,7 +9,7 @@
 # export LANG=en_US.UTF-8
 # set -x
 
-## ========== 系统预检 ==========
+# 系统预检
 os_name=$(grep ^ID= /etc/*release | awk -F'=' '{print $2}' | sed 's/"//g')
 if [[ "$os_name" != "debian" && "$os_name" != "ubuntu" && "$os_name" != "centos" && "$os_name" != "rocky" && "$os_name" != "alma" ]]; then
     _exit
@@ -21,14 +21,14 @@ if [ "$(cd -P -- "$(dirname -- "$0")" && pwd -P)" != "/root" ]; then
     cd /root >/dev/null 2>&1
 fi
 
-## ========== 进程守护与信号处理 ==========
+# 守护进程与信号处理
 watchdog_pid="/tmp/watchdog.pid"
 if [ -f "$watchdog_pid" ] && kill -0 $(cat "$watchdog_pid") 2>/dev/null; then
     exit 1
 fi
 echo $$ > "$watchdog_pid"
 
-## 终止信号捕获，意外中断时能优雅地处理
+# 终止信号捕获，意外中断时能优雅地处理
 trap _exit SIGINT SIGQUIT SIGTERM SIGHUP
 
 _exit() {
@@ -39,14 +39,14 @@ _exit() {
     exit 0
 }
 
-## ========== 脚本入参校验 ==========
+# 脚本入参校验
 if [[ ${#} -ne 1 || ! $1 =~ ^[0-9]+$ ]]; then
     _exit
 else
     server_number=$1
 fi
 
-## ========== 所需时间相关 ==========
+# 所需时间相关
 suning_timeapi=$(date -d @$(($(curl -sL https://f.m.suning.com/api/ct.do | awk -F'"currentTime": ' '{print $2}' | cut -d ',' -f1) / 1000)) +"%Y-%m-%dT%H:00:00")            # 苏宁时间API
 taobao_timeapi=$(date -d @$(($(curl -sL https://acs.m.taobao.com/gw/mtop.common.getTimestamp/ | awk -F'"t":"' '{print $2}' | cut -d '"' -f1) / 1000)) +"%Y-%m-%dT%H:00:00") # 淘宝时间API
 ddnspod_timeapi=$(date -d @$(($(curl -sL https://ip.ddnspod.com/timestamp) / 1000)) +"%Y-%m-%dT%H:00:00")
@@ -73,11 +73,11 @@ beijing_time=$(date -d @$(($(curl -sL https://acs.m.taobao.com/gw/mtop.common.ge
 # beijing_time=$(date -d @$(($(curl -sL https://ip.ddnspod.com/timestamp) / 1000)) +"%Y-%m-%dT%H:%M:%S")
 # beijing_time=$(curl -sL --max-time 2 "https://timeapi.io/api/Time/current/zone?timeZone=Asia/Shanghai" | grep -oP '"dateTime":\s*"\K[^"]+' | sed 's/\.[0-9]*//g' | sed 's/T/ /')
 
-## echo "xxxxxxxxxxxx" > /root/password.txt
-## chmod 600 /root/password.txt 只有root用户可以读取该文件
+# echo "xxxxxxxxxxxx" > /root/password.txt
+# chmod 600 /root/password.txt 只有root用户可以读取该文件
 [ -f /root/password.txt ] && [ -s /root/password.txt ] && server_password=$(cat /root/password.txt) || exit 1
 
-## 根据区服编号匹配服务器IP
+# 根据区服编号匹配服务器IP
 if (( server_number >= 1 && server_number <= 5 )); then
     server_ip="10.46.99.216"
 elif (( server_number >= 6 && server_number <= 10 )); then
@@ -86,7 +86,7 @@ else
     _exit
 fi
 
-## ========== API 回调 ==========
+# API 回调
 send_message() {
     local action="$1"
     local country=$(curl -s ipinfo.io/country || echo "unknown")
@@ -98,7 +98,7 @@ send_message() {
         -d "{\"action\":\"$action\",\"timestamp\":\"$(date -u '+%Y-%m-%d %H:%M:%S' -d '+8 hours')\",\"country\":\"$country\",\"os_info\":\"$os_info\",\"cpu_arch\":\"$cpu_arch\"}" >/dev/null 2>&1 &
 }
 
-## ========== sshpass命令校验 ==========
+# sshpass命令校验
 if ! command -v sshpass >/dev/null 2>&1; then
     if command -v dnf >/dev/null 2>&1; then
         if ! rpm -q epel-release >/dev/null 2>&1; then
@@ -117,9 +117,9 @@ if ! command -v sshpass >/dev/null 2>&1; then
     fi
 fi
 
-## ========== 构建远程命令 ==========
+# 构建远程命令
 remote_command="\
-## 进入游戏目录，修改开服时间
+# 进入游戏目录，修改开服时间
 cd /data/server${server_number}/game || exit 1 && \
 [ -f lua/config/profile.lua ] || exit 1 && \
 sed -i '/^\s*local open_server_time\s*=/s|\"[^\"]*\"|\"'"$openserver_time"'\"|' lua/config/profile.lua || exit 1 && \
@@ -128,7 +128,7 @@ grep -q '^\s*local open_server_time\s*=\s*\"'"$openserver_time"'\"' lua/config/p
 if ! find lua/config/profile.lua -mmin -1 >/dev/null 2>&1; then exit 1; fi && \
 ./server.sh reload || exit 1 && \
 
-## 进入登录目录，修改白名单
+# 进入登录目录，修改白名单
 cd /data/server/login || exit 1 && \
 if [ -f etc/white_list.txt ]; then \
     sed -i '/^\s*'"${server_number}"'\s*$/d' etc/white_list.txt || exit 1 && \
@@ -140,7 +140,7 @@ else \
 fi && \
 ./server.sh reload || exit 1"
 
-## ========== 执行远程命令 ==========
+# 执行远程命令
 # 三次重试机会
 for (( i=1; i<=3; i++ )); do
     # 执行远程命令，捕获错误信息
