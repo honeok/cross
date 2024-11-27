@@ -15,12 +15,6 @@ if [[ "$os_name" != "debian" && "$os_name" != "ubuntu" && "$os_name" != "centos"
     _exit
 fi
 
-[ "$(id -u)" -ne "0" ] && _exit
-
-if [ "$(cd -P -- "$(dirname -- "$0")" && pwd -P)" != "/root" ]; then
-    cd /root >/dev/null 2>&1
-fi
-
 # 守护进程与信号处理
 watchdog_pid="/tmp/watchdog.pid"
 if [ -f "$watchdog_pid" ] && kill -0 $(cat "$watchdog_pid") 2>/dev/null; then
@@ -39,6 +33,12 @@ _exit() {
     exit 0
 }
 
+[ "$(id -u)" -ne "0" ] && _exit
+
+if [ "$(cd -P -- "$(dirname -- "$0")" && pwd -P)" != "/root" ]; then
+    cd /root >/dev/null 2>&1
+fi
+
 # 脚本入参校验
 if [[ ${#} -ne 1 || ! $1 =~ ^[0-9]+$ ]]; then
     _exit
@@ -46,7 +46,7 @@ else
     server_number=$1
 fi
 
-# 所需时间相关
+# 开服所需时间相关
 suning_timeapi=$(date -d @$(($(curl -sL https://f.m.suning.com/api/ct.do | awk -F'"currentTime": ' '{print $2}' | cut -d ',' -f1) / 1000)) +"%Y-%m-%dT%H:00:00")            # 苏宁时间API
 taobao_timeapi=$(date -d @$(($(curl -sL https://acs.m.taobao.com/gw/mtop.common.getTimestamp/ | awk -F'"t":"' '{print $2}' | cut -d '"' -f1) / 1000)) +"%Y-%m-%dT%H:00:00") # 淘宝时间API
 ddnspod_timeapi=$(date -d @$(($(curl -sL https://ip.ddnspod.com/timestamp) / 1000)) +"%Y-%m-%dT%H:00:00")
