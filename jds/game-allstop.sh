@@ -6,6 +6,7 @@
 # Blog: www.honeok.com
 # https://github.com/honeok/cross/blob/master/jds/game-allstop.sh
 
+# export LANG=en_US.UTF-8
 # set -x
 
 server_range=$(seq 1 5)   # Game服务器范围
