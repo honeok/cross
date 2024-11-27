@@ -16,7 +16,7 @@ game2="127.0.0.1"
 # 系统预检
 os_name=$(grep ^ID= /etc/*release | awk -F'=' '{print $2}' | sed 's/"//g')
 if [[ "$os_name" != "debian" && "$os_name" != "ubuntu" && "$os_name" != "centos" && "$os_name" != "rocky" && "$os_name" != "alma" ]]; then
-    _exit
+    exit 0
 fi
 
 # 守护进程与信号处理
