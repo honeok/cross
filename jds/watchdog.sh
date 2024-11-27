@@ -4,7 +4,7 @@
 #
 # Copyright (C) 2024 honeok <yihaohey@gmail.com>
 # Blog: www.honeok.com
-# https://github.com/honeok/shell/blob/master/jds/watchdog.sh
+# https://github.com/honeok/cross/blob/master/jds/watchdog.sh
 
 # export LANG=en_US.UTF-8
 # set -x
