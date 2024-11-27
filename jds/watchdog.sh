@@ -9,6 +9,10 @@
 # export LANG=en_US.UTF-8
 # set -x
 
+# 游戏服定义
+game1="10.46.99.216"
+game2="127.0.0.1"
+
 # 系统预检
 os_name=$(grep ^ID= /etc/*release | awk -F'=' '{print $2}' | sed 's/"//g')
 if [[ "$os_name" != "debian" && "$os_name" != "ubuntu" && "$os_name" != "centos" && "$os_name" != "rocky" && "$os_name" != "alma" ]]; then
@@ -79,9 +83,9 @@ beijing_time=$(date -d @$(($(curl -sL https://acs.m.taobao.com/gw/mtop.common.ge
 
 # 根据区服编号匹配服务器IP
 if (( server_number >= 1 && server_number <= 5 )); then
-    server_ip="10.46.99.216"
+    server_ip=${game1}
 elif (( server_number >= 6 && server_number <= 10 )); then
-    server_ip="127.0.0.1"
+    server_ip=${game2}
 else
     _exit
 fi
