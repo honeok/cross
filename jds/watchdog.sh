@@ -4,7 +4,6 @@
 #
 # Copyright (C) 2024 honeok <yihaohey@gmail.com>
 # Blog: www.honeok.com
-# Twitter: https://twitter.com/hone0k
 # https://github.com/honeok/cross/blob/master/jds/watchdog.sh
 
 # export LANG=en_US.UTF-8
