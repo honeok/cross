@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
-# auth: honeok
-# date: 2021-12-15
-# desc: H5 DEPLOY IMAGE      TIPS: OLD SCRIPT IS /opt/script
-##########################
+#
+# Description: H5 Container Rolling Update
+#
+# Copyright (C) 2021 - 2022 honeok <yihaohey@gmail.com>
+# Blog: www.honeok.com
+# https://github.com/honeok/cross/blob/master/nx-engine/aifengxing.sh
 
 . /etc/init.d/functions
 CONTRAST=`docker images | grep -iv "REPOSITORY" | awk 'BEGIN{FS=" ";OFS=":"}{print $1,$2}'`

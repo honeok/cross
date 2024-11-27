@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import time
 
 # 配置部分
-BARK_API_URL = "https://api.honeok.de/to73XJ2pqf6HfHMg8WQ7n1/"
+BARK_API_URL = "x"
 TITLE = "天气警报"
 DISTRICTS = ['武侯区', '锦江区', '青羊区', '金牛区', '成华区', '龙泉驿区', '郫都区']
 CHECK_INTERVAL = 60  # 每隔 60 秒检查一次时间
