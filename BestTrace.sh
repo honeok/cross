@@ -47,7 +47,10 @@ fi
 separator() { printf "%-70s\n" "-" | sed 's/\s/-/g'; }
 
 supported_params=$(cat <<EOF
-支持的参数：
+默认执行广东、上海、北京、四川三网回程:
+bash BestTrace.sh
+
+可选参数：
   -nmg  # 内蒙古
   -hlj  # 黑龙江
   -xj   # 新疆
@@ -66,14 +69,11 @@ supported_params=$(cat <<EOF
   -sh   # 上海
   -gd   # 广东
 
-默认执行广东、上海、北京、四川三网回程：
-  ./BestTrace.sh
-
-指定参数示例：
-  ./BestTrace.sh -h         # 帮助命令
-  ./BestTrace.sh -d         # 单独删除 nexttrace
-  ./BestTrace.sh -nmg       # 测试内蒙古
-  ./BestTrace.sh -nmg -d    # 测试后删除 nexttrace
+指定参数示例:
+  bash BestTrace.sh -h         # 帮助命令
+  bash BestTrace.sh -d         # 单独删除 nexttrace
+  bash BestTrace.sh -nmg       # 测试内蒙古
+  bash BestTrace.sh -nmg -d    # 测试后删除 nexttrace
 EOF
 )
 
