@@ -17,7 +17,10 @@ bash <(curl -sL raw.githubusercontent.com/honeok/cross/master/BestTrace.sh)
 脚本支持以下命令行**参数**来选择不同区域的路由回程
 
 ```shell
+默认执行广东、上海、北京、四川三网回程:
+bash BestTrace.sh
 
+可选参数：
   -nmg  # 内蒙古
   -hlj  # 黑龙江
   -xj   # 新疆
@@ -36,19 +39,9 @@ bash <(curl -sL raw.githubusercontent.com/honeok/cross/master/BestTrace.sh)
   -sh   # 上海
   -gd   # 广东
 
-默认执行广东、上海、北京、四川三网回程:
-  ./BestTrace.sh
-
 指定参数示例:
-  ./BestTrace.sh -nmg       # 测试内蒙古
-  ./BestTrace.sh -nmg -d    # 测试后删除 nexttrace
-  ./BestTrace.sh -d         # 单独删除 nexttrace
+  bash BestTrace.sh -h         # 帮助命令
+  bash BestTrace.sh -d         # 单独删除 nexttrace
+  bash BestTrace.sh -nmg       # 测试内蒙古
+  bash BestTrace.sh -nmg -d    # 测试后删除 nexttrace
 ```
-
-### 示例用法：
-
-```shell
-bash <(curl -sL raw.githubusercontent.com/honeok/cross/master/BestTrace.sh) -nmg     # 内蒙古三网路由
-bash <(curl -sL raw.githubusercontent.com/honeok/cross/master/BestTrace.sh) -nmg -d  # 路由追踪完成后删除nexttrace
-```
-
