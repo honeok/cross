@@ -33,7 +33,7 @@ sudo() {
         if command -v sudo > /dev/null 2>&1; then
             command sudo "$@"
         else
-            err "错误: 您的系统未安装sudo，因此无法进行该项操作。"
+            err "错误: 您的系统未安装 sudo ，因此无法进行该项操作。"
             exit 1
         fi
     else
@@ -43,7 +43,7 @@ sudo() {
 
 check_systemd() {
     if [ "$os_alpine" != 1 ] && ! command -v systemctl >/dev/null 2>&1; then
-        echo "不支持此系统：未找到systemctl命令"
+        echo "不支持此系统：未找到 systemctl 命令"
         exit 1
     fi
 }
