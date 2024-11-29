@@ -1,7 +1,14 @@
-#!/bin/bash
-
-author=233boy
-# github=https://github.com/233boy/sing-box
+#!/usr/bin/env bash
+#
+# Description: One-click installation script for sing-box.
+#
+# Author: 233boy
+# Blog: https://233boy.com
+# https://github.com/233boy/sing-box
+#
+# Modify By honeok <yihaohey@gmail.com>
+# Blog: https://www.honeok.com
+# https://github.com/honeok/cross/blob/master/sing-box.sh
 
 # bash fonts colors
 red='\e[31m'
