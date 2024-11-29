@@ -10,21 +10,21 @@
 # Blog: https://www.honeok.com
 # https://github.com/honeok/cross/blob/master/sing-box.sh
 
-# bash fonts colors
-red='\e[31m'
-yellow='\e[33m'
-gray='\e[90m'
-green='\e[92m'
-blue='\e[94m'
+yellow='\033[93m'
+red='\033[91m'
+gray='\033[97m'
+green='\033[92m'
+blue='\033[94m'
 magenta='\e[95m'
-cyan='\e[96m'
-none='\e[0m'
-_red() { echo -e ${red}$@${none}; }
-_blue() { echo -e ${blue}$@${none}; }
-_cyan() { echo -e ${cyan}$@${none}; }
-_green() { echo -e ${green}$@${none}; }
+cyan='\033[96m'
+none='\033[0m'
 _yellow() { echo -e ${yellow}$@${none}; }
+_red() { echo -e ${red}$@${none}; }
+_gray() { echo -e ${gray}$@${none}; }
+_green() { echo -e ${green}$@${none}; }
+_blue() { echo -e ${blue}$@${none}; }
 _magenta() { echo -e ${magenta}$@${none}; }
+_cyan() { echo -e ${cyan}$@${none}; }
 _red_bg() { echo -e "\e[41m$@${none}"; }
 
 is_err=$(_red_bg 错误!)
