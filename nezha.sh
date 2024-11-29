@@ -14,10 +14,14 @@ NZ_DASHBOARD_SERVICE="/etc/systemd/system/nezha-dashboard.service"
 NZ_DASHBOARD_SERVICERC="/etc/init.d/nezha-dashboard"
 NZ_VERSION="v0"
 
-red='\033[0;31m'
-green='\033[0;32m'
-yellow='\033[0;33m'
+red='\033[91m'
+green='\033[92m'
+yellow='\033[93m'
 plain='\033[0m'
+_red() { echo -e ${red}$@${plain}; }
+_green() { echo -e ${green}$@${plain}; }
+_yellow() { echo -e ${yellow}$@${plain}; }
+
 export PATH="$PATH:/usr/local/bin"
 
 os_arch=""
@@ -29,7 +33,7 @@ sudo() {
         if command -v sudo > /dev/null 2>&1; then
             command sudo "$@"
         else
-            err "错误: 您的系统未安装 sudo，因此无法进行该项操作。"
+            err "错误: 您的系统未安装sudo，因此无法进行该项操作。"
             exit 1
         fi
     else
@@ -39,7 +43,7 @@ sudo() {
 
 check_systemd() {
     if [ "$os_alpine" != 1 ] && ! command -v systemctl >/dev/null 2>&1; then
-        echo "不支持此系统：未找到 systemctl 命令"
+        echo "不支持此系统：未找到systemctl命令"
         exit 1
     fi
 }
@@ -131,20 +135,20 @@ pre_check() {
         GITHUB_URL=$CUSTOM_MIRROR
         Get_Docker_URL="get.docker.com"
         Get_Docker_Argu=" -s docker --mirror Aliyun"
-        Docker_IMG="registry.cn-shanghai.aliyuncs.com\/naibahq\/nezha-dashboard"
+        Docker_IMG="registry.cn-shanghai.aliyuncs.com\/naibahq\/nezha-dashboard:v0.20.13"
     else
         if [ -z "$CN" ]; then
             GITHUB_RAW_URL="raw.githubusercontent.com/naiba/nezha/master"
             GITHUB_URL="github.com"
             Get_Docker_URL="get.docker.com"
             Get_Docker_Argu=" "
-            Docker_IMG="ghcr.io\/naiba\/nezha-dashboard"
+            Docker_IMG="ghcr.io\/naiba\/nezha-dashboard:v0.20.13"
         else
             GITHUB_RAW_URL="gitee.com/naibahq/nezha/raw/master"
             GITHUB_URL="gitee.com"
             Get_Docker_URL="get.docker.com"
             Get_Docker_Argu=" -s docker --mirror Aliyun"
-            Docker_IMG="registry.cn-shanghai.aliyuncs.com\/naibahq\/nezha-dashboard"
+            Docker_IMG="registry.cn-shanghai.aliyuncs.com\/naibahq\/nezha-dashboard:v0.20.13"
         fi
     fi
 }
@@ -211,8 +215,8 @@ select_version() {
     fi
 }
 
-update_script() {
-    echo "> 更新脚本"
+#update_script() {
+    #echo "> 更新脚本"
 
     #curl -sL https://${GITHUB_RAW_URL}/script/install.sh -o /tmp/nezha.sh
     #new_version=$(grep "NZ_VERSION" /tmp/nezha.sh | head -n 1 | awk -F "=" '{print $2}' | sed 's/\"//g;s/,//g;s/ //g')
@@ -221,19 +225,19 @@ update_script() {
     #    return 1
     #fi
     #echo "当前最新版本为: ${new_version}"
-    if [ -z "$CN" ]; then
-        curl -sL https://raw.githubusercontent.com/nezhahq/scripts/main/install.sh -o /tmp/nezha.sh
-    else
-        curl -sL https://gitee.com/naibahq/scripts/raw/main/install.sh -o /tmp/nezha.sh
-    fi
-    mv -f /tmp/nezha.sh ./nezha.sh && chmod a+x ./nezha.sh
+    #if [ -z "$CN" ]; then
+    #    curl -sL https://raw.githubusercontent.com/nezhahq/scripts/main/install.sh -o /tmp/nezha.sh
+    #else
+    #    curl -sL https://gitee.com/naibahq/scripts/raw/main/install.sh -o /tmp/nezha.sh
+    #fi
+    #mv -f /tmp/nezha.sh ./nezha.sh && chmod a+x ./nezha.sh
 
-    echo "3s后执行新脚本"
-    sleep 3s
-    clear
-    exec ./nezha.sh
-    exit 0
-}
+    #echo "3s后执行新脚本"
+    #sleep 3s
+    #clear
+    #exec ./nezha.sh
+    #exit 0
+#}
 
 before_show_menu() {
     echo && info "* 按回车返回主菜单 *" && read temp
@@ -485,21 +489,21 @@ modify_dashboard_config() {
     fi
 
     echo "关于 GitHub Oauth2 应用：在 https://github.com/settings/developers 创建，无需审核，Callback 填 http(s)://域名或IP/oauth2/callback"
-        echo "关于 Gitee Oauth2 应用：在 https://gitee.com/oauth/applications 创建，无需审核，Callback 填 http(s)://域名或IP/oauth2/callback"
-        printf "请输入 OAuth2 提供商(github/gitlab/jihulab/gitee，默认 github): "
-        read -r nz_oauth2_type
-        printf "请输入 Oauth2 应用的 Client ID: "
-        read -r nz_github_oauth_client_id
-        printf "请输入 Oauth2 应用的 Client Secret: "
-        read -r nz_github_oauth_client_secret
-        printf "请输入 GitHub/Gitee 登录名作为管理员，多个以逗号隔开: "
-        read -r nz_admin_logins
-        printf "请输入站点标题: "
-        read -r nz_site_title
-        printf "请输入站点访问端口: (默认 8008)"
-        read -r nz_site_port
-        printf "请输入用于 Agent 接入的 RPC 端口: (默认 5555)"
-        read -r nz_grpc_port
+    echo "关于 Gitee Oauth2 应用：在 https://gitee.com/oauth/applications 创建，无需审核，Callback 填 http(s)://域名或IP/oauth2/callback"
+    printf "请输入 OAuth2 提供商(github/gitlab/jihulab/gitee，默认 github): "
+    read -r nz_oauth2_type
+    printf "请输入Oauth2应用的 Client ID: "
+    read -r nz_github_oauth_client_id
+    printf "请输入Oauth2应用的 Client Secret: "
+    read -r nz_github_oauth_client_secret
+    printf "请输入GitHub/Gitee登录名作为管理员，多个以逗号隔开: "
+    read -r nz_admin_logins
+    printf "请输入站点标题: "
+    read -r nz_site_title
+    printf "请输入站点访问端口: (默认 8008)"
+    read -r nz_site_port
+    printf "请输入用于Agent接入的RPC端口: (默认 5555)"
+    read -r nz_grpc_port
 
     if [ -z "$nz_admin_logins" ] || [ -z "$nz_github_oauth_client_id" ] || [ -z "$nz_github_oauth_client_secret" ] || [ -z "$nz_site_title" ]; then
         err "所有选项都不能为空"
