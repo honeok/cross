@@ -15,16 +15,17 @@ _yellow() { echo -e "${yellow}$@${white}"; }
 _red() { echo -e "${red}$@${white}"; }
 _green() { echo -e ${green}$@${white}; }
 
+## 获取公网IP地址
 ip_address() {
-    local ipv4_services=("ipv4.ip.sb" "api.ipify.org" "checkip.amazonaws.com" "ipinfo.io/ip")
-    local ipv6_services=("ipv6.ip.sb" "api6.ipify.org" "v6.ident.me" "ipv6.icanhazip.com")
+    local ipv4_services=("ipv4.ip.sb" "ipv4.icanhazip.com" "v4.ident.me" "api.ipify.org")
+    local ipv6_services=("ipv6.ip.sb" "ipv6.icanhazip.com" "v6.ident.me" "api6.ipify.org")
 
-    ipv4_address=""
+    ipv4_address=""  # 初始化全局变量
     ipv6_address=""
 
     # 获取IPv4地址
     for service in "${ipv4_services[@]}"; do
-        ipv4_address=$(curl -s "$service")
+        ipv4_address=$(curl -s -4 -k "$service")
         if [[ "$ipv4_address" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             break
         fi
@@ -32,7 +33,7 @@ ip_address() {
 
     # 获取IPv6地址
     for service in "${ipv6_services[@]}"; do
-        ipv6_address=$(curl -s --max-time 2 "$service")
+        ipv6_address=$(curl -s -6 -k --max-time 2 "$service")
         if [[ "$ipv6_address" =~ ^[0-9a-fA-F:]+$ ]]; then
             break
         fi
