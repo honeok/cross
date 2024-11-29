@@ -1,11 +1,11 @@
-#!/bin/sh
-
-#========================================================
-#   System Required: CentOS 7+ / Debian 8+ / Ubuntu 16+ / Alpine 3+ /
-#     Arch 仅测试了一次，如有问题带截图反馈 dysf888@pm.me
-#   Description: 哪吒监控安装脚本
-#   Github: https://github.com/naiba/nezha
-#========================================================
+#!/usr/bin/env bash
+#
+# Description: Nezha Monitoring Installation Script
+# System Required: CentOS 7+ / Debian 8+ / Ubuntu 16+ / Alpine 3+ / Arch
+# Github: https://github.com/nezhahq/nezha
+#
+# Modified By: honeok <yihaohey@gmail.com>
+# https://github.com/honeok/cross/blob/master/nezha.sh
 
 NZ_BASE_PATH="/opt/nezha"
 NZ_DASHBOARD_PATH="${NZ_BASE_PATH}/dashboard"
