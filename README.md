@@ -5,16 +5,6 @@
 
 The towering giant tower, I see it, with people jumping down every moment. When I was young, I didn’t understand and thought they were snowflakes.
 
-## TeamSpeak服务器一键脚本
-
-1️⃣ 国外服务器
-```shell
-bash <(curl -skL raw.githubusercontent.com/honeok/cross/master/interesting/ts.sh)
-```
-2️⃣ 国内服务器
-```shell
-bash <(curl -skL gh.611611.best/raw.githubusercontent.com/honeok/cross/master/interesting/ts.sh)
-```
 ## BestTrace路由追踪
 
 1️⃣ 国外服务器
@@ -60,4 +50,15 @@ bash BestTrace.sh
   bash BestTrace.sh -d         # 单独删除 nexttrace
   bash BestTrace.sh -nmg       # 测试内蒙古
   bash BestTrace.sh -nmg -d    # 测试后删除 nexttrace
+```
+
+## TeamSpeak服务器一键脚本
+
+1️⃣ 国外服务器
+```shell
+bash <(curl -skL raw.githubusercontent.com/honeok/cross/master/interesting/ts.sh)
+```
+2️⃣ 国内服务器
+```shell
+bash <(curl -skL gh.611611.best/raw.githubusercontent.com/honeok/cross/master/interesting/ts.sh)
 ```
