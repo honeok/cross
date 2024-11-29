@@ -1,13 +1,29 @@
+# cross
+
+[![commit](https://img.shields.io/github/last-commit/honeok/cross)](https://github.com/honeok/cross)
+[![LICENSE](https://img.shields.io/github/license/honeok/cross.svg?style=flat)](./LICENSE)
+
+The towering giant tower, I see it, with people jumping down every moment. When I was young, I didn’t understand and thought they were snowflakes.
+
 ## TeamSpeak服务器一键脚本
 
+1️⃣ 国外服务器
 ```shell
-bash <(curl -sL raw.githubusercontent.com/honeok/cross/master/interesting/ts.sh)
+bash <(curl -skL raw.githubusercontent.com/honeok/cross/master/interesting/ts.sh)
 ```
-
+2️⃣ 国内服务器
+```shell
+bash <(curl -skL gh.611611.best/raw.githubusercontent.com/honeok/cross/master/interesting/ts.sh)
+```
 ## BestTrace路由追踪
 
+1️⃣ 国外服务器
 ```shell
-bash <(curl -sL raw.githubusercontent.com/honeok/cross/master/BestTrace.sh)
+bash <(curl -skL raw.githubusercontent.com/honeok/cross/master/BestTrace.sh)
+```
+2️⃣ 国内服务器
+```shell
+bash <(curl -skL gh.611611.best/raw.githubusercontent.com/honeok/cross/master/BestTrace.sh)
 ```
 
 ### 参数说明：
