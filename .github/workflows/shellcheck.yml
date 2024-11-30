@@ -21,12 +21,16 @@ jobs:
 
       - name: Install shellcheck
         run: |
-          # 安装 shellcheck
           if ! command -v shellcheck > /dev/null 2>&1; then
             sudo apt-get update && sudo apt-get install -y shellcheck
           fi
 
-      - name: Find and lint recently modified .sh files
+      - name: Find recently modified .sh files
         run: |
-          # 查找最近 10 秒钟内更新或新增的 .sh 文件，并检查
-          find . -type f -name "*.sh" -newermt "$(date --date='10 seconds ago' '+%Y-%m-%d %H:%M:%S')" -exec shellcheck {} \;
+          # 获取当前时间戳（使用本地时区，比如上海时间）
+          current_time=$(TZ='Asia/Shanghai' date +%s)
+          # 查找过去10秒钟内修改的 .sh 文件
+          find . -type f -name "*.sh" -newermt "$(date -d @$((current_time - 10)) +"%Y-%m-%d %H:%M:%S")" | while read file; do
+            echo "Checking file: $file"
+            shellcheck "$file"
+          done
