@@ -2,8 +2,8 @@
 
 [![Commit](https://img.shields.io/github/last-commit/honeok/cross)](https://github.com/honeok/cross)
 [![Build Status](https://github.com/honeok/cross/actions/workflows/shellcheck.yml/badge.svg)](https://github.com/honeok/cross/actions/workflows/shellcheck.yml/badge.svg)
-![Issues](https://img.shields.io/github/issues/honeok/cross.svg)(https://img.shields.io/github/issues/honeok/cross.svg)
-![Stars](https://img.shields.io/github/stars/honeok/cross.svg)(https://img.shields.io/github/stars/honeok/cross.svg)
+![Issues](https://img.shields.io/github/issues/honeok/cross.svg)](https://img.shields.io/github/issues/honeok/cross.svg)
+![Stars](https://img.shields.io/github/stars/honeok/cross.svg)](https://img.shields.io/github/stars/honeok/cross.svg)
 [![LICENSE](https://img.shields.io/github/license/honeok/cross.svg?style=flat)](./LICENSE)
 
 <br>
