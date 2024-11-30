@@ -4,4 +4,4 @@ echo "fuck"
 echo 
 echo 
 
-echo ""
+echo "1"
