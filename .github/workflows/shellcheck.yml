@@ -26,30 +26,36 @@ jobs:
             sudo apt-get update && sudo apt-get install -y shellcheck
           fi
 
-      - name: Get the current time and UTC time
+      - name: Get the current UTC time and commit time
         id: time_info
         run: |
-          # 获取当前时间（本地时间）
-          current_time=$(date '+%Y-%m-%d %H:%M:%S')
-          # 获取当前时间的UTC时间
-          utc_time=$(date -u '+%Y-%m-%d %H:%M:%S')
-          
-          echo "Current time: $current_time"
-          echo "UTC time: $utc_time"
-          
-          # 获取当前时间戳（Unix时间戳）
-          current_timestamp=$(date -d "$current_time" +%s)
-          utc_timestamp=$(date -d "$utc_time" +%s)
-
-          # 获取10秒之前的时间戳
-          ten_seconds_ago=$((current_timestamp - 10))
-
-          # 将时间戳存储为环境变量
-          echo "current_timestamp=$current_timestamp" >> $GITHUB_ENV
+          # 获取当前 UTC 时间
+          current_utc_time=$(date -u '+%Y-%m-%d %H:%M:%S')
+          # 获取当前时间的 Unix 时间戳
+          current_utc_timestamp=$(date -u -d "$current_utc_time" +%s)
+          # 获取当前提交的时间（Git 提交时间）
+          commit_time=$(git log -1 --format=%ci)
+          # 提交时间转换为 UTC 时间
+          commit_utc_time=$(date -u -d "$commit_time" '+%Y-%m-%d %H:%M:%S')
+          # 提交时间的 Unix 时间戳
+          commit_utc_timestamp=$(date -u -d "$commit_utc_time" +%s)
+          # 计算 10 秒之前的时间戳
+          ten_seconds_ago=$((current_utc_timestamp - 10))
+          echo "Current UTC time: $current_utc_time"
+          echo "Commit UTC time: $commit_utc_time"
+          # 将这些信息存储为 GitHub Actions 环境变量
+          echo "current_utc_timestamp=$current_utc_timestamp" >> $GITHUB_ENV
+          echo "commit_utc_timestamp=$commit_utc_timestamp" >> $GITHUB_ENV
           echo "ten_seconds_ago=$ten_seconds_ago" >> $GITHUB_ENV
-          echo "utc_timestamp=$utc_timestamp" >> $GITHUB_ENV
-          
-      - name: Find and lint recently modified .sh files
+
+      - name: Check if commit was in the last 10 seconds
         run: |
-          # 查找 10 秒钟内更新或新增的 .sh 文件并进行 shellcheck
-          find . -type f -name "*.sh" -newermt "@${{ env.ten_seconds_ago }}" -exec shellcheck {} \;
+          # 判断提交时间是否在过去 10 秒内
+          if [ $((commit_utc_timestamp)) -ge $((ten_seconds_ago)) ]; then
+            echo "Commit was made in the last 10 seconds. Checking .sh files..."
+            
+            # 查找 10 秒内修改或新增的 .sh 文件并执行 shellcheck
+            find . -type f -name "*.sh" -newermt "@${{ env.commit_utc_timestamp }}" -exec shellcheck {} \;
+          else
+            echo "No recent changes to .sh files in the last 10 seconds."
+          fi
