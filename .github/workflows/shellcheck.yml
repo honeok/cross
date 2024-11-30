@@ -28,7 +28,11 @@ jobs:
       - name: Lint changed .sh files
         run: |
           # 获取本次提交与上次提交之间的更改文件列表，并筛选出.sh文件
-          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD | grep '\.sh$')
+          if git rev-parse --verify HEAD^ &>/dev/null; then
+            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD | grep '\.sh$')
+          else
+            exit 0
+          fi
 
           # 没有.sh文件变化则跳过
           [ -z "$CHANGED_FILES" ] && exit 0
