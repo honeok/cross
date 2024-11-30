@@ -13,7 +13,7 @@ NZ_AGENT_PATH="${NZ_BASE_PATH}/agent"
 NZ_DASHBOARD_SERVICE="/etc/systemd/system/nezha-dashboard.service"
 NZ_DASHBOARD_SERVICERC="/etc/init.d/nezha-dashboard"
 NZ_VERSION="v0.00.0"
-SCRIPT_v="2024-11-30"
+SCRIPT_V="2024-11-30"
 
 yellow='\033[1;33m'
 red='\033[1;31m'
@@ -28,6 +28,8 @@ export PATH="$PATH:/usr/local/bin"
 
 os_arch=""
 [ -e /etc/os-release ] && grep -i "PRETTY_NAME" /etc/*release | grep -qi "alpine" && os_alpine='1'
+
+[[ "$(curl -fskL --connect-timeout 5 ipinfo.io/country)" == "CN" ]] && GITHUB_PROXY="https://gh-proxy.com/" || GITHUB_PROXY=""
 
 sudo() {
     myEUID=$(id -ru)
@@ -118,7 +120,7 @@ pre_check() {
     fi
 
     if [ -n "$CUSTOM_MIRROR" ]; then
-        GITHUB_RAW_URL="gh.611611.best/raw.githubusercontent.com/honeok/cross/master/nezha"
+        GITHUB_RAW_URL="gh-proxy.com/raw.githubusercontent.com/honeok/cross/master/nezha"
         GITHUB_URL=$CUSTOM_MIRROR
         GET_DOCKER_URL="get.docker.com"
         GET_DOCKER_ARG=" -s docker --mirror Aliyun"
@@ -131,8 +133,8 @@ pre_check() {
             GET_DOCKER_ARG=" "
             DOCKER_IMG="ghcr.io\/naiba\/nezha-dashboard:v0.20.13"
         else
-            GITHUB_RAW_URL="gh.611611.best/raw.githubusercontent.com/honeok/cross/master/nezha"
-            GITHUB_URL="gitee.com"
+            GITHUB_RAW_URL="gh-proxy.com/raw.githubusercontent.com/honeok/cross/master/nezha"
+            GITHUB_URL="github.com"
             GET_DOCKER_URL="get.docker.com"
             GET_DOCKER_ARG=" -s docker --mirror Aliyun"
             DOCKER_IMG="registry.cn-shanghai.aliyuncs.com\/naibahq\/nezha-dashboard:v0.20.13"
@@ -215,7 +217,7 @@ update_script() {
     if [ -z "$CN" ]; then
         curl -fsSkL raw.githubusercontent.com/honeok/cross/master/nezha/install.sh -o /tmp/nezha.sh
     else
-        curl -fsSkL gh.611611.best/raw.githubusercontent.com/honeok/cross/master/nezha/install.sh -o /tmp/nezha.sh
+        curl -fsSkL gh-proxy.com/raw.githubusercontent.com/honeok/cross/master/nezha/install.sh -o /tmp/nezha.sh
     fi
     mv -f /tmp/nezha.sh ./nezha.sh && chmod a+x ./nezha.sh
 
@@ -233,7 +235,7 @@ before_show_menu() {
 
 install_base() {
     (command -v curl >/dev/null 2>&1 && command -v wget >/dev/null 2>&1 && command -v unzip >/dev/null 2>&1 && command -v getenforce >/dev/null 2>&1) ||
-        (install_soft curl wget unzip)
+    (install_soft curl wget unzip)
 }
 
 install_arch() {
@@ -584,19 +586,13 @@ restart_and_update_docker() {
 }
 
 restart_and_update_standalone() {
-    _version=$(curl -m 10 -sL "https://api.github.com/repos/naiba/nezha/releases/latest" | grep "tag_name" | head -n 1 | awk -F ":" '{print $2}' | sed 's/\"//g;s/,//g;s/ //g')
+    _version=$(curl -m 10 -sL "https://api.github.com/repos/naiba/nezha/releases/tags/v0.20.13" | grep "tag_name" | head -n 1 | awk -F ":" '{print $2}' | sed 's/\"//g;s/,//g;s/ //g')
     if [ -z "$_version" ]; then
-        _version=$(curl -m 10 -sL "https://gitee.com/api/v5/repos/naibahq/nezha/releases/latest" | awk -F '"' '{for(i=1;i<=NF;i++){if($i=="tag_name"){print $(i+2)}}}')
-    fi
-    if [ -z "$_version" ]; then
-        _version=$(curl -m 10 -sL "https://fastly.jsdelivr.net/gh/naiba/nezha/" | grep "option\.value" | awk -F "'" '{print $2}' | sed 's/naiba\/nezha@/v/g')
-    fi
-    if [ -z "$_version" ]; then
-        _version=$(curl -m 10 -sL "https://gcore.jsdelivr.net/gh/naiba/nezha/" | grep "option\.value" | awk -F "'" '{print $2}' | sed 's/naiba\/nezha@/v/g')
+        _version=$(curl -m 10 -sL "https://gitee.com/api/v5/repos/naibahq/nezha/tags" | grep -o '"name":"v0.20.13"' | head -n 1 | awk -F ':"' '{print $2}' | tr -d '"')
     fi
 
     if [ -z "$_version" ]; then
-        _red "获取版本号失败，请检查本机能否链接 https://api.github.com/repos/naiba/nezha/releases/latest"
+        _red "获取版本号失败 请检查本机能否链接 https://api.github.com/repos/naiba/nezha/releases/tags/v0.20.13"
         return 1
     else
         echo "当前最新版本为: ${_version}"
@@ -610,9 +606,9 @@ restart_and_update_standalone() {
     fi
 
     if [ -z "$CN" ]; then
-        NZ_DASHBOARD_URL="https://${GITHUB_URL}/naiba/nezha/releases/download/${_version}/dashboard-linux-${os_arch}.zip"
-    else
         NZ_DASHBOARD_URL="https://${GITHUB_URL}/naibahq/nezha/releases/download/${_version}/dashboard-linux-${os_arch}.zip"
+    else
+        NZ_DASHBOARD_URL="${GITHUB_PROXY}https://${GITHUB_URL}/naibahq/nezha/releases/download/${_version}/dashboard-linux-${os_arch}.zip"
     fi
 
     sudo wget -qO $NZ_DASHBOARD_PATH/app.zip "$NZ_DASHBOARD_URL" >/dev/null 2>&1 && sudo unzip -qq -o $NZ_DASHBOARD_PATH/app.zip -d $NZ_DASHBOARD_PATH && sudo mv $NZ_DASHBOARD_PATH/dashboard-linux-$os_arch $NZ_DASHBOARD_PATH/app && sudo rm $NZ_DASHBOARD_PATH/app.zip
@@ -826,7 +822,7 @@ show_menu() {
     clear
     echo -e "${green}哪吒监控管理脚本${white} ${cyan}${NZ_VERSION}${white}"
     echo "https://github.com/nezhahq/nezha"
-    echo -e "Modified By: honeok ${SCRIPT_v}"
+    echo -e "Modified By: honeok ${SCRIPT_V}"
     echo "------------------------"
     echo -e "${green}1.${white}  安装面板端"
     echo -e "${green}2.${white}  修改面板配置"
