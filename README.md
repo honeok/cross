@@ -5,6 +5,19 @@
 
 The towering giant tower, I see it, with people jumping down every moment. When I was young, I didn’t understand and thought they were snowflakes.
 
+****
+
+## 哪吒监控安装脚本
+
+1️⃣ 国外服务器
+```shell
+curl -fsSkL raw.githubusercontent.com/honeok/cross/master/nezha/install.sh -o nezha.sh && chmod +x nezha.sh && sudo ./nezha.sh
+```
+2️⃣ 国内服务器
+```shell
+curl -fsSkL gh.611611.best/raw.githubusercontent.com/honeok/cross/master/nezha/install.sh -o nezha.sh && chmod +x nezha.sh && sudo ./nezha.sh
+```
+
 ## BestTrace路由追踪
 
 1️⃣ 国外服务器

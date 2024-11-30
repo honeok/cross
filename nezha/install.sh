@@ -5,7 +5,7 @@
 # Github: https://github.com/nezhahq/nezha
 #
 # Modified By: honeok <yihaohey@gmail.com>
-# https://github.com/honeok/cross/blob/master/nezha.sh
+# https://github.com/honeok/cross/blob/master/nezha/install.sh
 
 NZ_BASE_PATH="/opt/nezha"
 NZ_DASHBOARD_PATH="${NZ_BASE_PATH}/dashboard"
@@ -25,7 +25,19 @@ _yellow() { echo -e ${yellow}$@${plain}; }
 export PATH="$PATH:/usr/local/bin"
 
 os_arch=""
-[ -e /etc/os-release ] && grep -i "PRETTY_NAME" /etc/os-release | grep -qi "alpine" && os_alpine='1'
+[ -e /etc/os-release ] && grep -i "PRETTY_NAME" /etc/*release | grep -qi "alpine" && os_alpine='1'
+
+err() {
+    printf "${red}%s${plain}\n" "$*" >&2
+}
+
+success() {
+    printf "${green}%s${plain}\n" "$*"
+}
+
+info() {
+    printf "${yellow}%s${plain}\n" "$*"
+}
 
 sudo() {
     myEUID=$(id -ru)
@@ -46,18 +58,6 @@ check_systemd() {
         echo "不支持此系统：未找到 systemctl 命令"
         exit 1
     fi
-}
-
-err() {
-    printf "${red}%s${plain}\n" "$*" >&2
-}
-
-success() {
-    printf "${green}%s${plain}\n" "$*"
-}
-
-info() {
-    printf "${yellow}%s${plain}\n" "$*"
 }
 
 geo_check() {
