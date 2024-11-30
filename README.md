@@ -1,7 +1,9 @@
 # cross
 
-[![commit](https://img.shields.io/github/last-commit/honeok/cross)](https://github.com/honeok/cross)
+[![Commit](https://img.shields.io/github/last-commit/honeok/cross)](https://github.com/honeok/cross)
 [![Build Status](https://github.com/honeok/cross/actions/workflows/shellcheck.yml/badge.svg)](https://github.com/honeok/cross/actions/workflows/shellcheck.yml/badge.svg)
+![Issues](https://img.shields.io/github/issues/honeok/cross.svg)(https://img.shields.io/github/issues/honeok/cross.svg)
+![Stars](https://img.shields.io/github/stars/honeok/cross.svg)(https://img.shields.io/github/stars/honeok/cross.svg)
 [![LICENSE](https://img.shields.io/github/license/honeok/cross.svg?style=flat)](./LICENSE)
 
 <br>
@@ -92,3 +94,7 @@ bash <(curl -skL raw.githubusercontent.com/honeok/cross/master/play/ts.sh)
 ```shell
 bash <(curl -skL gh.611611.best/raw.githubusercontent.com/honeok/cross/master/play/ts.sh)
 ```
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=honeok/cross&type=Date)](https://star-history.com/#honeok/cross&Date)
