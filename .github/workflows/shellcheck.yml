@@ -20,52 +20,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install shellcheck
-        run: |
-          # 安装 shellcheck
-          if ! command -v shellcheck > /dev/null 2>&1; then
-            sudo apt-get update && sudo apt-get install -y shellcheck
-          fi
+        run: command -v shellcheck > /dev/null 2>&1 || (sudo apt-get update && sudo apt-get install -y shellcheck)
 
-      - name: Get the current commit SHA and check if it's the first commit
-        id: commit_info
-        run: |
-          # 获取当前提交的 SHA 值
-          current_commit_sha=$(git rev-parse HEAD)
-          echo "Current commit SHA: $current_commit_sha"
-          # 获取提交历史的数量
-          commit_count=$(git rev-list --count HEAD)
-          echo "Commit history count: $commit_count"
-          if [ "$commit_count" -le 1 ]; then
-            echo "This is the first commit."
-            previous_commit_sha=""
-          else
-            # 获取上一次提交的 SHA 值
-            previous_commit_sha=$(git rev-parse HEAD^)
-            echo "Previous commit SHA: $previous_commit_sha"
-          fi
-
-      - name: Find modified or added .sh files between commits
-        id: find_sh_files
-        run: |
-          if [ -n "$previous_commit_sha" ]; then
-            # 获取当前提交与上一次提交之间的差异，查找修改或新增的 .sh 文件
-            modified_files=$(git diff --name-only $previous_commit_sha..$current_commit_sha | grep '\.sh$')
-          else
-            # 如果是首次提交，直接检查当前提交中的所有 .sh 文件
-            modified_files=$(git ls-tree -r $current_commit_sha --name-only | grep '\.sh$')
-          fi
-          if [ -z "$modified_files" ]; then
-            echo "No .sh files modified or added."
-          else
-            echo "Modified or added .sh files: $modified_files"
-            echo "::set-output name=files::$modified_files"
-          fi
-
-      - name: Run shellcheck on modified .sh files
-        if: steps.find_sh_files.outputs.files != ''
-        run: |
-          # 获取所有修改或新增的 .sh 文件
-          files="${{ steps.find_sh_files.outputs.files }}"
-          for file in $files; do
-            shellcheck $file
-          done
+      - name: Lint .sh files
+        run: find . -type f -name "*.sh" -exec shellcheck {} \;
