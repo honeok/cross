@@ -3,16 +3,18 @@ name: CI
 on:
   push:
     paths:
-      - '*.sh'
       - '**/*.sh'
+    branches:
+      - "*"
   pull_request:
     paths:
-      - '*.sh'
       - '**/*.sh'
+    branches:
+      - "*"
   workflow_dispatch:
 
 jobs:
-  lint:
+  shellcheck:
     runs-on: ubuntu-latest
 
     steps:
@@ -21,22 +23,21 @@ jobs:
 
       - name: Install shellcheck
         run: |
+          # 安装shellcheck
           if ! command -v shellcheck > /dev/null 2>&1; then
             sudo apt-get update && sudo apt-get install -y shellcheck
           fi
 
-      - name: Fetch all Git commits
+      - name: Get changed .sh files
+        id: changes
         run: |
-          git fetch --prune --unshallow
+          # 获取本次推送中所有修改或新增的.sh文件
+          CHANGED_FILES=$(git diff --name-only $GITHUB_SHA $GITHUB_SHA^ | grep '\.sh$')
+          
+          [ -z "$CHANGED_FILES" ] && exit 0
+          echo "$CHANGED_FILES" > changed_files.txt
 
       - name: Lint changed .sh files
         run: |
-          CHANGED_FILES=$(git diff --name-only HEAD | grep '\.sh$')
-
-          # 没有.sh文件变化则跳过
-          [ -z "$CHANGED_FILES" ] && exit 0
-
-          # 对所有修改的.sh文件执行check
-          for file in $CHANGED_FILES; do
-            shellcheck "$file"
-          done
+          # 遍历所有修改过的.sh文件并进行check
+          [ -f changed_files.txt ] && cat changed_files.txt | xargs -I {} shellcheck {}
