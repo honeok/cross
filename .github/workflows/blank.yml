@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    paths:
+      - '*.sh'
+      - '**/*.sh'
+  pull_request:
+    paths:
+      - '*.sh'
+      - '**/*.sh'
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: |
+          if ! command -v shellcheck > /dev/null 2>&1; then
+            sudo apt-get update && sudo apt-get install -y shellcheck
+          fi
+
+      - name: Lint changed .sh files
+        run: |
+          # 获取本次提交与上次提交之间的更改文件列表，并筛选出.sh文件
+          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD | grep '\.sh$')
+
+          # 没有.sh文件变化则跳过
+          [ -z "$CHANGED_FILES" ] && exit 0
+
+          # 对每个.sh文件执行shellcheck
+          for file in $CHANGED_FILES; do
+            shellcheck "$file"
+          done
