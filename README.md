@@ -71,9 +71,11 @@ bash BestTrace.sh
                   -sc   # 四川
                   -sh   # 上海
                   -gd   # 广东
+```
 
-指定参数示例:
+**指定参数示例**
 
+```shell
 bash BestTrace.sh -h         # 帮助命令
 bash BestTrace.sh -d         # 单独删除 nexttrace
 bash BestTrace.sh -nmg       # 测试内蒙古
