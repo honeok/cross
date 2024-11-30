@@ -1,8 +1,8 @@
-version: "3.8"
+version: "3.3"
 
 services:
   dashboard:
-    image: registry.cn-shanghai.aliyuncs.com/naibahq/nezha-dashboard
+    image: nz_image_url
     container_name: nezha-dashboard
     restart: unless-stopped
     volumes:
@@ -11,5 +11,5 @@ services:
       - ./theme-custom/template:/dashboard/resource/template/theme-custom:ro
       - ./dashboard-custom/template:/dashboard/resource/template/dashboard-custom:ro
     ports:
-      - 9001:80
-      - 5555:5555
+      - nz_site_port:80
+      - nz_grpc_port:nz_grpc_port
