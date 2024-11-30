@@ -123,22 +123,22 @@ pre_check() {
     if [ -n "$CUSTOM_MIRROR" ]; then
         GITHUB_RAW_URL="gitee.com/naibahq/nezha/raw/master"
         GITHUB_URL=$CUSTOM_MIRROR
-        Get_Docker_URL="get.docker.com"
-        Get_Docker_Argu=" -s docker --mirror Aliyun"
-        Docker_IMG="registry.cn-shanghai.aliyuncs.com\/naibahq\/nezha-dashboard:v0.20.13"
+        GET_DOCKER_URL="get.docker.com"
+        GET_DOCKER_ARG=" -s docker --mirror Aliyun"
+        DOCKER_IMG="registry.cn-shanghai.aliyuncs.com\/naibahq\/nezha-dashboard:v0.20.13"
     else
         if [ -z "$CN" ]; then
             GITHUB_RAW_URL="raw.githubusercontent.com/naiba/nezha/master"
             GITHUB_URL="github.com"
-            Get_Docker_URL="get.docker.com"
-            Get_Docker_Argu=" "
-            Docker_IMG="ghcr.io\/naiba\/nezha-dashboard:v0.20.13"
+            GET_DOCKER_URL="get.docker.com"
+            GET_DOCKER_ARG=" "
+            DOCKER_IMG="ghcr.io\/naiba\/nezha-dashboard:v0.20.13"
         else
             GITHUB_RAW_URL="gitee.com/naibahq/nezha/raw/master"
             GITHUB_URL="gitee.com"
-            Get_Docker_URL="get.docker.com"
-            Get_Docker_Argu=" -s docker --mirror Aliyun"
-            Docker_IMG="registry.cn-shanghai.aliyuncs.com\/naibahq\/nezha-dashboard:v0.20.13"
+            GET_DOCKER_URL="get.docker.com"
+            GET_DOCKER_ARG=" -s docker --mirror Aliyun"
+            DOCKER_IMG="registry.cn-shanghai.aliyuncs.com\/naibahq\/nezha-dashboard:v0.20.13"
         fi
     fi
 }
@@ -317,8 +317,8 @@ install_dashboard_docker() {
         if ! command -v docker >/dev/null 2>&1; then
             echo "正在安装 Docker"
             if [ "$os_alpine" != 1 ]; then
-                if ! curl -sL https://${Get_Docker_URL} | sudo bash -s "${Get_Docker_Argu}"; then
-                    _red "下载脚本失败，请检查本机能否连接 ${Get_Docker_URL}"
+                if ! curl -sL https://${GET_DOCKER_URL} | sudo bash -s "${GET_DOCKER_ARG}"; then
+                    _red "下载脚本失败，请检查本机能否连接 ${GET_DOCKER_URL}"
                     return 0
                 fi
                 sudo systemctl enable docker.service
@@ -521,7 +521,7 @@ modify_dashboard_config() {
     if [ "$IS_DOCKER_NEZHA" = 1 ]; then
         sed -i "s/nz_site_port/${nz_site_port}/" /tmp/nezha-docker-compose.yaml
         sed -i "s/nz_grpc_port/${nz_grpc_port}/g" /tmp/nezha-docker-compose.yaml
-        sed -i "s/nz_image_url/${Docker_IMG}/" /tmp/nezha-docker-compose.yaml
+        sed -i "s/nz_image_url/${DOCKER_IMG}/" /tmp/nezha-docker-compose.yaml
     elif [ "$IS_DOCKER_NEZHA" = 0 ]; then
         sed -i "s/80/${nz_site_port}/" /tmp/nezha-config.yaml
     fi
