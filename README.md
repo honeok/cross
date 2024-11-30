@@ -9,7 +9,21 @@ The towering giant tower, I see it, with people jumping down every moment. When 
 
 ## 哪吒监控安装脚本
 
+<div align="center">
+  <br>
+  <img width="360" style="max-width:80%" src=".github/brand.svg" title="哪吒监控 Nezha Monitoring">
+  <br>
+  <small><i>LOGO designed by <a href="https://xio.ng" target="_blank">熊大</a> .</i></small>
+  <br><br>
+<img alt="GitHub release (with filter)" src="https://img.shields.io/github/v/release/nezhahq/nezha?color=brightgreen&style=for-the-badge&logo=github&label=Dashboard">&nbsp;<img src="https://img.shields.io/github/v/release/nezhahq/agent?color=brightgreen&label=Agent&style=for-the-badge&logo=github">&nbsp;<img src="https://img.shields.io/github/actions/workflow/status/nezhahq/agent/agent.yml?label=Agent%20CI&logo=github&style=for-the-badge">&nbsp;<img src="https://img.shields.io/badge/Installer-v0.20.2-brightgreen?style=for-the-badge&logo=linux">
+  <br>
+  <br>
+  <p>:trollface: <b>Nezha Monitoring: Self-hostable, lightweight, servers and websites monitoring and O&M tool.</b></p>
+  <p>Supports <b>monitoring</b> system status, HTTP (SSL certificate change, upcoming expiration, expired), TCP, Ping and supports <b>push alerts</b>, run scheduled tasks and <b>web terminal</b>.</p>
+</div>
+
 1️⃣ 国外服务器
+
 ```shell
 curl -fsSkL raw.githubusercontent.com/honeok/cross/master/nezha/install.sh -o nezha.sh && chmod +x nezha.sh && sudo ./nezha.sh
 ```
