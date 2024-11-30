@@ -28,9 +28,10 @@ jobs:
 
       - name: Find and lint modified or new .sh files
         run: |
-          # 获取当前提交和前一个提交的差异，查找所有修改或新增的 .sh 文件
-          modified_files=$(git diff --name-only $GITHUB_SHA^..$GITHUB_SHA -- '*.sh' '**/*.sh')
-
+          # 获取当前提交的父提交 SHA
+          parent_commit=$(git log --format=%H -n 1 $GITHUB_SHA^)
+          # 获取当前提交和父提交的差异，查找所有修改或新增的 .sh 文件
+          modified_files=$(git diff --name-only $parent_commit..$GITHUB_SHA -- '*.sh' '**/*.sh')
           # 如果有修改的 .sh 文件，进行 shellcheck 检查
           if [ -n "$modified_files" ]; then
             echo "Modified or new .sh files found, running shellcheck..."
