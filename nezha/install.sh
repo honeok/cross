@@ -12,32 +12,21 @@ NZ_DASHBOARD_PATH="${NZ_BASE_PATH}/dashboard"
 NZ_AGENT_PATH="${NZ_BASE_PATH}/agent"
 NZ_DASHBOARD_SERVICE="/etc/systemd/system/nezha-dashboard.service"
 NZ_DASHBOARD_SERVICERC="/etc/init.d/nezha-dashboard"
-NZ_VERSION="v0"
+NZ_VERSION="v0.00.0"
 
-red='\033[91m'
-green='\033[92m'
-yellow='\033[93m'
-plain='\033[0m'
-_red() { echo -e ${red}$@${plain}; }
-_green() { echo -e ${green}$@${plain}; }
-_yellow() { echo -e ${yellow}$@${plain}; }
+yellow='\033[1;33m'
+red='\033[1;31m'
+green='\033[1;32m'
+cyan='\033[1;36m'
+white='\033[0m'
+_red() { echo -e ${red}$@${white}; }
+_green() { echo -e ${green}$@${white}; }
+_yellow() { echo -e ${yellow}$@${white}; }
 
 export PATH="$PATH:/usr/local/bin"
 
 os_arch=""
 [ -e /etc/os-release ] && grep -i "PRETTY_NAME" /etc/*release | grep -qi "alpine" && os_alpine='1'
-
-err() {
-    printf "${red}%s${plain}\n" "$*" >&2
-}
-
-success() {
-    printf "${green}%s${plain}\n" "$*"
-}
-
-info() {
-    printf "${yellow}%s${plain}\n" "$*"
-}
 
 sudo() {
     myEUID=$(id -ru)
@@ -45,7 +34,7 @@ sudo() {
         if command -v sudo > /dev/null 2>&1; then
             command sudo "$@"
         else
-            err "错误: 您的系统未安装 sudo ，因此无法进行该项操作。"
+            _red "错误: 您的系统未安装 sudo ，因此无法进行该项操作。"
             exit 1
         fi
     else
@@ -55,7 +44,7 @@ sudo() {
 
 check_systemd() {
     if [ "$os_alpine" != 1 ] && ! command -v systemctl >/dev/null 2>&1; then
-        echo "不支持此系统：未找到 systemctl 命令"
+        _red "不支持此系统：未找到 systemctl 命令"
         exit 1
     fi
 }
@@ -192,11 +181,11 @@ installation_check() {
 
 select_version() {
     if [ -z "$IS_DOCKER_NEZHA" ]; then
-        info "请自行选择您的安装方式（如果你是安装Agent，输入哪个都是一样的）："
-        info "1. Docker"
-        info "2. 独立安装"
+        _yellow "请自行选择您的安装方式（如果你是安装Agent，输入哪个都是一样的）:"
+        _yellow "1. Docker"
+        _yellow "2. 独立安装"
         while true; do
-            printf "请输入选择 [1-2]："
+            printf "请输入选择 [1-2]:"
             read -r option
             case "${option}" in
                 1)
@@ -208,7 +197,7 @@ select_version() {
                     break
                     ;;
                 *)
-                    err "请输入正确的选择 [1-2]"
+                    _red "请输入正确的选择 [1-2]"
                     ;;
             esac
         done
@@ -240,7 +229,7 @@ select_version() {
 #}
 
 before_show_menu() {
-    echo && info "* 按回车返回主菜单 *" && read temp
+    echo && _yellow "* 按回车返回主菜单 *" && read temp
     show_menu
 }
 
@@ -250,7 +239,7 @@ install_base() {
 }
 
 install_arch() {
-    info "提示：Arch安装libselinux需添加nezha-agent用户，安装完会自动删除，建议手动检查一次"
+    _yellow "提示：Arch安装libselinux需添加nezha-agent用户，安装完会自动删除，建议手动检查一次"
     read -r -p "是否安装libselinux? [Y/n] " input
     case $input in
     [yY][eE][sS] | [yY])
@@ -261,7 +250,7 @@ install_arch() {
                                         git clone https://aur.archlinux.org/libselinux.git; cd libselinux; makepkg -si --noconfirm; cd ..;
                                         rm -rf libsepol libselinux'
         sed -i '/nezha-agent/d' /etc/sudoers && sleep 30s && killall -u nezha-agent && userdel -r nezha-agent
-        echo -e "${red}提示: ${plain}已删除用户nezha-agent，请务必手动核查一遍！\n"
+        echo -e "${red}提示: ${white}已删除用户nezha-agent，请务必手动核查一遍！\n"
         ;;
     [nN][oO] | [nN])
         echo "不安装libselinux"
@@ -328,7 +317,7 @@ install_dashboard_docker() {
             echo "正在安装 Docker"
             if [ "$os_alpine" != 1 ]; then
                 if ! curl -sL https://${Get_Docker_URL} | sudo bash -s "${Get_Docker_Argu}"; then
-                    err "下载脚本失败，请检查本机能否连接 ${Get_Docker_URL}"
+                    _red "下载脚本失败，请检查本机能否连接 ${Get_Docker_URL}"
                     return 0
                 fi
                 sudo systemctl enable docker.service
@@ -338,7 +327,7 @@ install_dashboard_docker() {
                 sudo rc-update add docker
                 sudo rc-service docker start
             fi
-            success "Docker 安装成功"
+            _green "Docker 安装成功"
             installation_check
         fi
     fi
@@ -382,7 +371,7 @@ install_agent() {
     fi
 
     if [ -z "$_version" ]; then
-        err "获取版本号失败，请检查本机能否链接 https://api.github.com/repos/nezhahq/agent/releases/tags/v0.20.5"
+        _red "获取版本号失败，请检查本机能否链接 https://api.github.com/repos/nezhahq/agent/releases/tags/v0.20.5"
         return 1
     else
         echo "当前最新版本为: ${_version}"
@@ -400,7 +389,7 @@ install_agent() {
 
     _cmd="wget -t 2 -T 60 -O nezha-agent_linux_${os_arch}.zip $NZ_AGENT_URL >/dev/null 2>&1"
     if ! eval "$_cmd"; then
-        err "Release 下载失败，请检查本机能否连接 ${GITHUB_URL}"
+        _red "Release 下载失败，请检查本机能否连接 ${GITHUB_URL}"
         return 1
     fi
 
@@ -434,7 +423,7 @@ modify_agent_config() {
             read -r nz_grpc_proxy
         echo "${nz_grpc_proxy}" | grep -qiw 'Y' && args='--tls'
         if [ -z "$nz_grpc_host" ] || [ -z "$nz_client_secret" ]; then
-            err "所有选项都不能为空"
+            _red "所有选项都不能为空"
             before_show_menu
             return 1
         fi
@@ -458,7 +447,7 @@ modify_agent_config() {
         sudo "${NZ_AGENT_PATH}"/nezha-agent service install -s "$nz_grpc_host:$nz_grpc_port" -p "$nz_client_secret" "$args" >/dev/null 2>&1
     fi
     
-    success "Agent配置 修改成功，请稍等重启生效"
+    _green "Agent配置 修改成功，请稍等重启生效"
 
     #if [[ $# == 0 ]]; then
     #    before_show_menu
@@ -473,18 +462,18 @@ modify_dashboard_config() {
             echo "正在下载 Docker 脚本"
             _cmd="wget -t 2 -T 60 -O /tmp/nezha-docker-compose.yaml https://${GITHUB_RAW_URL}/script/docker-compose.yaml >/dev/null 2>&1"
             if ! eval "$_cmd"; then
-                err "下载脚本失败，请检查本机能否连接 ${GITHUB_RAW_URL}"
+                _red "下载脚本失败，请检查本机能否连接 ${GITHUB_RAW_URL}"
                 return 0
             fi
         else
-            err "请手动安装 docker-compose。https://docs.docker.com/compose/install/linux/"
+            _red "请手动安装 docker-compose。https://docs.docker.com/compose/install/linux/"
             before_show_menu
         fi
     fi
 
     _cmd="wget -t 2 -T 60 -O /tmp/nezha-config.yaml https://${GITHUB_RAW_URL}/script/config.yaml >/dev/null 2>&1"
     if ! eval "$_cmd"; then
-        err "下载脚本失败，请检查本机能否连接 ${GITHUB_RAW_URL}"
+        _red "下载脚本失败，请检查本机能否连接 ${GITHUB_RAW_URL}"
         return 0
     fi
 
@@ -506,7 +495,7 @@ modify_dashboard_config() {
     read -r nz_grpc_port
 
     if [ -z "$nz_admin_logins" ] || [ -z "$nz_github_oauth_client_id" ] || [ -z "$nz_github_oauth_client_secret" ] || [ -z "$nz_site_title" ]; then
-        err "所有选项都不能为空"
+        _red "所有选项都不能为空"
         before_show_menu
         return 1
     fi
@@ -547,20 +536,20 @@ modify_dashboard_config() {
         if [ "$os_alpine" != 1 ]; then
             _download="sudo wget -t 2 -T 60 -O $NZ_DASHBOARD_SERVICE https://${GITHUB_RAW_URL}/script/nezha-dashboard.service >/dev/null 2>&1"
             if ! eval "$_download"; then
-                err "文件下载失败，请检查本机能否连接 ${GITHUB_RAW_URL}"
+                _red "文件下载失败，请检查本机能否连接 ${GITHUB_RAW_URL}"
                 return 0
             fi
         else
             _download="sudo wget -t 2 -T 60 -O $NZ_DASHBOARD_SERVICERC https://${GITHUB_RAW_URL}/script/nezha-dashboard >/dev/null 2>&1"
             if ! eval "$_download"; then
-                err "文件下载失败，请检查本机能否连接 ${GITHUB_RAW_URL}"
+                _red "文件下载失败，请检查本机能否连接 ${GITHUB_RAW_URL}"
                 return 0
             fi
             sudo chmod +x $NZ_DASHBOARD_SERVICERC
         fi
     fi
 
-    success "面板配置 修改成功，请稍等重启生效"
+    _green "面板配置 修改成功，请稍等重启生效"
 
     restart_and_update
 
@@ -579,10 +568,10 @@ restart_and_update() {
     fi
 
     if eval "$_cmd"; then
-        success "哪吒监控 重启成功"
-        info "默认管理面板地址：域名:站点访问端口"
+        _green "哪吒监控 重启成功"
+        _yellow "默认管理面板地址：域名:站点访问端口"
     else
-        err "重启失败，可能是因为启动时间超过了两秒，请稍后查看日志信息"
+        _red "重启失败，可能是因为启动时间超过了两秒，请稍后查看日志信息"
     fi
 
     if [ $# = 0 ]; then
@@ -609,7 +598,7 @@ restart_and_update_standalone() {
     fi
 
     if [ -z "$_version" ]; then
-        err "获取版本号失败，请检查本机能否链接 https://api.github.com/repos/naiba/nezha/releases/latest"
+        _red "获取版本号失败，请检查本机能否链接 https://api.github.com/repos/naiba/nezha/releases/latest"
         return 1
     else
         echo "当前最新版本为: ${_version}"
@@ -650,9 +639,9 @@ start_dashboard() {
     fi
 
     if eval "$_cmd"; then
-        success "哪吒监控 启动成功"
+        _green "哪吒监控 启动成功"
     else
-        err "启动失败，请稍后查看日志信息"
+        _red "启动失败，请稍后查看日志信息"
     fi
 
     if [ $# = 0 ]; then
@@ -682,9 +671,9 @@ stop_dashboard() {
     fi
 
     if eval "$_cmd"; then
-        success "哪吒监控 停止成功"
+        _green "哪吒监控 停止成功"
     else
-        err "停止失败，请稍后查看日志信息"
+        _red "停止失败，请稍后查看日志信息"
     fi
 
     if [ $# = 0 ]; then
@@ -726,7 +715,7 @@ show_dashboard_log_standalone() {
     if [ "$os_alpine" != 1 ]; then
         sudo journalctl -xf -u nezha-dashboard.service
     else
-        sudo tail -n 10 /var/log/nezha-dashboard.err
+        sudo tail -n 10 /var/log/nezha-dashboard._red
     fi
 }
 
@@ -777,7 +766,7 @@ show_agent_log() {
     if [ "$os_alpine" != 1 ]; then
         sudo journalctl -xf -u nezha-agent.service
     else
-        sudo tail -n 10 /var/log/nezha-agent.err
+        sudo tail -n 10 /var/log/nezha-agent._red
     fi
 
     if [ $# = 0 ]; then
@@ -837,31 +826,29 @@ show_usage() {
 
 show_menu() {
     printf "
-    ${green}哪吒监控管理脚本${plain} ${red}${NZ_VERSION}${plain}
-    --- https://github.com/naiba/nezha ---
-    ${green}1.${plain}  安装面板端
-    ${green}2.${plain}  修改面板配置
-    ${green}3.${plain}  启动面板
-    ${green}4.${plain}  停止面板
-    ${green}5.${plain}  重启并更新面板
-    ${green}6.${plain}  查看面板日志
-    ${green}7.${plain}  卸载管理面板
-    ————————————————-
-    ${green}8.${plain}  安装监控Agent
-    ${green}9.${plain}  修改Agent配置
-    ${green}10.${plain} 查看Agent日志
-    ${green}11.${plain} 卸载Agent
-    ${green}12.${plain} 重启Agent
-    ————————————————-
-    ${green}13.${plain} 更新脚本
-    ————————————————-
-    ${green}0.${plain}  退出脚本
+    ${green}哪吒监控管理脚本${white} ${red}${NZ_VERSION}${white}
+    --- https://github.com/nezhahq/nezha ---
+    --- Modified By: honeok
+    ${green}1.${white}  安装面板端
+    ${green}2.${white}  修改面板配置
+    ${green}3.${white}  启动面板
+    ${green}4.${white}  停止面板
+    ${green}5.${white}  重启并更新面板
+    ${green}6.${white}  查看面板日志
+    ${green}7.${white}  卸载管理面板
+    ————————————————
+    ${green}8.${white}  安装监控Agent
+    ${green}9.${white}  修改Agent配置
+    ${green}10.${white} 查看Agent日志
+    ${green}11.${white} 卸载Agent
+    ${green}12.${white} 重启Agent
+    ————————————————
+    ${green}13.${white} 更新脚本
+    ————————————————
+    ${green}0.${white}  退出脚本
     "
     echo && printf "请输入选择 [0-13]: " && read -r num
     case "${num}" in
-        0)
-            exit 0
-            ;;
         1)
             install_dashboard
             ;;
@@ -899,10 +886,14 @@ show_menu() {
             restart_agent
             ;;
         13)
-            update_script
+            #update_script
+            echo ""
+            ;;
+        0)
+            exit 0
             ;;
         *)
-            err "请输入正确的数字 [0-13]"
+            _red "请输入正确的数字 [0-13]"
             ;;
     esac
 }
