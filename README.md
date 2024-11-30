@@ -53,7 +53,7 @@ bash <(curl -skL gh.611611.best/raw.githubusercontent.com/honeok/cross/master/Be
 ```shell
 bash BestTrace.sh
 
-                  可选参数：
+               # -- 可选参数 --
                   -nmg  # 内蒙古
                   -hlj  # 黑龙江
                   -xj   # 新疆
