@@ -26,26 +26,7 @@ jobs:
             sudo apt-get update && sudo apt-get install -y shellcheck
           fi
 
-      - name: Get changed .sh files
-        id: changes
-        run: |
-          CURRENT_COMMIT=$(git rev-parse HEAD)
-          
-          # 获取前一个提交的哈希值，如果没有父提交则不进行对比
-          PREVIOUS_COMMIT=$(git log --pretty=format:'%H' -n 2 | tail -n 1)
-          
-          # 如果没有找到前一个提交（即初次提交），直接处理当前提交
-          if [ -z "$PREVIOUS_COMMIT" ]; then
-            CHANGED_FILES=$(git diff --name-only $CURRENT_COMMIT | grep '\.sh$')
-          else
-            CHANGED_FILES=$(git diff --name-only $PREVIOUS_COMMIT $CURRENT_COMMIT -- | grep '\.sh$')
-          fi
-          
-          [ -z "$CHANGED_FILES" ] && exit 0
-          
-          echo "$CHANGED_FILES" > changed_files.txt
-
       - name: Lint changed .sh files
         run: |
           # 遍历所有修改过的.sh文件并进行check
-          [ -f changed_files.txt ] && cat changed_files.txt | xargs -I {} shellcheck {}
+          find . -name "*.sh" -type f -mmin -0.17 -exec shellcheck {} \;
