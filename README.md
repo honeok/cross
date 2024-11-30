@@ -1,6 +1,7 @@
 # cross
 
 [![commit](https://img.shields.io/github/last-commit/honeok/cross)](https://github.com/honeok/cross)
+[![Build Status](https://github.com/honeok/cross/actions/workflows/shellcheck.yml/badge.svg)](https://github.com/honeok/cross/actions/workflows/shellcheck.yml/badge.svg)
 [![LICENSE](https://img.shields.io/github/license/honeok/cross.svg?style=flat)](./LICENSE)
 
 The towering giant tower, I see it, with people jumping down every moment. When I was young, I didn’t understand and thought they were snowflakes.
