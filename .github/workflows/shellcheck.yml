@@ -26,32 +26,7 @@ jobs:
             sudo apt-get update && sudo apt-get install -y shellcheck
           fi
 
-      - name: Get changed .sh files
-        id: changes
+      - name: Find and lint recently modified .sh files
         run: |
-          # 获取当前提交的 SHA 值
-          CURRENT_COMMIT=$GITHUB_SHA
-          
-          # 尝试获取前一个提交的 SHA 值，如果失败则使用当前提交
-          PREVIOUS_COMMIT=$(git rev-parse --verify HEAD^ 2>/dev/null || echo $CURRENT_COMMIT)
-          
-          echo "Comparing $CURRENT_COMMIT and $PREVIOUS_COMMIT"
-
-          # 获取当前提交与前一个提交之间的差异文件，筛选出 .sh 文件
-          CHANGED_FILES=$(git diff --name-only $PREVIOUS_COMMIT $CURRENT_COMMIT -- | grep '\.sh$')
-          
-          # 如果没有修改或新增 .sh 文件，跳过后续步骤
-          if [ -z "$CHANGED_FILES" ]; then
-            echo "No .sh files changed, skipping shellcheck."
-            exit 0
-          fi
-          
-          # 将变更的 .sh 文件保存到文件中
-          echo "$CHANGED_FILES" > changed_files.txt
-
-      - name: Lint changed .sh files
-        run: |
-          # 如果存在 changed_files.txt 文件，遍历并对每个文件进行 shellcheck
-          if [ -f changed_files.txt ]; then
-            cat changed_files.txt | xargs -I {} shellcheck {}
-          fi
+          # 获取当前时间戳，查找最近 10 秒钟内更新的 .sh 文件
+          find . -type f -name "*.sh" -newermt "$(date --date='10 seconds ago' '+%Y-%m-%d %H:%M:%S')" -exec shellcheck {} \;
