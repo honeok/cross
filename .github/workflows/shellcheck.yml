@@ -21,7 +21,7 @@ jobs:
 
       - name: Install shellcheck
         run: |
-          # 安装shellcheck
+          # 安装 shellcheck
           if ! command -v shellcheck > /dev/null 2>&1; then
             sudo apt-get update && sudo apt-get install -y shellcheck
           fi
@@ -29,8 +29,8 @@ jobs:
       - name: Get modified .sh files
         id: changes
         run: |
-          # 获取当前提交所有的已修改或新增的 .sh 文件
-          CHANGED_FILES=$(git diff --name-only HEAD | grep -E '\.sh$')
+          # 查找当前工作区（不包括未暂存的变更）中修改或新增的 .sh 文件
+          CHANGED_FILES=$(git diff --name-only --diff-filter=AM HEAD | grep -E '\.sh$' || true)
 
           # 如果没有修改的 .sh 文件，跳过
           if [ -z "$CHANGED_FILES" ]; then
@@ -38,7 +38,7 @@ jobs:
             exit 0
           fi
 
-          # 输出变动的文件
+          # 输出变动的文件列表
           echo "Modified .sh files: $CHANGED_FILES"
           echo "$CHANGED_FILES" > changed_files.txt
 
