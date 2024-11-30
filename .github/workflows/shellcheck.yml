@@ -30,15 +30,14 @@ jobs:
         id: changes
         run: |
           # 获取当前提交与前一个提交的差异文件列表
-          CHANGED_FILES=$(git diff --name-only HEAD~1..HEAD)
-          # 获取本次推送中所有修改或新增的.sh文件
-          CHANGED_SH_FILES=$(echo "$CHANGED_FILES" | grep -E '\.sh$')
+          CHANGED_FILES=$(git diff --name-only HEAD~1..HEAD | grep '\.sh$')
           
-          [ -z "$CHANGED_SH_FILES" ] && exit 0
+          [ -z "$CHANGED_FILES" ] && exit 0
+          
+          echo "$CHANGED_FILES" > changed_files.txt
+          cat changed_files.txt
 
       - name: Lint changed .sh files
         run: |
           # 遍历所有修改过的.sh文件并进行check
-          for file in $CHANGED_SH_FILES; do
-            shellcheck "$file"
-          done
+          [ -f changed_files.txt ] && cat changed_files.txt | xargs -I {} shellcheck {}
