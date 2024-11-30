@@ -29,7 +29,7 @@ jobs:
       - name: Get changed .sh files
         id: changes
         run: |
-          CURRENT_COMMIT=$GITHUB_SHA
+          CURRENT_COMMIT=$(git rev-parse HEAD)
           
           # 获取前一个提交的哈希值，如果没有父提交则不进行对比
           PREVIOUS_COMMIT=$(git log --pretty=format:'%H' -n 2 | tail -n 1)
@@ -44,7 +44,6 @@ jobs:
           [ -z "$CHANGED_FILES" ] && exit 0
           
           echo "$CHANGED_FILES" > changed_files.txt
-          cat changed_files.txt
 
       - name: Lint changed .sh files
         run: |
