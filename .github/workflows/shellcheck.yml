@@ -30,7 +30,7 @@ jobs:
         id: changes
         run: |
           # 获取本次推送的所有 .sh 文件
-          CHANGED_FILES=$(git diff --name-only $GITHUB_SHA^..$GITHUB_SHA | grep '\.sh$')
+          CHANGED_FILES=$(git diff --name-only $GITHUB_SHA^ $GITHUB_SHA -- | grep '\.sh$')
           
           [ -z "$CHANGED_FILES" ] && exit 0
           
