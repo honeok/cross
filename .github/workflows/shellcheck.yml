@@ -3,14 +3,12 @@ name: CI
 on:
   push:
     paths:
+      - '*.sh'
       - '**/*.sh'
-    branches:
-      - "*"
   pull_request:
     paths:
+      - '*.sh'
       - '**/*.sh'
-    branches:
-      - "*"
   workflow_dispatch:
 
 jobs:
