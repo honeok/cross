@@ -2,4 +2,3 @@
 
 
 echo "fuck"
-echo "fuck"
