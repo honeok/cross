@@ -26,28 +26,35 @@ jobs:
             sudo apt-get update && sudo apt-get install -y shellcheck
           fi
 
-      - name: Find and lint modified or new .sh files
+      - name: Get the current commit SHA and previous commit SHA
+        id: commit_info
         run: |
-          # 获取当前提交的 SHA
-          current_commit=$GITHUB_SHA
+          # 获取当前提交的 SHA 值
+          current_commit_sha=$(git rev-parse HEAD)
+          echo "Current commit SHA: $current_commit_sha"
+          
+          # 获取上一次提交的 SHA 值
+          previous_commit_sha=$(git rev-parse HEAD^)
+          echo "Previous commit SHA: $previous_commit_sha"
 
-          # 获取当前提交的父提交 SHA
-          parent_commit=$(git log --format=%H -n 1 $current_commit^ || echo "no-parent")
-
-          if [ "$parent_commit" = "no-parent" ]; then
-            # 如果没有父提交（比如第一次提交），直接使用当前提交进行检查
-            echo "No parent commit found, checking all .sh files in this commit..."
-            modified_files=$(git diff --name-only $current_commit -- '*.sh' '**/*.sh')
-          else
-            # 如果有父提交，比较父提交和当前提交的差异
-            echo "Parent commit found, checking .sh files modified between commits..."
-            modified_files=$(git diff --name-only $parent_commit..$current_commit -- '*.sh' '**/*.sh')
-          fi
-
-          # 如果有修改的 .sh 文件，进行 shellcheck 检查
-          if [ -n "$modified_files" ]; then
-            echo "Modified or new .sh files found, running shellcheck..."
-            echo "$modified_files" | xargs -I {} shellcheck {}
-          else
+      - name: Find modified or added .sh files between the current and previous commit
+        id: find_sh_files
+        run: |
+          # 获取当前提交与上一次提交之间的差异，查找修改或新增的 .sh 文件
+          modified_files=$(git diff --name-only $previous_commit_sha..$current_commit_sha | grep '\.sh$')
+          
+          if [ -z "$modified_files" ]; then
             echo "No .sh files modified or added."
+          else
+            echo "Modified or added .sh files: $modified_files"
+            echo "::set-output name=files::$modified_files"
           fi
+
+      - name: Run shellcheck on modified .sh files
+        if: steps.find_sh_files.outputs.files != ''
+        run: |
+          # 获取所有修改或新增的 .sh 文件
+          files="${{ steps.find_sh_files.outputs.files }}"
+          for file in $files; do
+            shellcheck $file
+          done
