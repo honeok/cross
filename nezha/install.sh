@@ -13,6 +13,7 @@ NZ_AGENT_PATH="${NZ_BASE_PATH}/agent"
 NZ_DASHBOARD_SERVICE="/etc/systemd/system/nezha-dashboard.service"
 NZ_DASHBOARD_SERVICERC="/etc/init.d/nezha-dashboard"
 NZ_VERSION="v0.00.0"
+SCRIPT_v="2024-11-30"
 
 yellow='\033[1;33m'
 red='\033[1;31m'
@@ -204,8 +205,8 @@ select_version() {
     fi
 }
 
-#update_script() {
-    #echo "> 更新脚本"
+update_script() {
+    echo "> 更新脚本"
 
     #curl -sL https://${GITHUB_RAW_URL}/script/install.sh -o /tmp/nezha.sh
     #new_version=$(grep "NZ_VERSION" /tmp/nezha.sh | head -n 1 | awk -F "=" '{print $2}' | sed 's/\"//g;s/,//g;s/ //g')
@@ -214,19 +215,19 @@ select_version() {
     #    return 1
     #fi
     #echo "当前最新版本为: ${new_version}"
-    #if [ -z "$CN" ]; then
-    #    curl -sL https://raw.githubusercontent.com/nezhahq/scripts/main/install.sh -o /tmp/nezha.sh
-    #else
-    #    curl -sL https://gitee.com/naibahq/scripts/raw/main/install.sh -o /tmp/nezha.sh
-    #fi
-    #mv -f /tmp/nezha.sh ./nezha.sh && chmod a+x ./nezha.sh
+    if [ -z "$CN" ]; then
+        curl -fsSkL raw.githubusercontent.com/honeok/cross/master/nezha/install.sh -o /tmp/nezha.sh
+    else
+        curl -fsSkL gh.611611.best/raw.githubusercontent.com/honeok/cross/master/nezha/install.sh -o /tmp/nezha.sh
+    fi
+    mv -f /tmp/nezha.sh ./nezha.sh && chmod a+x ./nezha.sh
 
-    #echo "3s后执行新脚本"
-    #sleep 3s
-    #clear
-    #exec ./nezha.sh
-    #exit 0
-#}
+    echo "3s后执行新脚本"
+    sleep 3s
+    clear
+    exec ./nezha.sh
+    exit 0
+}
 
 before_show_menu() {
     echo && _yellow "* 按回车返回主菜单 *" && read temp
@@ -264,10 +265,10 @@ install_arch() {
 
 install_soft() {
     (command -v yum >/dev/null 2>&1 && sudo yum makecache && sudo yum install "$@" selinux-policy -y) ||
-        (command -v apt >/dev/null 2>&1 && sudo apt update && sudo apt install "$@" selinux-utils -y) ||
-        (command -v pacman >/dev/null 2>&1 && sudo pacman -Syu "$@" base-devel --noconfirm && install_arch) ||
-        (command -v apt-get >/dev/null 2>&1 && sudo apt-get update && sudo apt-get install "$@" selinux-utils -y) ||
-        (command -v apk >/dev/null 2>&1 && sudo apk update && sudo apk add "$@" -f)
+    (command -v apt >/dev/null 2>&1 && sudo apt update && sudo apt install "$@" selinux-utils -y) ||
+    (command -v pacman >/dev/null 2>&1 && sudo pacman -Syu "$@" base-devel --noconfirm && install_arch) ||
+    (command -v apt-get >/dev/null 2>&1 && sudo apt-get update && sudo apt-get install "$@" selinux-utils -y) ||
+    (command -v apk >/dev/null 2>&1 && sudo apk update && sudo apk add "$@" -f)
 }
 
 install_dashboard() {
@@ -825,29 +826,31 @@ show_usage() {
 }
 
 show_menu() {
-    printf "
-    ${green}哪吒监控管理脚本${white} ${cyan}${NZ_VERSION}${white}
-    https://github.com/nezhahq/nezha
-    Modified By: honeok
-    ${green}1.${white}  安装面板端
-    ${green}2.${white}  修改面板配置
-    ${green}3.${white}  启动面板
-    ${green}4.${white}  停止面板
-    ${green}5.${white}  重启并更新面板
-    ${green}6.${white}  查看面板日志
-    ${green}7.${white}  卸载管理面板
-    ————————————————
-    ${green}8.${white}  安装监控Agent
-    ${green}9.${white}  修改Agent配置
-    ${green}10.${white} 查看Agent日志
-    ${green}11.${white} 卸载Agent
-    ${green}12.${white} 重启Agent
-    ————————————————
-    ${green}13.${white} 更新脚本
-    ————————————————
-    ${green}0.${white}  退出脚本
-    "
-    echo && printf "请输入选择 [0-13]: " && read -r num
+    clear
+    echo -e "${green}哪吒监控管理脚本${white} ${cyan}${NZ_VERSION}${white}"
+    echo "https://github.com/nezhahq/nezha"
+    echo -e "Modified By: honeok ${SCRIPT_v}"
+    echo "------------------------"
+    echo -e "${green}1.${white}  安装面板端"
+    echo -e "${green}2.${white}  修改面板配置"
+    echo -e "${green}3.${white}  启动面板"
+    echo -e "${green}4.${white}  停止面板"
+    echo -e "${green}5.${white}  重启并更新面板"
+    echo -e "${green}6.${white}  查看面板日志"
+    echo -e "${green}7.${white}  卸载管理面板"
+    echo "------------------------"
+    echo -e "${green}8.${white}  安装监控Agent"
+    echo -e "${green}9.${white}  修改Agent配置"
+    echo -e "${green}10.${white} 查看Agent日志"
+    echo -e "${green}11.${white} 卸载Agent"
+    echo -e "${green}12.${white} 重启Agent"
+    echo "------------------------"
+    echo -e "${green}13.${white} 更新脚本"
+    echo "------------------------"
+    echo -e "${green}0.${white}  退出脚本"
+
+    echo -n "请输入选择 [0-13]: "
+    read -r num
     case "${num}" in
         1)
             install_dashboard
@@ -886,8 +889,7 @@ show_menu() {
             restart_agent
             ;;
         13)
-            #update_script
-            echo ""
+            update_script
             ;;
         0)
             exit 0
