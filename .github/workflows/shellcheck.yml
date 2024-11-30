@@ -26,7 +26,25 @@ jobs:
             sudo apt-get update && sudo apt-get install -y shellcheck
           fi
 
-      - name: Lint changed .sh files
+      - name: Get modified .sh files
+        id: changes
         run: |
-          # 遍历所有修改过的.sh文件并进行check
-          find . -name "*.sh" -type f -mmin -0.17 -exec shellcheck {} \;
+          # 获取当前提交所有的已修改或新增的 .sh 文件
+          CHANGED_FILES=$(git diff --name-only HEAD | grep -E '\.sh$')
+
+          # 如果没有修改的 .sh 文件，跳过
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No .sh files changed, skipping shellcheck."
+            exit 0
+          fi
+
+          # 输出变动的文件
+          echo "Modified .sh files: $CHANGED_FILES"
+          echo "$CHANGED_FILES" > changed_files.txt
+
+      - name: Lint modified .sh files
+        run: |
+          # 对变动的 .sh 文件执行 shellcheck
+          if [ -f changed_files.txt ]; then
+            cat changed_files.txt | xargs -I {} shellcheck {}
+          fi
