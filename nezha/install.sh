@@ -35,7 +35,7 @@ sudo() {
         if command -v sudo > /dev/null 2>&1; then
             command sudo "$@"
         else
-            _red "错误: 您的系统未安装 sudo ，因此无法进行该项操作。"
+            _red "错误: 您的系统未安装sudo，因此无法进行该项操作。"
             exit 1
         fi
     else
@@ -45,7 +45,7 @@ sudo() {
 
 check_systemd() {
     if [ "$os_alpine" != 1 ] && ! command -v systemctl >/dev/null 2>&1; then
-        _red "不支持此系统：未找到 systemctl 命令"
+        _red "不支持此系统: 未找到systemctl命令"
         exit 1
     fi
 }
@@ -89,28 +89,25 @@ pre_check() {
         geo_check
         if [ -n "$isCN" ]; then
             echo "根据geoip api提供的信息，当前IP可能在中国"
-            printf "是否选用中国镜像完成安装? [Y/n] (自定义镜像输入 3)："
+            echo -n "是否选用中国镜像完成安装? [Y/n] (自定义镜像输入 3): "
             read -r input
             case $input in
             [yY][eE][sS] | [yY])
                 echo "使用中国镜像"
                 CN=true
                 ;;
-
             [nN][oO] | [nN])
                 echo "不使用中国镜像"
                 ;;
-
             [3])
                 echo "使用自定义镜像"
-                printf "请输入自定义镜像 (例如:dn-dao-github-mirror.daocloud.io),留空为不使用: "
+                echo -n "请输入自定义镜像 (例如:dn-dao-github-mirror.daocloud.io) 留空为不使用: "
                 read -r input
                 case $input in
-                *)
-                    CUSTOM_MIRROR=$input
-                    ;;
+                    *)
+                        CUSTOM_MIRROR=$input
+                        ;;
                 esac
-
                 ;;
             *)
                 echo "使用中国镜像"
@@ -182,7 +179,7 @@ installation_check() {
 
 select_version() {
     if [ -z "$IS_DOCKER_NEZHA" ]; then
-        _yellow "请自行选择您的安装方式（如果你是安装Agent，输入哪个都是一样的）:"
+        _yellow "请自行选择您的安装方式(如果你是安装Agent，输入哪个都是一样的): "
         _yellow "1. Docker"
         _yellow "2. 独立安装"
         while true; do
@@ -414,7 +411,7 @@ modify_agent_config() {
 
     if [ $# -lt 3 ]; then
         echo "请先在管理面板上添加Agent，记录下密钥"
-            printf "请输入一个解析到面板所在IP的域名（不可套CDN）: "
+            printf "请输入一个解析到面板所在IP的域名(不可套CDN): "
             read -r nz_grpc_host
             printf "请输入面板RPC端口 (默认值 5555): "
             read -r nz_grpc_port
