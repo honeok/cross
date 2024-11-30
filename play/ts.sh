@@ -4,7 +4,7 @@
 #
 # Copyright (C) 2023 - 2024 honeok <yihaohey@gmail.com>
 # Blog: https://www.honeok.com
-# https://github.com/honeok/cross/blob/master/interesting/ts.sh
+# https://github.com/honeok/cross/blob/master/play/ts.sh
 
 yellow='\033[1;33m'
 red='\033[1;31m'

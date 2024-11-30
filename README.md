@@ -69,9 +69,9 @@ bash BestTrace.sh
 
 1️⃣ 国外服务器
 ```shell
-bash <(curl -skL raw.githubusercontent.com/honeok/cross/master/interesting/ts.sh)
+bash <(curl -skL raw.githubusercontent.com/honeok/cross/master/play/ts.sh)
 ```
 2️⃣ 国内服务器
 ```shell
-bash <(curl -skL gh.611611.best/raw.githubusercontent.com/honeok/cross/master/interesting/ts.sh)
+bash <(curl -skL gh.611611.best/raw.githubusercontent.com/honeok/cross/master/play/ts.sh)
 ```

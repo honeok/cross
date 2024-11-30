@@ -4,7 +4,7 @@
 #
 # Copyright (C) 2023 - 2024 honeok <yihaohey@gmail.com>
 # Blog: https://www.honeok.com
-# https://github.com/honeok/shell/blob/master/interesting/alert.sh
+# https://github.com/honeok/shell/blob/master/play/alert.sh
 #
 # usage: echo "*/1 * * * * ${PWD}/weather_alert.sh >/dev/null 2>&1" | crontab -
 
