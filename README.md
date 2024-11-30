@@ -21,22 +21,22 @@ The towering giant tower, I see it, with people jumping down every moment. When 
 
 国外服务器：
 
-```bash
+```shell
 curl -fsSkL raw.githubusercontent.com/honeok/cross/master/nezha/install.sh -o nezha.sh && chmod +x nezha.sh && sudo ./nezha.sh
 ```
 国内服务器：
-```bash
+```shell
 curl -fsSkL gh.611611.best/raw.githubusercontent.com/honeok/cross/master/nezha/install.sh -o nezha.sh && chmod +x nezha.sh && sudo ./nezha.sh
 ```
 
 ## BestTrace路由追踪
 
 国外服务器：
-```bash
+```shell
 bash <(curl -skL raw.githubusercontent.com/honeok/cross/master/BestTrace.sh)
 ```
 国内服务器：
-```bash
+```shell
 bash <(curl -skL gh.611611.best/raw.githubusercontent.com/honeok/cross/master/BestTrace.sh)
 ```
 
@@ -47,9 +47,11 @@ bash <(curl -skL gh.611611.best/raw.githubusercontent.com/honeok/cross/master/Be
 脚本支持以下命令行**参数**来选择不同区域的路由回程
 
 **可选参数**
-```bash
-默认执行广东、上海、北京、四川三网回程:
-    bash BestTrace.sh
+
+默认执行广东、上海、北京、四川三网回程
+
+```shell
+bash BestTrace.sh
 
                   可选参数：
                   -nmg  # 内蒙古
@@ -71,19 +73,20 @@ bash <(curl -skL gh.611611.best/raw.githubusercontent.com/honeok/cross/master/Be
                   -gd   # 广东
 
 指定参数示例:
-    bash BestTrace.sh -h         # 帮助命令
-    bash BestTrace.sh -d         # 单独删除 nexttrace
-    bash BestTrace.sh -nmg       # 测试内蒙古
-    bash BestTrace.sh -nmg -d    # 测试后删除 nexttrace
+
+bash BestTrace.sh -h         # 帮助命令
+bash BestTrace.sh -d         # 单独删除 nexttrace
+bash BestTrace.sh -nmg       # 测试内蒙古
+bash BestTrace.sh -nmg -d    # 测试后删除 nexttrace
 ```
 
 ## TeamSpeak服务器一键脚本
 
 国外服务器：
-```bash
+```shell
 bash <(curl -skL raw.githubusercontent.com/honeok/cross/master/play/ts.sh)
 ```
 国内服务器：
-```bash
+```shell
 bash <(curl -skL gh.611611.best/raw.githubusercontent.com/honeok/cross/master/play/ts.sh)
 ```
