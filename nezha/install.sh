@@ -827,8 +827,8 @@ show_usage() {
 show_menu() {
     printf "
     ${green}哪吒监控管理脚本${white} ${cyan}${NZ_VERSION}${white}
-    --- https://github.com/nezhahq/nezha ---
-    --- Modified By: honeok
+    https://github.com/nezhahq/nezha
+    Modified By: honeok
     ${green}1.${white}  安装面板端
     ${green}2.${white}  修改面板配置
     ${green}3.${white}  启动面板
