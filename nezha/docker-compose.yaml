@@ -1,9 +1,10 @@
-version: "3.3"
+version: "3.8"
 
 services:
   dashboard:
     image: registry.cn-shanghai.aliyuncs.com/naibahq/nezha-dashboard
-    restart: always
+    container_name: nezha-dashboard
+    restart: unless-stopped
     volumes:
       - ./data:/dashboard/data
       - ./static-custom/static:/dashboard/resource/static/custom:ro
