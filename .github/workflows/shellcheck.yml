@@ -32,8 +32,8 @@ jobs:
           # 获取当前提交的 SHA 值
           CURRENT_COMMIT=$GITHUB_SHA
           
-          # 获取前一个提交的 SHA 值，确保我们正确地比较两次提交
-          PREVIOUS_COMMIT=$(git rev-parse HEAD^2 2>/dev/null || echo $GITHUB_SHA)
+          # 获取前一个提交的 SHA 值，捕获错误处理首次提交
+          PREVIOUS_COMMIT=$(git rev-parse HEAD^ 2>/dev/null || echo $GITHUB_SHA)
           
           echo "Comparing $CURRENT_COMMIT and $PREVIOUS_COMMIT"
 
