@@ -28,5 +28,5 @@ jobs:
 
       - name: Find and lint recently modified .sh files
         run: |
-          # 获取当前时间戳，查找最近 10 秒钟内更新的 .sh 文件
+          # 查找最近 10 秒钟内更新或新增的 .sh 文件，并检查
           find . -type f -name "*.sh" -newermt "$(date --date='10 seconds ago' '+%Y-%m-%d %H:%M:%S')" -exec shellcheck {} \;
