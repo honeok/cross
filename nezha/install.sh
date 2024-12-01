@@ -832,7 +832,6 @@ show_menu() {
     clear
     echo -e "--- ${green}哪吒监控管理脚本${white} --- ${purple}${NZ_VERSION}${white}"
     echo "https://github.com/nezhahq/nezha"
-    echo -e "Script Modified By: honeok ${yellow}${SCRIPT_V}${white}"
     echo "------------------------"
     echo -e "${green}1.${white}  安装面板端"
     echo -e "${green}2.${white}  修改面板配置"
