@@ -14,22 +14,46 @@ NZ_DASHBOARD_SERVICE="/etc/systemd/system/nezha-dashboard.service"
 NZ_DASHBOARD_SERVICERC="/etc/init.d/nezha-dashboard"
 NZ_VERSION="v0.00.0"
 GH_PROXY="https://gh-proxy.com/"
-SCRIPT_V="2024-12-01"
+SCRIPT_V="2024.12.01"
 
 yellow='\033[93m'
-red='\033[91m'
+red='\033[38;5;160m'
 green='\033[92m'
 cyan='\033[96m'
+purple='\033[95m'
 white='\033[0m'
 _yellow() { echo -e ${yellow}$@${white}; }
 _red() { echo -e ${red}$@${white}; }
 _green() { echo -e ${green}$@${white}; }
 _cyan() { echo -e ${cyan}$@${white}; }
+_purple() { echo -e ${purple}$@${white}; }
 
 export PATH="$PATH:/usr/local/bin"
 
 os_arch=""
 [ -e /etc/os-release ] && grep -i '^PRETTY_NAME=' /etc/*release | grep -qi "alpine" && os_alpine='1'
+
+ip_address() {
+    local ipv4_services=("ipv4.ip.sb" "ipv4.icanhazip.com" "v4.ident.me" "api.ipify.org")
+    local ipv6_services=("ipv6.ip.sb" "ipv6.icanhazip.com" "v6.ident.me" "api6.ipify.org")
+
+    ipv4_address=""
+    ipv6_address=""
+
+    for service in "${ipv4_services[@]}"; do
+        ipv4_address=$(curl -fskL4 -m 3 "$service")
+        if [[ "$ipv4_address" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            break
+        fi
+    done
+
+    for service in "${ipv6_services[@]}"; do
+        ipv6_address=$(curl -fskL6 -m 3 "$service")
+        if [[ "$ipv6_address" =~ ^[0-9a-fA-F:]+$ ]]; then
+            break
+        fi
+    done
+}
 
 # 根据用户权限决定是否使用sudo
 sudo() {
@@ -104,8 +128,10 @@ prepare_check() {
         fi
     fi
 
+    ip_address
+
     # 设置GITHUB代理
-    if [ -n "$CN" ]; then
+    if [ -n "$CN" ] || { [ -z "$ipv4_address" ] && [ -n "$ipv6_address" ]; }; then
         GITHUB_PROXY="${GH_PROXY}"
     else
         GITHUB_PROXY=""
@@ -169,7 +195,7 @@ select_version() {
         _yellow "1. Docker"
         _yellow "2. 独立安装"
         while true; do
-            printf "请输入选择 [1-2]:"
+            echo -n "请输入选择 [1-2]: "
             read -r option
             case "${option}" in
                 1)
@@ -356,28 +382,28 @@ install_agent() {
         _red "获取版本号失败，请检查本机能否链接 https://api.github.com/repos/nezhahq/agent/releases/tags/v0.20.5"
         return 1
     else
-        echo "当前最新版本为: ${_version}"
+        echo -e "${yellow}当前最新版本为:${white} ${_version}"
     fi
 
     # 哪吒监控文件夹
     sudo mkdir -p $NZ_AGENT_PATH
 
-    echo "正在下载监控端"
-    if [ -z "$CN" ]; then
+    _yellow "正在下载监控端"
+    if [ -z "$CN" ] || { [ -z "$ipv4_address" ] && [ -n "$ipv6_address" ]; }; then
         NZ_AGENT_URL="https://${GITHUB_URL}/nezhahq/agent/releases/download/${_version}/nezha-agent_linux_${os_arch}.zip"
     else
-        NZ_AGENT_URL="https://${GITHUB_URL}/naibahq/agent/releases/download/${_version}/nezha-agent_linux_${os_arch}.zip"
+        NZ_AGENT_URL="${GITHUB_PROXY}https://${GITHUB_URL}/naibahq/agent/releases/download/${_version}/nezha-agent_linux_${os_arch}.zip"
     fi
 
     _cmd="wget -t 2 -T 60 -O nezha-agent_linux_${os_arch}.zip $NZ_AGENT_URL >/dev/null 2>&1"
     if ! eval "$_cmd"; then
-        _red "Release 下载失败，请检查本机能否连接 ${GITHUB_URL}"
+        _red "Release下载失败，请检查本机能否连接 ${GITHUB_URL}"
         return 1
     fi
 
     sudo unzip -qo nezha-agent_linux_${os_arch}.zip &&
-        sudo mv nezha-agent $NZ_AGENT_PATH &&
-        sudo rm -rf nezha-agent_linux_${os_arch}.zip README.md
+    sudo mv nezha-agent $NZ_AGENT_PATH &&
+    sudo rm -rf nezha-agent_linux_${os_arch}.zip README.md
 
     if [ $# -ge 3 ]; then
         modify_agent_config "$@"
@@ -391,19 +417,21 @@ install_agent() {
 }
 
 modify_agent_config() {
-    echo "> 修改Agent配置"
+    _yellow "> 修改Agent配置"
 
     if [ $# -lt 3 ]; then
-        echo "请先在管理面板上添加Agent，记录下密钥"
-            printf "请输入一个解析到面板所在IP的域名(不可套CDN): "
-            read -r nz_grpc_host
-            printf "请输入面板RPC端口 (默认值 5555): "
-            read -r nz_grpc_port
-            printf "请输入Agent 密钥: "
-            read -r nz_client_secret
-            printf "是否启用针对 gRPC 端口的 SSL/TLS加密 (--tls)，需要请按 [y]，默认是不需要，不理解用户可回车跳过: "
-            read -r nz_grpc_proxy
+        _yellow "请先在管理面板上添加Agent，记录下密钥"
+        echo -n "请输入一个解析到面板所在IP的域名(不可套CDN): "
+        read -r nz_grpc_host
+        echo -n "请输入面板RPC端口 (默认值 5555): "
+        read -r nz_grpc_port
+        echo -n "请输入Agent 密钥: "
+        read -r nz_client_secret
+
+        echo -n "是否启用针对gRPC端口的SSL/TLS加密 (--tls)，需要请按 [y]，默认是不需要，不理解用户可回车跳过: "
+        read -r nz_grpc_proxy
         echo "${nz_grpc_proxy}" | grep -qiw 'Y' && args='--tls'
+
         if [ -z "$nz_grpc_host" ] || [ -z "$nz_client_secret" ]; then
             _red "所有选项都不能为空"
             before_show_menu
@@ -428,7 +456,7 @@ modify_agent_config() {
         sudo "${NZ_AGENT_PATH}"/nezha-agent service uninstall >/dev/null 2>&1
         sudo "${NZ_AGENT_PATH}"/nezha-agent service install -s "$nz_grpc_host:$nz_grpc_port" -p "$nz_client_secret" "$args" >/dev/null 2>&1
     fi
-    
+
     _green "Agent配置修改成功，请稍等重启生效"
 
     #if [[ $# == 0 ]]; then
@@ -437,11 +465,11 @@ modify_agent_config() {
 }
 
 modify_dashboard_config() {
-    echo "> 修改面板配置"
+    _yellow "> 修改面板配置"
 
     if [ "$IS_DOCKER_NEZHA" = 1 ]; then
         if [ -n "$DOCKER_COMPOSE_COMMAND" ]; then
-            echo "正在下载 Docker 脚本"
+            _yellow "正在下载Docker脚本"
             _cmd="wget -t 2 -T 60 -O /tmp/nezha-docker-compose.yaml https://${GITHUB_RAW_URL}/docker-compose.yaml >/dev/null 2>&1"
             if ! eval "$_cmd"; then
                 _red "下载脚本失败，请检查本机能否连接 ${GITHUB_RAW_URL}"
@@ -461,19 +489,19 @@ modify_dashboard_config() {
 
     echo "关于 GitHub Oauth2 应用：在 https://github.com/settings/developers 创建，无需审核，Callback 填 http(s)://域名或IP/oauth2/callback"
     echo "关于 Gitee Oauth2 应用：在 https://gitee.com/oauth/applications 创建，无需审核，Callback 填 http(s)://域名或IP/oauth2/callback"
-    printf "请输入 OAuth2 提供商(github/gitlab/jihulab/gitee，默认 github): "
+    echo -n "请输入 OAuth2 提供商(github/gitlab/jihulab/gitee，默认 github): "
     read -r nz_oauth2_type
-    printf "请输入Oauth2应用的 Client ID: "
+    echo -n "请输入Oauth2应用的 Client ID: "
     read -r nz_github_oauth_client_id
-    printf "请输入Oauth2应用的 Client Secret: "
+    echo -n "请输入Oauth2应用的 Client Secret: "
     read -r nz_github_oauth_client_secret
-    printf "请输入GitHub/Gitee登录名作为管理员，多个以逗号隔开: "
+    echo -n "请输入GitHub/Gitee登录名作为管理员，多个以逗号隔开: "
     read -r nz_admin_logins
-    printf "请输入站点标题: "
+    echo -n "请输入站点标题: "
     read -r nz_site_title
-    printf "请输入站点访问端口: (默认 8008)"
+    echo -n "请输入站点访问端口: (默认 8008)"
     read -r nz_site_port
-    printf "请输入用于Agent接入的RPC端口: (默认 5555)"
+    echo -n "请输入用于Agent接入的RPC端口: (默认 5555)"
     read -r nz_grpc_port
 
     if [ -z "$nz_admin_logins" ] || [ -z "$nz_github_oauth_client_id" ] || [ -z "$nz_github_oauth_client_secret" ] || [ -z "$nz_site_title" ]; then
@@ -514,7 +542,7 @@ modify_dashboard_config() {
     fi
 
     if [ "$IS_DOCKER_NEZHA" = 0 ]; then
-        echo "正在下载服务文件"
+        _yellow "正在下载服务文件"
         if [ "$os_alpine" != 1 ]; then
             _download="sudo wget -t 2 -T 60 -O $NZ_DASHBOARD_SERVICE https://${GITHUB_RAW_URL}/nezha-dashboard.service >/dev/null 2>&1"
             if ! eval "$_download"; then
@@ -531,7 +559,7 @@ modify_dashboard_config() {
         fi
     fi
 
-    _green "面板配置 修改成功，请稍等重启生效"
+    _green "面板配置修改成功，请稍等重启生效"
 
     restart_and_update
 
@@ -541,7 +569,7 @@ modify_dashboard_config() {
 }
 
 restart_and_update() {
-    echo "> 重启并更新面板"
+    _yellow "> 重启并更新面板"
 
     if [ "$IS_DOCKER_NEZHA" = 1 ]; then
         _cmd="restart_and_update_docker"
@@ -550,8 +578,8 @@ restart_and_update() {
     fi
 
     if eval "$_cmd"; then
-        _green "哪吒监控 重启成功"
-        _yellow "默认管理面板地址：域名:站点访问端口"
+        _green "哪吒监控重启成功"
+        _yellow "默认管理面板地址: 域名:站点访问端口"
     else
         _red "重启失败，可能是因为启动时间超过了两秒，请稍后查看日志信息"
     fi
@@ -802,9 +830,9 @@ show_usage() {
 
 show_menu() {
     clear
-    echo -e "${green}哪吒监控管理脚本${white} ${cyan}${NZ_VERSION}${white}"
+    echo -e "--- ${green}哪吒监控管理脚本${white} --- ${purple}${NZ_VERSION}${white}"
     echo "https://github.com/nezhahq/nezha"
-    echo -e "Modified By: honeok ${SCRIPT_V}"
+    echo -e "Script Modified By: honeok ${yellow}${SCRIPT_V}${white}"
     echo "------------------------"
     echo -e "${green}1.${white}  安装面板端"
     echo -e "${green}2.${white}  修改面板配置"
