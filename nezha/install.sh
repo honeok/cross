@@ -13,27 +13,27 @@ NZ_AGENT_PATH="${NZ_BASE_PATH}/agent"
 NZ_DASHBOARD_SERVICE="/etc/systemd/system/nezha-dashboard.service"
 NZ_DASHBOARD_SERVICERC="/etc/init.d/nezha-dashboard"
 NZ_VERSION="v0.00.0"
-SCRIPT_V="2024-11-30"
+GH_PROXY="https://gh-proxy.com/"
+SCRIPT_V="2024-12-01"
 
-yellow='\033[1;33m'
-red='\033[1;31m'
-green='\033[1;32m'
-cyan='\033[1;36m'
+yellow='\033[93m'
+red='\033[91m'
+green='\033[92m'
+cyan='\033[96m'
 white='\033[0m'
+_yellow() { echo -e ${yellow}$@${white}; }
 _red() { echo -e ${red}$@${white}; }
 _green() { echo -e ${green}$@${white}; }
-_yellow() { echo -e ${yellow}$@${white}; }
+_cyan() { echo -e ${cyan}$@${white}; }
 
 export PATH="$PATH:/usr/local/bin"
 
 os_arch=""
-[ -e /etc/os-release ] && grep -i "PRETTY_NAME" /etc/*release | grep -qi "alpine" && os_alpine='1'
+[ -e /etc/os-release ] && grep -i '^PRETTY_NAME=' /etc/*release | grep -qi "alpine" && os_alpine='1'
 
-[[ "$(curl -fskL --connect-timeout 5 ipinfo.io/country)" == "CN" ]] && GITHUB_PROXY="https://gh-proxy.com/" || GITHUB_PROXY=""
-
+# 根据用户权限决定是否使用sudo
 sudo() {
-    myEUID=$(id -ru)
-    if [ "$myEUID" -ne 0 ]; then
+    if [ "$(id -ru)" -ne 0 ]; then
         if command -v sudo > /dev/null 2>&1; then
             command sudo "$@"
         else
@@ -68,93 +68,77 @@ geo_check() {
     done
 }
 
-pre_check() {
+prepare_check() {
     umask 077
 
     ## os_arch
-    if uname -m | grep -q 'x86_64'; then
-        os_arch="amd64"
-    elif uname -m | grep -q 'i386\|i686'; then
-        os_arch="386"
-    elif uname -m | grep -q 'aarch64\|armv8b\|armv8l'; then
-        os_arch="arm64"
-    elif uname -m | grep -q 'arm'; then
-        os_arch="arm"
-    elif uname -m | grep -q 's390x'; then
-        os_arch="s390x"
-    elif uname -m | grep -q 'riscv64'; then
-        os_arch="riscv64"
-    fi
+    case "$(uname -m)" in
+        x86_64) os_arch="amd64" ;;
+        i386|i686) os_arch="386" ;;
+        aarch64|armv8b|armv8l) os_arch="arm64" ;;
+        arm) os_arch="arm" ;;
+        s390x) os_arch="s390x" ;;
+        riscv64) os_arch="riscv64" ;;
+    esac
 
     ## China_IP
     if [ -z "$CN" ]; then
         geo_check
         if [ -n "$isCN" ]; then
-            echo "根据geoip api提供的信息，当前IP可能在中国"
-            echo -n "是否选用中国镜像完成安装? [Y/n] (自定义镜像输入 3): "
+            echo "根据Geoip api提供的信息，当前IP可能在中国"
+            echo -n "是否选用中国镜像完成安装? [Y/n]: "
             read -r input
             case $input in
             [yY][eE][sS] | [yY])
-                echo "使用中国镜像"
+                _yellow "使用中国镜像"
                 CN=true
                 ;;
             [nN][oO] | [nN])
-                echo "不使用中国镜像"
-                ;;
-            [3])
-                echo "使用自定义镜像"
-                echo -n "请输入自定义镜像 (例如:dn-dao-github-mirror.daocloud.io) 留空为不使用: "
-                read -r input
-                case $input in
-                    *)
-                        CUSTOM_MIRROR=$input
-                        ;;
-                esac
+                _yellow "不使用中国镜像"
                 ;;
             *)
-                echo "使用中国镜像"
+                _yellow "使用中国镜像"
                 CN=true
                 ;;
             esac
         fi
     fi
 
-    if [ -n "$CUSTOM_MIRROR" ]; then
-        GITHUB_RAW_URL="gh-proxy.com/raw.githubusercontent.com/honeok/cross/master/nezha"
-        GITHUB_URL=$CUSTOM_MIRROR
+    # 设置GITHUB代理
+    if [ -n "$CN" ]; then
+        GITHUB_PROXY="${GH_PROXY}"
+    else
+        GITHUB_PROXY=""
+    fi
+
+    GITHUB_RAW_URL="${GITHUB_PROXY}raw.githubusercontent.com/honeok/cross/master/nezha"
+    GITHUB_URL="github.com"
+
+    if [ -z "$CN" ]; then
         GET_DOCKER_URL="get.docker.com"
+        GET_DOCKER_ARG=" "
+        DOCKER_IMG="ghcr.io\/naiba\/nezha-dashboard:v0.20.13"
+    else
+        GET_DOCKER_URL="${GITHUB_PROXY}raw.githubusercontent.com/honeok/Tools/main/docker/install.sh"
         GET_DOCKER_ARG=" -s docker --mirror Aliyun"
         DOCKER_IMG="registry.cn-shanghai.aliyuncs.com\/naibahq\/nezha-dashboard:v0.20.13"
-    else
-        if [ -z "$CN" ]; then
-            GITHUB_RAW_URL="raw.githubusercontent.com/honeok/cross/master/nezha"
-            GITHUB_URL="github.com"
-            GET_DOCKER_URL="get.docker.com"
-            GET_DOCKER_ARG=" "
-            DOCKER_IMG="ghcr.io\/naiba\/nezha-dashboard:v0.20.13"
-        else
-            GITHUB_RAW_URL="gh-proxy.com/raw.githubusercontent.com/honeok/cross/master/nezha"
-            GITHUB_URL="github.com"
-            GET_DOCKER_URL="get.docker.com"
-            GET_DOCKER_ARG=" -s docker --mirror Aliyun"
-            DOCKER_IMG="registry.cn-shanghai.aliyuncs.com\/naibahq\/nezha-dashboard:v0.20.13"
-        fi
     fi
 }
 
-installation_check() {
+# 检查是否安装nezha-dashboard镜像以及是否已经配置docker-compose
+install_check() {
     if docker compose version >/dev/null 2>&1; then
         DOCKER_COMPOSE_COMMAND="docker compose"
         if sudo $DOCKER_COMPOSE_COMMAND ls | grep -qw "$NZ_DASHBOARD_PATH/docker-compose.yaml" >/dev/null 2>&1; then
             NEZHA_IMAGES=$(sudo docker images --format "{{.Repository}}:{{.Tag}}" | grep -w "nezha-dashboard")
             if [ -n "$NEZHA_IMAGES" ]; then
-                echo "存在带有 nezha-dashboard 仓库的 Docker 镜像："
+                _green "存在带有nezha-dashboard仓库的Docker镜像: "
                 echo "$NEZHA_IMAGES"
                 IS_DOCKER_NEZHA=1
                 FRESH_INSTALL=0
                 return
             else
-                echo "未找到带有 nezha-dashboard 仓库的 Docker 镜像。"
+                _yellow "未找到带有nezha-dashboard仓库的Docker镜像"
             fi
         fi
     elif command -v docker-compose >/dev/null 2>&1; then
@@ -162,13 +146,13 @@ installation_check() {
         if sudo $DOCKER_COMPOSE_COMMAND -f "$NZ_DASHBOARD_PATH/docker-compose.yaml" config >/dev/null 2>&1; then
             NEZHA_IMAGES=$(sudo docker images --format "{{.Repository}}:{{.Tag}}" | grep -w "nezha-dashboard")
             if [ -n "$NEZHA_IMAGES" ]; then
-                echo "存在带有 nezha-dashboard 仓库的 Docker 镜像："
+                _green "存在带有nezha-dashboard仓库的Docker镜像: "
                 echo "$NEZHA_IMAGES"
                 IS_DOCKER_NEZHA=1
                 FRESH_INSTALL=0
                 return
             else
-                echo "未找到带有 nezha-dashboard 仓库的 Docker 镜像。"
+                _yellow "未找到带有nezha-dashboard仓库的Docker镜像"
             fi
         fi
     fi
@@ -205,7 +189,7 @@ select_version() {
 }
 
 update_script() {
-    echo "> 更新脚本"
+    _yellow "> 更新脚本"
 
     #curl -sL https://${GITHUB_RAW_URL}/script/install.sh -o /tmp/nezha.sh
     #new_version=$(grep "NZ_VERSION" /tmp/nezha.sh | head -n 1 | awk -F "=" '{print $2}' | sed 's/\"//g;s/,//g;s/ //g')
@@ -214,14 +198,11 @@ update_script() {
     #    return 1
     #fi
     #echo "当前最新版本为: ${new_version}"
-    if [ -z "$CN" ]; then
-        curl -fsSkL raw.githubusercontent.com/honeok/cross/master/nezha/install.sh -o /tmp/nezha.sh
-    else
-        curl -fsSkL gh-proxy.com/raw.githubusercontent.com/honeok/cross/master/nezha/install.sh -o /tmp/nezha.sh
-    fi
+
+    curl -fskL ${GITHUB_PROXY}raw.githubusercontent.com/honeok/cross/master/nezha/install.sh -o /tmp/nezha.sh
     mv -f /tmp/nezha.sh ./nezha.sh && chmod a+x ./nezha.sh
 
-    echo "3s后执行新脚本"
+    _yellow "3s后执行新脚本"
     sleep 3s
     clear
     exec ./nezha.sh
@@ -239,8 +220,9 @@ install_base() {
 }
 
 install_arch() {
-    _yellow "提示：Arch安装libselinux需添加nezha-agent用户，安装完会自动删除，建议手动检查一次"
-    read -r -p "是否安装libselinux? [Y/n] " input
+    echo -e "${red}提示: ${white}Arch安装libselinux需添加nezha-agent用户，安装完会自动删除建议手动检查一次"
+    echo -n -e "${yellow}是否安装libselinux? [Y/n] ${white}"
+    read -r input
     case $input in
     [yY][eE][sS] | [yY])
         useradd -m nezha-agent
@@ -253,10 +235,10 @@ install_arch() {
         echo -e "${red}提示: ${white}已删除用户nezha-agent，请务必手动核查一遍！\n"
         ;;
     [nN][oO] | [nN])
-        echo "不安装libselinux"
+        _yellow "不安装libselinux"
         ;;
     *)
-        echo "不安装libselinux"
+        _yellow "不安装libselinux"
         exit 0
         ;;
     esac
@@ -274,25 +256,25 @@ install_dashboard() {
     check_systemd
     install_base
 
-    echo "> 安装面板"
+    _yellow "> 安装面板"
 
     # 哪吒监控文件夹
     if [ ! "$FRESH_INSTALL" = 0 ]; then
         sudo mkdir -p $NZ_DASHBOARD_PATH
     else
-        echo "您可能已经安装过面板端，重复安装会覆盖数据，请注意备份。"
+        echo -e "${red}提示: ${white}您可能已经安装过面板端，重复安装会覆盖数据请注意备份。"
         printf "是否退出安装? [Y/n] "
         read -r input
         case $input in
         [yY][eE][sS] | [yY])
-            echo "退出安装"
+            _yellow "退出安装"
             exit 0
             ;;
         [nN][oO] | [nN])
-            echo "继续安装"
+            _yellow "继续安装"
             ;;
         *)
-            echo "退出安装"
+            _yellow "退出安装"
             exit 0
             ;;
         esac
@@ -314,9 +296,9 @@ install_dashboard() {
 install_dashboard_docker() {
     if [ ! "$FRESH_INSTALL" = 0 ]; then
         if ! command -v docker >/dev/null 2>&1; then
-            echo "正在安装 Docker"
+            _yellow "正在安装Docker"
             if [ "$os_alpine" != 1 ]; then
-                if ! curl -sL https://${GET_DOCKER_URL} | sudo bash -s "${GET_DOCKER_ARG}"; then
+                if ! curl -fskL https://${GET_DOCKER_URL} | sudo bash -s "${GET_DOCKER_ARG}"; then
                     _red "下载脚本失败，请检查本机能否连接 ${GET_DOCKER_URL}"
                     return 0
                 fi
@@ -328,7 +310,7 @@ install_dashboard_docker() {
                 sudo rc-service docker start
             fi
             _green "Docker 安装成功"
-            installation_check
+            install_check
         fi
     fi
 }
@@ -343,7 +325,7 @@ selinux() {
     #Check SELinux
     if command -v getenforce >/dev/null 2>&1; then
         if getenforce | grep '[Ee]nfor'; then
-            echo "SELinux是开启状态，正在关闭！"
+            _yellow "SELinux是开启状态，正在关闭！"
             sudo setenforce 0 >/dev/null 2>&1
             find_key="SELINUX="
             sudo sed -ri "/^$find_key/c${find_key}disabled" /etc/selinux/config
@@ -355,9 +337,9 @@ install_agent() {
     install_base
     selinux
 
-    echo "> 安装监控Agent"
+    _yellow "> 安装监控Agent"
 
-    echo "正在获取监控Agent版本号"
+    _yellow "正在获取监控Agent版本号"
 
     _version=$(curl -sL "https://api.github.com/repos/nezhahq/agent/releases/tags/v0.20.5" | grep "tag_name" | head -n 1 | awk -F ":" '{print $2}' | sed 's/\"//g;s/,//g;s/ //g')
     if [ -z "$_version" ]; then
@@ -893,8 +875,8 @@ show_menu() {
     esac
 }
 
-pre_check
-installation_check
+prepare_check
+install_check
 
 if [ $# -gt 0 ]; then
     case $1 in
