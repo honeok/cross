@@ -25,22 +25,22 @@ The towering giant tower, I see it, with people jumping down every moment. When 
 国外服务器：
 
 ```shell
-curl -fsSkL raw.githubusercontent.com/honeok/cross/master/nezha/install.sh -o nezha.sh && chmod +x nezha.sh && sudo ./nezha.sh
+curl -fskL raw.githubusercontent.com/honeok/cross/master/nezha/install.sh -o nezha.sh && chmod +x nezha.sh && sudo ./nezha.sh
 ```
 国内服务器：
 ```shell
-curl -fsSkL gh.611611.best/raw.githubusercontent.com/honeok/cross/master/nezha/install.sh -o nezha.sh && chmod +x nezha.sh && sudo ./nezha.sh
+curl -fskL gh.611611.best/raw.githubusercontent.com/honeok/cross/master/nezha/install.sh -o nezha.sh && chmod +x nezha.sh && sudo ./nezha.sh
 ```
 
 ## BestTrace路由追踪
 
 国外服务器：
 ```shell
-bash <(curl -skL raw.githubusercontent.com/honeok/cross/master/BestTrace.sh)
+bash <(curl -fskL raw.githubusercontent.com/honeok/cross/master/BestTrace.sh)
 ```
 国内服务器：
 ```shell
-bash <(curl -skL gh.611611.best/raw.githubusercontent.com/honeok/cross/master/BestTrace.sh)
+bash <(curl -fskL gh.611611.best/raw.githubusercontent.com/honeok/cross/master/BestTrace.sh)
 ```
 
 ### 参数说明：
@@ -89,11 +89,11 @@ bash BestTrace.sh -nmg -d    # 测试后删除 nexttrace
 
 国外服务器：
 ```shell
-bash <(curl -skL raw.githubusercontent.com/honeok/cross/master/play/ts.sh)
+bash <(curl -fskL raw.githubusercontent.com/honeok/cross/master/play/ts.sh)
 ```
 国内服务器：
 ```shell
-bash <(curl -skL gh.611611.best/raw.githubusercontent.com/honeok/cross/master/play/ts.sh)
+bash <(curl -fskL gh.611611.best/raw.githubusercontent.com/honeok/cross/master/play/ts.sh)
 ```
 
 ## Star History
