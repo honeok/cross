@@ -12,12 +12,12 @@ NZ_DASHBOARD_PATH="${NZ_BASE_PATH}/dashboard"
 NZ_AGENT_PATH="${NZ_BASE_PATH}/agent"
 NZ_DASHBOARD_SERVICE="/etc/systemd/system/nezha-dashboard.service"
 NZ_DASHBOARD_SERVICERC="/etc/init.d/nezha-dashboard"
-NZ_VERSION="v0.00.0"
+NZ_VERSION="v0"
 GH_PROXY="https://gh-proxy.com/"
 SCRIPT_V="2024.12.01"
 
 yellow='\033[93m'
-red='\033[38;5;160m'
+red='\033[31m'
 green='\033[92m'
 cyan='\033[96m'
 purple='\033[95m'
@@ -256,7 +256,7 @@ install_arch() {
         sudo -iu nezha-agent bash -c 'gpg --keyserver keys.gnupg.net --recv-keys 4695881C254508D1;
                                         cd /tmp; git clone https://aur.archlinux.org/libsepol.git; cd libsepol; makepkg -si --noconfirm --asdeps; cd ..;
                                         git clone https://aur.archlinux.org/libselinux.git; cd libselinux; makepkg -si --noconfirm; cd ..;
-                                        rm -rf libsepol libselinux'
+                                        rm -fr libsepol libselinux'
         sed -i '/nezha-agent/d' /etc/sudoers && sleep 30s && killall -u nezha-agent && userdel -r nezha-agent
         echo -e "${red}提示: ${white}已删除用户nezha-agent，请务必手动核查一遍！\n"
         ;;
@@ -289,7 +289,7 @@ install_dashboard() {
         sudo mkdir -p $NZ_DASHBOARD_PATH
     else
         echo -e "${red}提示: ${white}您可能已经安装过面板端，重复安装会覆盖数据请注意备份。"
-        printf "是否退出安装? [Y/n] "
+        echo -n  "是否退出安装? [Y/n] "
         read -r input
         case $input in
         [yY][eE][sS] | [yY])
@@ -335,7 +335,7 @@ install_dashboard_docker() {
                 sudo rc-update add docker
                 sudo rc-service docker start
             fi
-            _green "Docker 安装成功"
+            _green "Docker安装成功"
             install_check
         fi
     fi
@@ -365,25 +365,7 @@ install_agent() {
 
     _yellow "> 安装监控Agent"
 
-    _yellow "正在获取监控Agent版本号"
-
-    _version=$(curl -sL "https://api.github.com/repos/nezhahq/agent/releases/tags/v0.20.5" | grep "tag_name" | head -n 1 | awk -F ":" '{print $2}' | sed 's/\"//g;s/,//g;s/ //g')
-    if [ -z "$_version" ]; then
-        _version=$(curl -m 10 -sL "https://gitee.com/api/v5/repos/naibahq/agent/tags" | grep -o '"name": *"v0.20.5"' | awk -F '"' '{print $4}')
-    fi
-    if [ -z "$_version" ]; then
-        _version=$(curl -m 10 -sL "https://fastly.jsdelivr.net/gh/nezhahq/agent@v0.20.5/" | grep "option\.value" | awk -F "'" '{print $2}' | sed 's/nezhahq\/agent@/v/g')
-    fi
-    if [ -z "$_version" ]; then
-        _version=$(curl -m 10 -sL "https://gcore.jsdelivr.net/gh/nezhahq/agent@v0.20.5/" | grep "option\.value" | awk -F "'" '{print $2}' | sed 's/nezhahq\/agent@/v/g')
-    fi
-
-    if [ -z "$_version" ]; then
-        _red "获取版本号失败，请检查本机能否链接 https://api.github.com/repos/nezhahq/agent/releases/tags/v0.20.5"
-        return 1
-    else
-        echo -e "${yellow}当前最新版本为:${white} ${_version}"
-    fi
+    _version="v0.20.5"
 
     # 哪吒监控文件夹
     sudo mkdir -p $NZ_AGENT_PATH
@@ -403,7 +385,7 @@ install_agent() {
 
     sudo unzip -qo nezha-agent_linux_${os_arch}.zip &&
     sudo mv nezha-agent $NZ_AGENT_PATH &&
-    sudo rm -rf nezha-agent_linux_${os_arch}.zip README.md
+    sudo rm -fr nezha-agent_linux_${os_arch}.zip README.md
 
     if [ $# -ge 3 ]; then
         modify_agent_config "$@"
@@ -457,7 +439,7 @@ modify_agent_config() {
         sudo "${NZ_AGENT_PATH}"/nezha-agent service install -s "$nz_grpc_host:$nz_grpc_port" -p "$nz_client_secret" "$args" >/dev/null 2>&1
     fi
 
-    _green "Agent配置修改成功，请稍等重启生效"
+    _green "Agent配置修改成功，请稍等Agent重启生效"
 
     #if [[ $# == 0 ]]; then
     #    before_show_menu
@@ -465,7 +447,7 @@ modify_agent_config() {
 }
 
 modify_dashboard_config() {
-    _yellow "> 修改面板配置"
+    _yellow "> 修改Dashboard配置"
 
     if [ "$IS_DOCKER_NEZHA" = 1 ]; then
         if [ -n "$DOCKER_COMPOSE_COMMAND" ]; then
@@ -559,7 +541,7 @@ modify_dashboard_config() {
         fi
     fi
 
-    _green "面板配置修改成功，请稍等重启生效"
+    _green "Dashboard配置修改成功，请稍等Dashboard重启生效"
 
     restart_and_update
 
@@ -596,16 +578,13 @@ restart_and_update_docker() {
 }
 
 restart_and_update_standalone() {
-    _version=$(curl -m 10 -sL "https://api.github.com/repos/naiba/nezha/releases/tags/v0.20.13" | grep "tag_name" | head -n 1 | awk -F ":" '{print $2}' | sed 's/\"//g;s/,//g;s/ //g')
-    if [ -z "$_version" ]; then
-        _version=$(curl -m 10 -sL "https://gitee.com/api/v5/repos/naibahq/nezha/tags" | grep -o '"name":"v0.20.13"' | head -n 1 | awk -F ':"' '{print $2}' | tr -d '"')
-    fi
+    _version="v0.20.13"
 
     if [ -z "$_version" ]; then
-        _red "获取版本号失败 请检查本机能否链接 https://api.github.com/repos/naiba/nezha/releases/tags/v0.20.13"
+        _red "获取Dashboard版本号失败，请检查本机能否链接 https://api.github.com/repos/naiba/nezha/releases/tags/v0.20.13"
         return 1
     else
-        echo "当前最新版本为: ${_version}"
+        echo -e "${yellow}当前最新版本为:${white} ${_version}"
     fi
 
     if [ "$os_alpine" != 1 ]; then
@@ -615,7 +594,7 @@ restart_and_update_standalone() {
         sudo rc-service nezha-dashboard stop
     fi
 
-    if [ -z "$CN" ]; then
+    if [ -z "$CN" ] || { [ -z "$ipv4_address" ] && [ -n "$ipv6_address" ]; }; then
         NZ_DASHBOARD_URL="https://${GITHUB_URL}/naibahq/nezha/releases/download/${_version}/dashboard-linux-${os_arch}.zip"
     else
         NZ_DASHBOARD_URL="${GITHUB_PROXY}https://${GITHUB_URL}/naibahq/nezha/releases/download/${_version}/dashboard-linux-${os_arch}.zip"
@@ -634,7 +613,7 @@ restart_and_update_standalone() {
 }
 
 start_dashboard() {
-    echo "> 启动面板"
+    _yellow "> 启动面板"
 
     if [ "$IS_DOCKER_NEZHA" = 1 ]; then
         _cmd="start_dashboard_docker"
@@ -666,7 +645,7 @@ start_dashboard_standalone() {
 }
 
 stop_dashboard() {
-    echo "> 停止面板"
+    _yellow "> 停止面板"
 
     if [ "$IS_DOCKER_NEZHA" = 1 ]; then
         _cmd="stop_dashboard_docker"
@@ -698,7 +677,7 @@ stop_dashboard_standalone() {
 }
 
 show_dashboard_log() {
-    echo "> 获取面板日志"
+    _yellow "> 获取Dashboard日志"
 
     if [ "$IS_DOCKER_NEZHA" = 1 ]; then
         show_dashboard_log_docker
@@ -719,12 +698,12 @@ show_dashboard_log_standalone() {
     if [ "$os_alpine" != 1 ]; then
         sudo journalctl -xf -u nezha-dashboard.service
     else
-        sudo tail -n 10 /var/log/nezha-dashboard._red
+        sudo tail -n 10 /var/log/nezha-dashboard.err
     fi
 }
 
 uninstall_dashboard() {
-    echo "> 卸载管理面板"
+    _yellow "> 卸载管理面板"
 
     if [ "$IS_DOCKER_NEZHA" = 1 ]; then
         uninstall_dashboard_docker
@@ -741,13 +720,18 @@ uninstall_dashboard() {
 
 uninstall_dashboard_docker() {
     sudo $DOCKER_COMPOSE_COMMAND -f ${NZ_DASHBOARD_PATH}/docker-compose.yaml down
-    sudo rm -rf $NZ_DASHBOARD_PATH
-    sudo docker rmi -f ghcr.io/naiba/nezha-dashboard >/dev/null 2>&1
-    sudo docker rmi -f registry.cn-shanghai.aliyuncs.com/naibahq/nezha-dashboard >/dev/null 2>&1
+    sudo rm -fr $NZ_DASHBOARD_PATH
+    #sudo docker rmi -f ghcr.io/naiba/nezha-dashboard >/dev/null 2>&1
+    #sudo docker rmi -f registry.cn-shanghai.aliyuncs.com/naibahq/nezha-dashboard >/dev/null 2>&1
+
+    # 删除所有与nezha-dashboard相关的镜像
+    for image in $(sudo docker images --format '{{.Repository}}:{{.Tag}}' | grep 'nezha-dashboard'); do
+        sudo docker rmi -f $image >/dev/null 2>&1
+    done
 }
 
 uninstall_dashboard_standalone() {
-    sudo rm -rf $NZ_DASHBOARD_PATH
+    sudo rm -fr $NZ_DASHBOARD_PATH
 
     if [ "$os_alpine" != 1 ]; then
         sudo systemctl disable nezha-dashboard
@@ -765,12 +749,12 @@ uninstall_dashboard_standalone() {
 }
 
 show_agent_log() {
-    echo "> 获取Agent日志"
+    _yellow "> 获取Agent日志"
 
     if [ "$os_alpine" != 1 ]; then
         sudo journalctl -xf -u nezha-agent.service
     else
-        sudo tail -n 10 /var/log/nezha-agent._red
+        sudo tail -n 10 /var/log/nezha-agent.err
     fi
 
     if [ $# = 0 ]; then
@@ -779,11 +763,11 @@ show_agent_log() {
 }
 
 uninstall_agent() {
-    echo "> 卸载Agent"
+    _yellow "> 卸载Agent"
 
     sudo ${NZ_AGENT_PATH}/nezha-agent service uninstall
 
-    sudo rm -rf $NZ_AGENT_PATH
+    sudo rm -fr $NZ_AGENT_PATH
     clean_all
 
     if [ $# = 0 ]; then
@@ -792,7 +776,7 @@ uninstall_agent() {
 }
 
 restart_agent() {
-    echo "> 重启Agent"
+    _yellow "> 重启Agent"
 
     sudo ${NZ_AGENT_PATH}/nezha-agent service restart
 
@@ -803,7 +787,7 @@ restart_agent() {
 
 clean_all() {
     if [ -z "$(ls -A ${NZ_BASE_PATH})" ]; then
-        sudo rm -rf ${NZ_BASE_PATH}
+        sudo rm -fr ${NZ_BASE_PATH}
     fi
 }
 
@@ -830,8 +814,10 @@ show_usage() {
 
 show_menu() {
     clear
-    echo -e "--- ${green}哪吒监控管理脚本${white} --- ${purple}${NZ_VERSION}${white}"
+    echo -e "-- ${green}哪吒监控管理脚本${purple}${NZ_VERSION}${white}${white} --"
     echo "https://github.com/nezhahq/nezha"
+    echo -e "${red}提示: ${white}v0面板停止维护 https://nezha.wiki"
+    echo -e "${yellow}本脚本为v0面板脚本修改版${white} by: honeok"
     echo "------------------------"
     echo -e "${green}1.${white}  安装面板端"
     echo -e "${green}2.${white}  修改面板配置"
@@ -850,7 +836,7 @@ show_menu() {
     echo -e "${green}13.${white} 更新脚本"
     echo "------------------------"
     echo -e "${green}0.${white}  退出脚本"
-
+    echo ""
     echo -n "请输入选择 [0-13]: "
     read -r num
     case "${num}" in
