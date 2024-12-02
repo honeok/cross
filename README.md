@@ -25,7 +25,7 @@ The towering giant tower, I see it, with people jumping down every moment. When 
 
 ### 使用方法
 
-- 将原有脚本替换为本脚本即可
+将原有脚本替换为本脚本即可
 
 ![Image](assets/nezha.png)
 
