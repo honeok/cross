@@ -22,7 +22,7 @@ The towering giant tower, I see it, with people jumping down every moment. When 
   <br><br>
 </div>
 
-[脚本文档](nezha/README.md)
+[文档](nezha/README.md)
 
 国外服务器：
 ```shell
