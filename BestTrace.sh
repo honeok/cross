@@ -7,33 +7,30 @@
 # Twitter: https://twitter.com/hone0k
 # https://github.com/honeok/cross/blob/master/BestTrace.sh
 
-yellow='\033[1;33m'
-red='\033[1;31m'
-green='\033[1;32m'
+yellow='\033[93m'
+red='\033[31m'
+green='\033[92m'
 white='\033[0m'
 _yellow() { echo -e "${yellow}$@${white}"; }
 _red() { echo -e "${red}$@${white}"; }
 _green() { echo -e ${green}$@${white}; }
 
-## 获取公网IP地址
 ip_address() {
     local ipv4_services=("ipv4.ip.sb" "ipv4.icanhazip.com" "v4.ident.me" "api.ipify.org")
     local ipv6_services=("ipv6.ip.sb" "ipv6.icanhazip.com" "v6.ident.me" "api6.ipify.org")
 
-    ipv4_address=""  # 初始化全局变量
+    ipv4_address=""
     ipv6_address=""
 
-    # 获取IPv4地址
     for service in "${ipv4_services[@]}"; do
-        ipv4_address=$(curl -s -4 -k "$service")
+        ipv4_address=$(curl -fskL4 -m 3 "$service")
         if [[ "$ipv4_address" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             break
         fi
     done
 
-    # 获取IPv6地址
     for service in "${ipv6_services[@]}"; do
-        ipv6_address=$(curl -s -6 -k --max-time 2 "$service")
+        ipv6_address=$(curl -fskL6 -m 3 "$service")
         if [[ "$ipv6_address" =~ ^[0-9a-fA-F:]+$ ]]; then
             break
         fi
@@ -41,8 +38,8 @@ ip_address() {
 }
 
 if ! command -v nexttrace >/dev/null 2>&1 && [ ! -f "/usr/local/bin/nexttrace" ] && [ ! -f "/usr/bin/nexttrace" ]; then
-    # bash <(curl -sL raw.githubusercontent.com/nxtrace/NTrace-core/main/nt_install.sh) || { echo "Nexttrace安装失败"; exit 1; }
-    bash <(curl -sL nxtrace.org/nt) || { _red "Nexttrace安装失败"; exit 1; }
+    # bash <(curl -fskL raw.githubusercontent.com/nxtrace/NTrace-core/main/nt_install.sh) || { _red "Nexttrace安装失败"; exit 1; }
+    bash <(curl -fskL nxtrace.org/nt) || { _red "Nexttrace安装失败"; exit 1; }
 fi
 
 separator() { printf "%-70s\n" "-" | sed 's/\s/-/g'; }
