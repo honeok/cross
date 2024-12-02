@@ -215,7 +215,7 @@ select_version() {
 }
 
 update_script() {
-    _yellow "> 更新脚本"
+    echo "> 更新脚本"
 
     #curl -sL https://${GITHUB_RAW_URL}/script/install.sh -o /tmp/nezha.sh
     #new_version=$(grep "NZ_VERSION" /tmp/nezha.sh | head -n 1 | awk -F "=" '{print $2}' | sed 's/\"//g;s/,//g;s/ //g')
@@ -282,7 +282,7 @@ install_dashboard() {
     check_systemd
     install_base
 
-    _yellow "> 安装面板"
+    echo "> 安装面板"
 
     # 哪吒监控文件夹
     if [ ! "$FRESH_INSTALL" = 0 ]; then
@@ -363,7 +363,7 @@ install_agent() {
     install_base
     selinux
 
-    _yellow "> 安装监控Agent"
+    echo "> 安装监控Agent"
 
     _version="v0.20.5"
 
@@ -399,7 +399,7 @@ install_agent() {
 }
 
 modify_agent_config() {
-    _yellow "> 修改Agent配置"
+    echo "> 修改Agent配置"
 
     if [ $# -lt 3 ]; then
         _yellow "请先在管理面板上添加Agent，记录下密钥"
@@ -447,7 +447,7 @@ modify_agent_config() {
 }
 
 modify_dashboard_config() {
-    _yellow "> 修改Dashboard配置"
+    echo "> 修改Dashboard配置"
 
     if [ "$IS_DOCKER_NEZHA" = 1 ]; then
         if [ -n "$DOCKER_COMPOSE_COMMAND" ]; then
@@ -551,7 +551,7 @@ modify_dashboard_config() {
 }
 
 restart_and_update() {
-    _yellow "> 重启并更新面板"
+    echo "> 重启并更新面板"
 
     if [ "$IS_DOCKER_NEZHA" = 1 ]; then
         _cmd="restart_and_update_docker"
@@ -613,7 +613,7 @@ restart_and_update_standalone() {
 }
 
 start_dashboard() {
-    _yellow "> 启动面板"
+    echo "> 启动面板"
 
     if [ "$IS_DOCKER_NEZHA" = 1 ]; then
         _cmd="start_dashboard_docker"
@@ -645,7 +645,7 @@ start_dashboard_standalone() {
 }
 
 stop_dashboard() {
-    _yellow "> 停止面板"
+    echo "> 停止面板"
 
     if [ "$IS_DOCKER_NEZHA" = 1 ]; then
         _cmd="stop_dashboard_docker"
@@ -677,7 +677,7 @@ stop_dashboard_standalone() {
 }
 
 show_dashboard_log() {
-    _yellow "> 获取Dashboard日志"
+    echo "> 获取Dashboard日志"
 
     if [ "$IS_DOCKER_NEZHA" = 1 ]; then
         show_dashboard_log_docker
@@ -703,7 +703,7 @@ show_dashboard_log_standalone() {
 }
 
 uninstall_dashboard() {
-    _yellow "> 卸载管理面板"
+    echo "> 卸载管理面板"
 
     if [ "$IS_DOCKER_NEZHA" = 1 ]; then
         uninstall_dashboard_docker
@@ -749,7 +749,7 @@ uninstall_dashboard_standalone() {
 }
 
 show_agent_log() {
-    _yellow "> 获取Agent日志"
+    echo "> 获取Agent日志"
 
     if [ "$os_alpine" != 1 ]; then
         sudo journalctl -xf -u nezha-agent.service
@@ -763,7 +763,7 @@ show_agent_log() {
 }
 
 uninstall_agent() {
-    _yellow "> 卸载Agent"
+    echo "> 卸载Agent"
 
     sudo ${NZ_AGENT_PATH}/nezha-agent service uninstall
 
@@ -776,7 +776,7 @@ uninstall_agent() {
 }
 
 restart_agent() {
-    _yellow "> 重启Agent"
+    echo "> 重启Agent"
 
     sudo ${NZ_AGENT_PATH}/nezha-agent service restart
 
@@ -817,7 +817,7 @@ show_menu() {
     echo -e "-- ${green}哪吒监控管理脚本${purple}${NZ_VERSION}${white}${white} --"
     echo "https://github.com/nezhahq/nezha"
     echo -e "${red}提示: ${white}v0面板停止维护 https://nezha.wiki"
-    echo -e "${yellow}本脚本为v0面板脚本修改版${white} by: honeok"
+    echo -e "${yellow}v0面板脚本修改版${white} by: honeok"
     echo "------------------------"
     echo -e "${green}1.${white}  安装面板端"
     echo -e "${green}2.${white}  修改面板配置"
