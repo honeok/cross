@@ -10,9 +10,9 @@
 
 将原有脚本替换为本脚本即可
 
-<div style="text-align: center;">
-    ![Image](assets/nezha.png)
-</div>
+<p align="center">
+    <img src="assets/nezha.png" alt="Image">
+</p>
 
 国外服务器：
 ```shell
