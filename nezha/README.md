@@ -27,14 +27,14 @@ curl -fskL gh.611611.best/raw.githubusercontent.com/honeok/cross/master/nezha/in
 
 参数清单：
 
-- `--report-delay`: 控制系统信息上报的间隔，默认为 1 秒，可以设置为 3 来进一步降低 agent 端系统资源占用（配置区间 1-4）
-- `--skip-conn`: 不监控连接数，推荐 机场/连接密集型 服务器或CPU占用较高的服务器设置
-- `--skip-procs`: 不监控进程数，也可以降低 Agent 占用
-- `--disable-auto-update`: 禁止自动更新 Agent（安全特性）
-- `--disable-force-update`: 禁止强制更新 Agent（安全特性）
-- `--disable-command-execute`: 禁止在 Agent 上执行定时任务、打开在线终端（安全特性）
-- `--tls`: 启用 SSL/TLS 加密（使用nginx反向代理Agent的grpc连接，并且nginx开启SSL/TLS时，需要启用该项配置）
-- `--temperature`: 启用GPU监控（如果支持）
+- `--report-delay`：控制系统信息上报的间隔，默认为1秒，可以设置为3来进一步降低agent端系统资源占用（配置区间 1-4）
+- `--skip-conn`：不监控连接数，推荐机场/连接密集型服务器或CPU占用较高的服务器设置
+- `--skip-procs`：不监控进程数，也可以降低Agent占用
+- `--disable-auto-update`：禁止自动更新Agent（安全特性）
+- `--disable-force-update`：禁止强制更新Agent（安全特性）
+- `--disable-command-execute`：禁止在Agent上执行定时任务、打开在线终端（安全特性）
+- `--tls`：启用SSL/TLS加密（使用nginx反向代理Agent的grpc连接，并且nginx开启SSL/TLS时，需要启用该项配置）
+- `--temperature`：启用GPU监控（如果支持）
 
 **重启服务：**
 
