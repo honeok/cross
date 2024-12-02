@@ -27,6 +27,8 @@ The towering giant tower, I see it, with people jumping down every moment. When 
 
 - 将原有脚本替换为本脚本即可
 
+![image](https://i.111666.best/image/Pd4A9Tln1aXlAyuw7oYq6p.png)
+
 国外服务器：
 
 ```shell
