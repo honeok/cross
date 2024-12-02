@@ -24,6 +24,14 @@ The towering giant tower, I see it, with people jumping down every moment. When 
 
 [脚本文档](nezha/README.md)
 
+国外服务器：
+```shell
+curl -fskL raw.githubusercontent.com/honeok/cross/master/nezha/install.sh -o nezha.sh && chmod +x nezha.sh && sudo ./nezha.sh
+```
+国内服务器：
+```shell
+curl -fskL gh.611611.best/raw.githubusercontent.com/honeok/cross/master/nezha/install.sh -o nezha.sh && chmod +x nezha.sh && sudo ./nezha.sh
+```
 ## BestTrace路由追踪
 
 国外服务器：
