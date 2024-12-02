@@ -10,7 +10,9 @@
 
 将原有脚本替换为本脚本即可
 
-![Image](assets/nezha.png)
+<div style="text-align: center;">
+    ![Image](assets/nezha.png)
+</div>
 
 国外服务器：
 ```shell
@@ -45,14 +47,14 @@ sudo systemctl daemon-reload
 sudo systemctl restart nezha-agent
 sudo systemctl status nezha-agent
 
-# 直接修改，禁用Agent自动更新命令
+# 直接修改 禁用Agent自动更新命令
 sed -i '/^ExecStart=/ {/"--disable-auto-update"/! s/$/ "--disable-auto-update"/}' /etc/systemd/system/nezha-agent.service && systemctl daemon-reload
 ```
 
 ## Agent版本回退
 
-以v.19.5为例，替换以下agent版本执行即可
+以`v0.20.5`为例，替换以下agent版本执行即可
 
 ```shell
-wget -q https://github.com/nezhahq/agent/releases/download/v0.19.5/nezha-agent_linux_amd64.zip && unzip -o nezha-agent_linux_amd64.zip -d /opt/nezha/agent && rm nezha-agent_linux_amd64.zip && systemctl daemon-reload && systemctl restart nezha-agent
+wget -q https://github.com/nezhahq/agent/releases/download/v0.20.5/nezha-agent_linux_amd64.zip && unzip -o nezha-agent_linux_amd64.zip -d /opt/nezha/agent && rm -f nezha-agent_linux_amd64.zip && systemctl daemon-reload && systemctl restart nezha-agent
 ```
