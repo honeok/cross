@@ -22,7 +22,7 @@ The towering giant tower, I see it, with people jumping down every moment. When 
   <br><br>
 </div>
 
-[哪吒监控安装脚本文档](nezha/README.md)
+[脚本文档](nezha/README.md)
 
 ## BestTrace路由追踪
 
