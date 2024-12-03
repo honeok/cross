@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 #
-# Description: TCP tuning.
+# Description: TCP tuning based on iperf3.
 #
 # Copyright (C) 2024 honeok <yihaohey@gmail.com>
 # Blog: www.honeok.com
-# https://github.com/honeok/Tools/blob/master/honeok.sh
+# https://github.com/honeok/cross/blob/master/tcp_tuning.sh
 
 # export LANG=en_US.UTF-8
 # set -x
@@ -35,9 +35,9 @@ _bg_yellow() { echo -e "${bg_yellow}${bold}$@${white}"; }
 _bg_red() { echo -e "${bg_red}${bold}$@${white}"; }
 _bg_green() { echo -e "${bg_green}${bold}$@${white}"; }
 
-info_msg=$(_bg_yellow 提示!)
-err_msg=$(_bg_red 警告!)
-suc_msg=$(_bg_green 成功!)
+info_msg=$(_bg_yellow 提示)
+err_msg=$(_bg_red 警告)
+suc_msg=$(_bg_green 成功)
 _info_msg() { echo -e "\n$info_msg $@\n"; }
 _err_msg() { echo -e "\n$err_msg $@\n"; }
 _suc_msg() { echo -e "\n$suc_msg $@\n"; }
