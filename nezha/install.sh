@@ -145,7 +145,7 @@ prepare_check() {
         GET_DOCKER_ARG=" "
         DOCKER_IMG="ghcr.io\/naiba\/nezha-dashboard:v0.20.13"
     else
-        GET_DOCKER_URL="${GITHUB_PROXY}raw.githubusercontent.com/honeok/Tools/main/docker/install.sh"
+        GET_DOCKER_URL="${GITHUB_PROXY}raw.githubusercontent.com/honeok/Tools/master/docker/install.sh"
         GET_DOCKER_ARG=" -s docker --mirror Aliyun"
         DOCKER_IMG="registry.cn-shanghai.aliyuncs.com\/naibahq\/nezha-dashboard:v0.20.13"
     fi
