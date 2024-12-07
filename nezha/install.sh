@@ -4,7 +4,7 @@
 # System Required: CentOS 7+ / Debian 8+ / Ubuntu 16+ / Alpine 3+ / Arch
 # Github: https://github.com/nezhahq/nezha
 #
-# Modified By: honeok <yihaohey@gmail.com>
+# Modified by: honeok <honeok@duck.com>
 # https://github.com/honeok/cross/blob/master/nezha/install.sh
 
 NZ_BASE_PATH="/opt/nezha"
@@ -12,9 +12,9 @@ NZ_DASHBOARD_PATH="${NZ_BASE_PATH}/dashboard"
 NZ_AGENT_PATH="${NZ_BASE_PATH}/agent"
 NZ_DASHBOARD_SERVICE="/etc/systemd/system/nezha-dashboard.service"
 NZ_DASHBOARD_SERVICERC="/etc/init.d/nezha-dashboard"
-NZ_VERSION="v0"
-GH_PROXY="https://gh-proxy.com/"
-SCRIPT_V="2024.12.01"
+GITHUB_URL="github.com"
+GITHUB_RAW_URL="${github_proxy}raw.githubusercontent.com/honeok/cross/master/nezha"
+NZ_VERSION="v0.0.0"
 
 yellow='\033[93m'
 red='\033[31m'
@@ -28,40 +28,33 @@ _green() { echo -e ${green}$@${white}; }
 _cyan() { echo -e ${cyan}$@${white}; }
 _purple() { echo -e ${purple}$@${white}; }
 
-export PATH="$PATH:/usr/local/bin"
+bg_yellow='\033[48;5;220m'
+bg_red='\033[41m'
+bg_green='\033[42m'
+bold='\033[1m'
+_bg_yellow() { echo -e "${bg_yellow}${bold}$@${white}"; }
+_bg_red() { echo -e "${bg_red}${bold}$@${white}"; }
+_bg_green() { echo -e "${bg_green}${bold}$@${white}"; }
 
+info_msg=$(_bg_yellow 提示)
+err_msg=$(_bg_red 警告)
+suc_msg=$(_bg_green 成功)
+_info_msg() { echo -e "$info_msg $@"; }
+_err_msg() { echo -e "$err_msg $@"; }
+_suc_msg() { echo -e "$suc_msg $@"; }
+
+export PATH="$PATH:/usr/local/bin"
+export DEBIAN_FRONTEND=noninteractive
 os_arch=""
+
 [ -e /etc/os-release ] && grep -i '^PRETTY_NAME=' /etc/*release | grep -qi "alpine" && os_alpine='1'
 
-ip_address() {
-    local ipv4_services=("ipv4.ip.sb" "ipv4.icanhazip.com" "v4.ident.me" "api.ipify.org")
-    local ipv6_services=("ipv6.ip.sb" "ipv6.icanhazip.com" "v6.ident.me" "api6.ipify.org")
-
-    ipv4_address=""
-    ipv6_address=""
-
-    for service in "${ipv4_services[@]}"; do
-        ipv4_address=$(curl -fskL4 -m 3 "$service")
-        if [[ "$ipv4_address" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            break
-        fi
-    done
-
-    for service in "${ipv6_services[@]}"; do
-        ipv6_address=$(curl -fskL6 -m 3 "$service")
-        if [[ "$ipv6_address" =~ ^[0-9a-fA-F:]+$ ]]; then
-            break
-        fi
-    done
-}
-
-# 根据用户权限决定是否使用sudo
 sudo() {
-    if [ "$(id -ru)" -ne 0 ]; then
-        if command -v sudo > /dev/null 2>&1; then
+    if [ "$EUID" -ne "0" ]; then
+        if command -v sudo >/dev/null 2>&1; then
             command sudo "$@"
         else
-            _red "错误: 您的系统未安装sudo，因此无法进行该项操作。"
+            _err_msg "$(_red '您的系统未安装sudo，因此无法进行该项操作。')"
             exit 1
         fi
     else
@@ -76,21 +69,53 @@ check_systemd() {
     fi
 }
 
-geo_check() {
-    api_list="https://blog.cloudflare.com/cdn-cgi/trace https://dash.cloudflare.com/cdn-cgi/trace https://developers.cloudflare.com/cdn-cgi/trace"
-    ua="Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/81.0"
-    set -- "$api_list"
-    for url in $api_list; do
-        text="$(curl -A "$ua" -m 10 -s "$url")"
-        endpoint="$(echo "$text" | sed -n 's/.*h=\([^ ]*\).*/\1/p')"
-        if echo "$text" | grep -qw 'CN'; then
-            isCN=true
+ip_address() {
+    local ipv4_services=("ipv4.ip.sb" "ipv4.icanhazip.com" "v4.ident.me" "api.ipify.org")
+    local ipv6_services=("ipv6.ip.sb" "ipv6.icanhazip.com" "v6.ident.me" "api6.ipify.org")
+    ipv4_address=""
+    ipv6_address=""
+    for service in "${ipv4_services[@]}"; do
+        ipv4_address=$(curl -fskL4 -m 3 "$service")
+        if [[ "$ipv4_address" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             break
-        elif echo "$url" | grep -q "$endpoint"; then
+        fi
+    done
+    for service in "${ipv6_services[@]}"; do
+        ipv6_address=$(curl -fskL6 -m 3 "$service")
+        if [[ "$ipv6_address" =~ ^[0-9a-fA-F:]+$ ]]; then
             break
         fi
     done
 }
+
+geo_check() {
+    local response
+    local cloudflare_api="https://blog.cloudflare.com/cdn-cgi/trace https://dash.cloudflare.com/cdn-cgi/trace https://developers.cloudflare.com/cdn-cgi/trace"
+    local user_agent="Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/81.0"
+    # set -- "$cloudflare_api"
+    for url in $cloudflare_api; do
+        response=$(curl -A "$user_agent" -m 10 -s "$url")
+        [ -n "$response" ] && country=$(echo "$response" | grep -oP 'loc=\K\w+')
+        [ ! -z "$country" ] && break
+    done
+    [ -z "$country" ] && _err_msg "$(_red '无法获取服务器所在地区，请检查网络！')" && exit 1
+}
+
+cdn_check() {
+    ip_address
+    geo_check
+
+    if [[ "$country" == "CN" || ( -z "$ipv4_address" && -n "$ipv6_address" ) || \
+        $(curl -fsSkL -o /dev/null -w "%{time_total}" --max-time 5 https://raw.githubusercontent.com/honeok/Tools/master/README.md) > 3 ]]; then
+        github_proxy="https://gh-proxy.com/"
+    else
+        github_proxy=""
+    fi
+}
+
+ip_address
+geo_check
+cdn_check
 
 prepare_check() {
     umask 077
@@ -108,46 +133,15 @@ prepare_check() {
     ## China_IP
     if [ -z "$CN" ]; then
         geo_check
-        if [ -n "$isCN" ]; then
-            echo "根据Geoip api提供的信息，当前IP可能在中国"
-            echo -n "是否选用中国镜像完成安装? [Y/n]: "
-            read -r input
-            case $input in
-            [yY][eE][sS] | [yY])
-                _yellow "使用中国镜像"
-                CN=true
-                ;;
-            [nN][oO] | [nN])
-                _yellow "不使用中国镜像"
-                ;;
-            *)
-                _yellow "使用中国镜像"
-                CN=true
-                ;;
-            esac
+        if [ "$country" == "CN" ]; then
+            GET_DOCKER_URL="${github_proxy}raw.githubusercontent.com/honeok/Tools/master/docker/install.sh"
+            GET_DOCKER_ARG=" -s docker --mirror Aliyun"
+            DOCKER_IMG="registry.cn-shanghai.aliyuncs.com\/naibahq\/nezha-dashboard:v0.20.13"
+        else
+            GET_DOCKER_URL="get.docker.com"
+            GET_DOCKER_ARG=" "
+            DOCKER_IMG="ghcr.io\/naiba\/nezha-dashboard:v0.20.13"
         fi
-    fi
-
-    ip_address
-
-    # 设置GITHUB代理
-    if [ -n "$CN" ] || { [ -z "$ipv4_address" ] && [ -n "$ipv6_address" ]; }; then
-        GITHUB_PROXY="${GH_PROXY}"
-    else
-        GITHUB_PROXY=""
-    fi
-
-    GITHUB_RAW_URL="${GITHUB_PROXY}raw.githubusercontent.com/honeok/cross/master/nezha"
-    GITHUB_URL="github.com"
-
-    if [ -z "$CN" ]; then
-        GET_DOCKER_URL="get.docker.com"
-        GET_DOCKER_ARG=" "
-        DOCKER_IMG="ghcr.io\/naiba\/nezha-dashboard:v0.20.13"
-    else
-        GET_DOCKER_URL="${GITHUB_PROXY}raw.githubusercontent.com/honeok/Tools/master/docker/install.sh"
-        GET_DOCKER_ARG=" -s docker --mirror Aliyun"
-        DOCKER_IMG="registry.cn-shanghai.aliyuncs.com\/naibahq\/nezha-dashboard:v0.20.13"
     fi
 }
 
@@ -225,7 +219,7 @@ update_script() {
     #fi
     #echo "当前最新版本为: ${new_version}"
 
-    curl -fskL ${GITHUB_PROXY}raw.githubusercontent.com/honeok/cross/master/nezha/install.sh -o /tmp/nezha.sh
+    curl -fskL ${github_proxy}raw.githubusercontent.com/honeok/cross/master/nezha/install.sh -o /tmp/nezha.sh
     mv -f /tmp/nezha.sh ./nezha.sh && chmod a+x ./nezha.sh
 
     _yellow "3s后执行新脚本"
@@ -371,15 +365,14 @@ install_agent() {
     sudo mkdir -p $NZ_AGENT_PATH
 
     _yellow "正在下载监控端"
-    if [ -z "$CN" ] || { [ -z "$ipv4_address" ] && [ -n "$ipv6_address" ]; }; then
-        NZ_AGENT_URL="https://${GITHUB_URL}/nezhahq/agent/releases/download/${_version}/nezha-agent_linux_${os_arch}.zip"
+    if [ ${country} == "CN" ] || { [ -z "$ipv4_address" ] && [ -n "$ipv6_address" ]; }; then
+        NZ_AGENT_URL="${github_proxy}https://${GITHUB_URL}/nezhahq/agent/releases/download/${_version}/nezha-agent_linux_${os_arch}.zip"
     else
-        NZ_AGENT_URL="${GITHUB_PROXY}https://${GITHUB_URL}/naibahq/agent/releases/download/${_version}/nezha-agent_linux_${os_arch}.zip"
+        NZ_AGENT_URL="https://${GITHUB_URL}/nezhahq/agent/releases/download/${_version}/nezha-agent_linux_${os_arch}.zip"
     fi
 
-    _cmd="wget -t 2 -T 60 -O nezha-agent_linux_${os_arch}.zip $NZ_AGENT_URL >/dev/null 2>&1"
-    if ! eval "$_cmd"; then
-        _red "Release下载失败，请检查本机能否连接 ${GITHUB_URL}"
+    if ! curl -fsSkL --retry 2 --max-time 60 -o nezha-agent_linux_${os_arch}.zip $NZ_AGENT_URL; then
+        _err_msg "$(_red "Release下载失败，请检查本机能否连接${GITHUB_URL}")"
         return 1
     fi
 
@@ -597,7 +590,7 @@ restart_and_update_standalone() {
     if [ -z "$CN" ] || { [ -z "$ipv4_address" ] && [ -n "$ipv6_address" ]; }; then
         NZ_DASHBOARD_URL="https://${GITHUB_URL}/naibahq/nezha/releases/download/${_version}/dashboard-linux-${os_arch}.zip"
     else
-        NZ_DASHBOARD_URL="${GITHUB_PROXY}https://${GITHUB_URL}/naibahq/nezha/releases/download/${_version}/dashboard-linux-${os_arch}.zip"
+        NZ_DASHBOARD_URL="${github_proxy}https://${GITHUB_URL}/naibahq/nezha/releases/download/${_version}/dashboard-linux-${os_arch}.zip"
     fi
 
     sudo wget -qO $NZ_DASHBOARD_PATH/app.zip "$NZ_DASHBOARD_URL" >/dev/null 2>&1 && sudo unzip -qq -o $NZ_DASHBOARD_PATH/app.zip -d $NZ_DASHBOARD_PATH && sudo mv $NZ_DASHBOARD_PATH/dashboard-linux-$os_arch $NZ_DASHBOARD_PATH/app && sudo rm $NZ_DASHBOARD_PATH/app.zip
@@ -814,10 +807,8 @@ show_usage() {
 
 show_menu() {
     clear
-    echo -e "-- ${green}哪吒监控管理脚本${purple}${NZ_VERSION}${white}${white} --"
+    echo -e "-- ${green}哪吒监控管理脚本 ${purple}${NZ_VERSION}${white}${white} --"
     echo "https://github.com/nezhahq/nezha"
-    echo -e "${red}提示: ${white}v0面板停止维护 https://nezha.wiki"
-    echo -e "${yellow}v0面板脚本修改版${white} by: honeok"
     echo "------------------------"
     echo -e "${green}1.${white}  安装面板端"
     echo -e "${green}2.${white}  修改面板配置"
