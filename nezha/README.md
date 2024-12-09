@@ -1,11 +1,12 @@
-<div align="center">
-  <br>
-  <img width="360" style="max-width:80%" src="https://raw.githubusercontent.com/nezhahq/nezha/master/.github/brand.svg" title="哪吒监控 Nezha Monitoring">
-  <br>
-  <small><i>LOGO designed by <a href="https://xio.ng" target="_blank">熊大</a> .</i></small>
-  <br><br>
-</div>
+#<div align="center">
+#  <br>
+#  <img width="360" style="max-width:80%" src="" title="哪吒监控 Nezha Monitoring">
+#  <br>
+#  <small><i>LOGO designed by <a href="https://xio.ng" target="_blank">熊大</a> .</i></small>
+#  <br><br>
+#</div>
 
+![](https://cdn.img2ipfs.com/ipfs/QmQ24Xu1SY71vrCh9LMWgFqbMXStGKwqdch2wvGVr25kv8?filename=image.png)
 # 使用方法
 
 将原有脚本替换为本脚本即可
