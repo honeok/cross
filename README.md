@@ -11,8 +11,6 @@
 The towering giant tower, I see it, with people jumping down every moment. When I was young, I didn’t understand and thought they were snowflakes.
 </br>
 
-****
-
 ## 哪吒监控安装脚本 V0
 
 <div align="center">
