@@ -4,8 +4,8 @@
 [![License](https://img.shields.io/github/license/honeok/cross.svg?style=flat)](./LICENSE)
 [![Commit](https://img.shields.io/github/last-commit/honeok/cross)](https://github.com/honeok/cross)
 [![Commit Activity](https://img.shields.io/github/commit-activity/m/honeok/cross.svg)](https://github.com/honeok/cross)
+[![GitHub Stars](https://img.shields.io/github/stars/honeok/cross?style=flat)](https://github.com/honeok/cross)
 [![Issues](https://img.shields.io/github/issues/honeok/cross.svg)](https://img.shields.io/github/issues/honeok/cross.svg)
-[![Stars](https://img.shields.io/github/stars/honeok/cross.svg)](https://img.shields.io/github/stars/honeok/cross.svg)
 
 <br>
 The towering giant tower, I see it, with people jumping down every moment. When I was young, I didn’t understand and thought they were snowflakes.
