@@ -22,11 +22,11 @@
 
 国外服务器：
 ```shell
-curl -sL https://raw.githubusercontent.com/honeok/cross/master/nezha/install.sh -o nezha.sh && chmod +x nezha.sh && sudo ./nezha.sh
+curl -sL https://github.com/honeok/cross/raw/master/nezha/install.sh -o nezha.sh && chmod +x nezha.sh && sudo ./nezha.sh
 ```
 国内服务器：
 ```shell
-curl -sL https://gh.611611.best/https://raw.githubusercontent.com/honeok/cross/master/nezha/install.sh -o nezha.sh && chmod +x nezha.sh && sudo ./nezha.sh
+curl -sL https://gh.611611.best/https://github.com/honeok/cross/raw/master/nezha/install.sh -o nezha.sh && chmod +x nezha.sh && sudo ./nezha.sh
 ```
 
 ## 运行参数
@@ -43,6 +43,11 @@ curl -sL https://gh.611611.best/https://raw.githubusercontent.com/honeok/cross/m
 - `--disable-command-execute`：禁止在Agent上执行定时任务、打开在线终端（安全特性）
 - `--tls`：启用SSL/TLS加密（使用nginx反向代理Agent的grpc连接，并且nginx开启SSL/TLS时，需要启用该项配置）
 - `--temperature`：启用GPU监控（如果支持）
+- `--use-ipv6-countrycode`：强制通过IPV6获得旗帜
+
+```shell
+--report-delay 2 --skip-conn --skip-procs --disable-auto-update --disable-force-update --disable-command-execute
+```
 
 **重启服务：**
 
