@@ -23,11 +23,11 @@ The towering giant tower, I see it, with people jumping down every moment. When 
 
 国外服务器：
 ```shell
-curl -sL https://raw.githubusercontent.com/honeok/cross/master/nezha/install.sh -o nezha.sh && chmod +x nezha.sh && sudo ./nezha.sh
+curl -sL https://github.com/honeok/cross/raw/master/nezha/install.sh -o nezha.sh && chmod +x nezha.sh && sudo ./nezha.sh
 ```
 国内服务器：
 ```shell
-curl -sL https://gh.611611.best/https://raw.githubusercontent.com/honeok/cross/master/nezha/install.sh -o nezha.sh && chmod +x nezha.sh && sudo ./nezha.sh
+curl -sL https://gh.611611.best/https://github.com/honeok/cross/raw/master/nezha/install.sh -o nezha.sh && chmod +x nezha.sh && sudo ./nezha.sh
 ```
 
 ## BestTrace路由追踪
@@ -83,15 +83,26 @@ bash BestTrace.sh -nmg       # 测试内蒙古
 bash BestTrace.sh -nmg -d    # 测试后删除 nexttrace
 ```
 
+## 内存超售检测
+
+国外服务器：
+```shell
+bash <(curl -sL https://github.com/honeok/cross/raw/master/memoryCheck.sh)
+```
+国内服务器：
+```shell
+bash <(curl -sL https://gh.611611.best/https://github.com/honeok/cross/raw/master/memoryCheck.sh)
+```
+
 ## TeamSpeak服务器一键脚本
 
 国外服务器：
 ```shell
-bash <(curl -sL https://raw.githubusercontent.com/honeok/cross/master/play/ts.sh)
+bash <(curl -sL https://github.com/honeok/cross/raw/master/play/ts.sh)
 ```
 国内服务器：
 ```shell
-bash <(curl -sL https://gh.611611.best/https://raw.githubusercontent.com/honeok/cross/master/play/ts.sh)
+bash <(curl -sL https://gh.611611.best/https://github.com/honeok/cross/raw/master/play/ts.sh)
 ```
 
 ## Star History
