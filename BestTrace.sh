@@ -35,9 +35,11 @@ ip_address() {
     done
 }
 
+ip_address
+
 if ! command -v nexttrace >/dev/null 2>&1 && [ ! -f "/usr/local/bin/nexttrace" ] && [ ! -f "/usr/bin/nexttrace" ]; then
     # bash <(curl -fskL raw.githubusercontent.com/nxtrace/NTrace-core/main/nt_install.sh) || { _red "Nexttrace安装失败"; exit 1; }
-    bash <(curl -fskL nxtrace.org/nt) || { _red "Nexttrace安装失败"; exit 1; }
+    bash <(curl -sL nxtrace.org/nt) || { _red "Nexttrace安装失败"; exit 1; }
 fi
 
 supported_params=$(cat <<EOF
@@ -74,7 +76,7 @@ EOF
 # 卸载逻辑
 uninstall_nexttrace(){
     separator
-    for file in /usr/local/bin/nexttrace /usr/bin/nexttrace; do
+    for file in "/usr/local/bin/nexttrace" "/usr/bin/nexttrace"; do
         [[ -f $file ]] && rm -f "$file" && _green "nexttrace已成功删除"
     done
 }
@@ -153,8 +155,6 @@ perform_trace() {
         nexttrace -M "${ips[i]}"
     done
 }
-
-ip_address
 
 # 根据网络栈决定追踪类型
 trace_type_v4=false
