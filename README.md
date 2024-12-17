@@ -7,41 +7,17 @@
 [![GitHub Stars](https://img.shields.io/github/stars/honeok/cross?style=flat)](https://github.com/honeok/cross)
 [![Issues](https://img.shields.io/github/issues/honeok/cross.svg)](https://img.shields.io/github/issues/honeok/cross.svg)
 
-<br>
 The towering giant tower, I see it, with people jumping down every moment. When I was young, I didn’t understand and thought they were snowflakes.
-</br>
 
-****
-
-## 哪吒监控安装脚本 V0
-
-<div align="center">
-  <br>
-  <img width="360" style="max-width:80%" src="https://raw.githubusercontent.com/nezhahq/nezha/master/.github/brand.svg" title="哪吒监控 Nezha Monitoring">
-  <br>
-  <small><i>LOGO designed by <a href="https://xio.ng" target="_blank">熊大</a> .</i></small>
-  <br><br>
-</div>
-
-[文档](nezha/README.md)
-
-国外服务器：
-```shell
-curl -fskL raw.githubusercontent.com/honeok/cross/master/nezha/install.sh -o nezha.sh && chmod +x nezha.sh && sudo ./nezha.sh
-```
-国内服务器：
-```shell
-curl -fskL gh.611611.best/raw.githubusercontent.com/honeok/cross/master/nezha/install.sh -o nezha.sh && chmod +x nezha.sh && sudo ./nezha.sh
-```
 ## BestTrace路由追踪
 
 国外服务器：
 ```shell
-bash <(curl -fskL raw.githubusercontent.com/honeok/cross/master/BestTrace.sh)
+bash <(curl -sL https://github.com/honeok/cross/raw/master/BestTrace.sh)
 ```
 国内服务器：
 ```shell
-bash <(curl -fskL gh.611611.best/raw.githubusercontent.com/honeok/cross/master/BestTrace.sh)
+bash <(curl -sL https://cdn.611611.best/https://github.com/honeok/cross/raw/master/BestTrace.sh)
 ```
 
 ### 参数说明：
@@ -86,15 +62,26 @@ bash BestTrace.sh -nmg       # 测试内蒙古
 bash BestTrace.sh -nmg -d    # 测试后删除 nexttrace
 ```
 
+## 内存超售检测
+
+国外服务器：
+```shell
+bash <(curl -sL https://github.com/honeok/cross/raw/master/memoryCheck.sh)
+```
+国内服务器：
+```shell
+bash <(curl -sL https://cdn.611611.best/https://github.com/honeok/cross/raw/master/memoryCheck.sh)
+```
+
 ## TeamSpeak服务器一键脚本
 
 国外服务器：
 ```shell
-bash <(curl -fskL raw.githubusercontent.com/honeok/cross/master/play/ts.sh)
+bash <(curl -sL https://github.com/honeok/cross/raw/master/play/ts.sh)
 ```
 国内服务器：
 ```shell
-bash <(curl -fskL gh.611611.best/raw.githubusercontent.com/honeok/cross/master/play/ts.sh)
+bash <(curl -sL https://cdn.611611.best/https://github.com/honeok/cross/raw/master/play/ts.sh)
 ```
 
 ## Star History
