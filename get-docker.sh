@@ -1,28 +1,24 @@
-#!/bin/bash
-# SPDX-License-Identifier: MIT
-# Copyright (c) 2024 honeok
-# Author: honeok yihaohey@gmail.com
+#!/usr/bin/env bash
+#
+# Description: Script for quickly installing the latest Docker-CE on supported Linux distros.
+#
+# Copyright (C) 2023-2024 honeok <honeok@duck.com>
 # Blog: www.honeok.com
+# https://github.com/honeok/cross
 
-set -o errexit
-clear
+version="v0.0.2 (2024.12.20)"
 
-gitdocker_version="2024.8.12 v1.0"
-os_release=$(grep '^PRETTY_NAME=' /etc/os-release | cut -d '"' -f 2)
-
-yellow='\033[1;33m'       # 黄色
-red='\033[1;31m'          # 红色
-magenta='\033[1;35m'      # 品红色
-green='\033[1;32m'        # 绿色
-blue='\033[1;34m'         # 蓝色
-cyan='\033[1;36m'         # 青色
-purple='\033[1;35m'       # 紫色
-gray='\033[1;30m'         # 灰色
-orange='\033[1;38;5;208m' # 橙色
-white='\033[0m'           # 白色
+yellow='\033[93m'
+red='\033[31m'
+green='\033[92m'
+blue='\033[94m'
+cyan='\033[96m'
+purple='\033[95m'
+gray='\033[37m'
+orange='\033[38;5;214m'
+white='\033[0m'
 _yellow() { echo -e ${yellow}$@${white}; }
 _red() { echo -e ${red}$@${white}; }
-_magenta() { echo -e ${magenta}$@${white}; }
 _green() { echo -e ${green}$@${white}; }
 _blue() { echo -e ${blue}$@${white}; }
 _cyan() { echo -e ${cyan}$@${white}; }
@@ -30,71 +26,71 @@ _purple() { echo -e ${purple}$@${white}; }
 _gray() { echo -e ${gray}$@${white}; }
 _orange() { echo -e ${orange}$@${white}; }
 
-# 安装软件包
-install(){
-	if [ $# -eq 0 ]; then
-		_red "未提供软件包参数"
-		return 1
-	fi
+err_msg=$(_bg_red 警告)
+_err_msg() { echo -e "$err_msg $@"; }
 
-	for package in "$@"; do
-		if ! command -v "$package" &>/dev/null; then
-			_yellow "正在安装${package}"
-			if command -v dnf &>/dev/null; then
-				dnf install -y "$package"
-			elif command -v yum &>/dev/null; then
-				yum -y install "$package"
-			elif command -v apt &>/dev/null; then
-				apt update && apt install -y "$package"
-			elif command -v apk &>/dev/null; then
-				apk add "$package"
-			else
-				_red "未知的包管理器"
-				return 1
-			fi
-		else
-			_yellow "${package}已安装"
-		fi
-	done
-	return 0
+export DEBIAN_FRONTEND=noninteractive
+
+os_name=$(grep ^ID= /etc/*release | awk -F'=' '{print $2}' | sed 's/"//g')
+[[ "$os_name" != "debian" && "$os_name" != "ubuntu" && "$os_name" != "centos" && "$os_name" != "rocky" && "$os_name" != "almalinux" ]] && exit 0
+[ "$(id -u)" -ne "0" ] && exit 1
+
+if [ "$(cd -P -- "$(dirname -- "$0")" && pwd -P)" != "/root" ]; then
+    cd /root >/dev/null 2>&1
+fi
+
+geo_check() {
+    local cloudflare_api="https://dash.cloudflare.com/cdn-cgi/trace"
+    local user_agent="Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/81.0"
+
+    country=$(curl -A "$user_agent" -m 10 -s "$cloudflare_api" | grep -oP 'loc=\K\w+')
+    [ -z "$country" ] && _err_msg "$(_red '无法获取服务器所在地区，请检查网络！')" && exit 1
 }
 
-# 检查网络连接
-check_internet_connect(){
-	if ! ping -c 1 objectstorage.ap-seoul-1.oraclecloud.com &> /dev/null; then
-		_red "网络错误,无法访问互联网"
-		exit 1
-	fi
-}
+install() {
+    if [ $# -eq 0 ]; then
+        _red "未提供软件包参数"
+        return 1
+    fi
 
-# 获取服务器IP地址
-check_ip_address(){
-	local ipv4_address=$(curl -s -H "X-Forwarded-For: 223.5.5.5" http://ifconfig.me)
-	local ipv6_address=$(curl -s --max-time 1 ipv6.ip.sb)
-	local isp_info=$(curl -s https://ipinfo.io | grep '"org":' | awk -F'"' '{print $4}')
-	local location=$(curl -s ipinfo.io/city)
-
-	_yellow "公网IPv4地址: ${ipv4_address}"
-	_yellow "公网IPv6地址: ${ipv6_address}"
-	_yellow "运营商: ${isp_info}"
-	_yellow "地理位置: ${location}"
+    for package in "$@"; do
+        if ! command -v "$package" >/dev/null 2>&1; then
+            _yellow "正在安装$package"
+            if command -v dnf >/dev/null 2>&1; then
+                dnf update -y
+                dnf install epel-release -y
+                dnf install "$package" -y
+            elif command -v yum >/dev/null 2>&1; then
+                yum update -y
+                yum install epel-release -y
+                yum install "$package" -y
+            elif command -v apt >/dev/null 2>&1; then
+                apt update -y
+                apt install "$package" -y
+            else
+                _red "未知的包管理器"
+                return 1
+            fi
+        else
+            echo -e "${green}${package}已经安装！${white}"
+        fi
+    done
+    return 0
 }
 
 # 检查Docker或Docker Compose是否已安装,用于在函数操作系统安装docker中嵌套
-check_docker_installed() {
-	if command -v docker >/dev/null 2>&1; then
-		if docker --version >/dev/null 2>&1; then
-			_red "Docker已安装,正在退出安装程序"
-			script_completion_message
-			exit 0
-		fi
-	fi
-	
-	if command -v docker compose >/dev/null 2>&1 || command -v docker-compose >/dev/null 2>&1; then
-		_red "Docker Compose已安装,正在退出安装程序"
-		script_completion_message
+check_docker() {
+    command -v docker >/dev/null 2>&1 && docker --version >/dev/null 2>&1 && {
+        _red "Docker已安装,正在退出安装程序"
+		completion_message
 		exit 0
-	fi
+	}
+
+    command -v docker-compose >/dev/null 2>&1 || command -v "docker compose" >/dev/null 2>&1 && {
+        _red "Docker Compose已安装,正在退出安装程序"
+        completion_message
+        exit 0
+    }
 }
 
 # 打印进度条
@@ -119,7 +115,7 @@ centos_install_docker(){
 	# 检查是否为CentOS7
 	if ! grep -q '^ID="centos"$' /etc/os-release || ! grep -q '^VERSION_ID="7"$' /etc/os-release; then
 		_red "本脚本仅支持在CentOS7上安装Docker,如有需求请www.honeok.com留言"
-		script_completion_message
+		completion_message
 		exit 0
 	fi
 
@@ -130,7 +126,7 @@ centos_install_docker(){
 		repo_url="https://download.docker.com/linux/centos/docker-ce.repo"
 	fi
 
-	check_docker_installed
+	check_docker
 	sudo yum remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine -y >/dev/null 2>&1 || true
 
 	commands=(
@@ -223,7 +219,7 @@ install_docker(){
 		exit 1
 	fi
 
-	check_docker_installed
+	check_docker
 
 	# 根据官方文档删除旧版本的Docker
 	apt install sudo >/dev/null 2>&1
@@ -267,14 +263,14 @@ install_docker(){
 # 卸载Docker
 uninstall_docker() {
 	local os_name
-	local os_release
+	local os_info
 	local docker_files=("/var/lib/docker" "/var/lib/containerd" "/etc/docker" "/opt/containerd")
 	local repo_files=("/etc/yum.repos.d/docker.*" "/etc/apt/sources.list.d/docker.*" "/etc/apt/keyrings/docker.*")
 
 	# 获取操作系统信息
 	if [ -f /etc/os-release ]; then
 		os_name=$(grep '^ID=' /etc/os-release | cut -d'=' -f2 | tr -d '"' | tr '[:upper:]' '[:lower:]')
-		os_release=$(grep '^VERSION_ID=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
+		os_info=$(grep '^VERSION_ID=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
 	else
 		_red "无法识别操作系统版本"
 		exit 1
@@ -283,9 +279,9 @@ uninstall_docker() {
 	_yellow "准备卸载Docker"
 
 	# 检查Docker是否安装
-	if ! command -v docker &> /dev/null; then
+	if ! command -v docker >/dev/null 2>&1; then
 		_red "Docker未安装在系统上,无法继续卸载"
-		script_completion_message
+		completion_message
 		exit 1
 	fi
 
@@ -359,7 +355,7 @@ uninstall_docker() {
 	fi
 
 	# 检查卸载是否成功
-	if command -v docker &> /dev/null; then
+	if command -v docker >/dev/null 2>&1; then
 		_red "Docker卸载失败,请手动检查"
 		exit 1
 	else
@@ -476,7 +472,7 @@ docker_main_version() {
 }
 
 # 退出脚本前显示执行完成信息
-script_completion_message() {
+completion_message() {
 	local timezone=$(timedatectl | awk '/Time zone/ {print $3}')
 	local current_time=$(date '+%Y-%m-%d %H:%M:%S')
 
@@ -496,7 +492,7 @@ cat << 'EOF'
 EOF
 
 	_yellow "Author: honeok"
-	_blue "Version: $gitdocker_version"
+	_blue "Version: $version"
 	_purple "Project: https://github.com/honeok"
 }
 
@@ -511,24 +507,24 @@ fi
 if [ -n "$1" ] && [ "$1" != "uninstall" ]; then
 	print_getdocker_logo
 	_red "无效参数! (可选: 没有参数/uninstall)"
-	script_completion_message
+	completion_message
 	exit 1
 fi
 
 if [ -n "$2" ]; then
 	print_getdocker_logo
 	_red "只能提供一个参数 (可选: uninstall)"
-	script_completion_message
+	completion_message
 	exit 1
 fi
 
 # 检查操作系统是否受支持(CentOS,Debian,Ubuntu)
-case "$os_release" in
+case "$os_info" in
 	*CentOS*|*centos*|*Debian*|*debian*|*Ubuntu*|*ubuntu*)
-		_yellow "检测到本脚本支持的Linux发行版: $os_release"
+		_yellow "检测到本脚本支持的Linux发行版: $os_info"
 		;;
 	*)
-		_red "此脚本不支持的Linux发行版: $os_release"
+		_red "此脚本不支持的Linux发行版: $os_info"
 		exit 1
 		;;
 esac
@@ -541,18 +537,12 @@ main(){
 	# 执行卸载 Docker
 	if [ "$1" == "uninstall" ]; then
 		uninstall_docker
-		script_completion_message
+		completion_message
 		exit 0
 	fi
 
-	# 检查网络连接
-	check_internet_connect
-
-	# 获取IP地址
-	check_ip_address
-
 	# 检查操作系统兼容性并执行安装或卸载
-	case "$os_release" in
+	case "$os_info" in
 	*CentOS*|*centos*)
 		centos_install_docker
 		generate_docker_config
@@ -570,7 +560,7 @@ main(){
 	esac
 
 	# 完成脚本
-	script_completion_message
+	completion_message
 }
 
 main "$@"
