@@ -47,6 +47,8 @@ geo_check() {
     [ -z "$country" ] && _err_msg "$(_red '无法获取服务器所在地区，请检查网络！')" && exit 1
 }
 
+geo_check
+
 install() {
     if [ $# -eq 0 ]; then
         _red "未提供软件包参数"
@@ -72,25 +74,24 @@ install() {
                 return 1
             fi
         else
-            echo -e "${green}${package}已经安装！${white}"
+            _green "${package}已经安装！"
         fi
     done
     return 0
 }
 
-# 检查Docker或Docker Compose是否已安装，用于在函数操作系统安装docker中嵌套
 check_docker() {
-    command -v docker >/dev/null 2>&1 && docker --version >/dev/null 2>&1 && {
-        _red "Docker已安装,正在退出安装程序"
-		completion_message
-		exit 0
-	}
-
-    command -v docker-compose >/dev/null 2>&1 || command -v "docker compose" >/dev/null 2>&1 && {
-        _red "Docker Compose已安装,正在退出安装程序"
+    if command -v docker >/dev/null 2>&1 && docker --version >/dev/null 2>&1; then
+        _red "Docker已安装，正在退出安装程序"
         completion_message
         exit 0
-    }
+    fi
+
+    if docker compose version >/dev/null 2>&1 || command -v docker-compose >/dev/null 2>&1; then
+        _red "Docker Compose已安装，正在退出安装程序"
+        completion_message
+        exit 0
+    fi
 }
 
 # 打印进度条
@@ -119,22 +120,22 @@ centos_install_docker(){
         exit 0
     fi
 
-# 根据地区选择镜像源
-    if [ "$(curl -s https://ipinfo.io/country)" == 'CN' ]; then
+    # 根据地区选择镜像源
+    if [ "$country" == 'CN' ]; then
         repo_url="http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo"
     else
         repo_url="https://download.docker.com/linux/centos/docker-ce.repo"
     fi
 
     check_docker
-    sudo yum remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine -y >/dev/null 2>&1 || true
+    yum remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine -y >/dev/null 2>&1 || true
 
     commands=(
-        "sudo yum install yum-utils -y >/dev/null 2>&1"
-        "sudo yum-config-manager --add-repo \"$repo_url\" >/dev/null 2>&1"
-        "sudo yum makecache fast >/dev/null 2>&1"
-        "sudo yum install docker-ce docker-ce-cli containerd.io -y >/dev/null 2>&1"
-        "sudo systemctl enable docker --now >/dev/null 2>&1"
+        "yum install yum-utils -y >/dev/null 2>&1"
+        "yum-config-manager --add-repo \"$repo_url\" >/dev/null 2>&1"
+        "yum makecache fast >/dev/null 2>&1"
+        "yum install docker-ce docker-ce-cli containerd.io -y >/dev/null 2>&1"
+        "systemctl enable docker --now >/dev/null 2>&1"
     )
 
     for command in "${commands[@]}"; do
