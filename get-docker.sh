@@ -71,12 +71,57 @@ install() {
             elif command -v apt >/dev/null 2>&1; then
                 apt update -y
                 apt install "$package" -y
+            elif command -v apk >/dev/null 2>&1; then
+                apk update
+                apk add "$package"
             else
                 _red "未知的包管理器"
                 return 1
             fi
         else
             _green "${package}已经安装！"
+        fi
+    done
+    return 0
+}
+
+remove() {
+    if [ $# -eq 0 ]; then
+        _red "未提供软件包参数"
+        return 1
+    fi
+
+    check_installed() {
+        local package="$1"
+        if command -v dnf >/dev/null 2>&1; then
+            rpm -q "$package" >/dev/null 2>&1
+        elif command -v yum >/dev/null 2>&1; then
+            rpm -q "$package" >/dev/null 2>&1
+        elif command -v apt >/dev/null 2>&1; then
+            dpkg -l | grep -qw "$package"
+        elif command -v apk >/dev/null 2>&1; then
+            apk info | grep -qw "$package"
+        else
+            _red "未知的包管理器"
+            return 1
+        fi
+        return 0
+    }
+
+    for package in "$@"; do
+        _yellow "正在卸载$package"
+        if check_installed "$package"; then
+            if command -v dnf >/dev/null 2>&1; then
+                dnf remove "$package"* -y
+            elif command -v yum >/dev/null 2>&1; then
+                yum remove "$package"* -y
+            elif command -v apt >/dev/null 2>&1; then
+                apt purge "$package"* -y
+            elif command -v apk >/dev/null 2>&1; then
+                apk del "$package"* -y
+            fi
+        else
+            _red "${package}没有安装，跳过卸载！"
         fi
     done
     return 0
@@ -114,13 +159,6 @@ centos_install_docker(){
     local repo_url=""
     local total_steps=5
     local step=0
-
-    # 检查是否为CentOS7
-    if ! grep -q '^ID="centos"$' /etc/os-release || ! grep -q '^VERSION_ID="7"$' /etc/os-release; then
-        _red "本脚本仅支持在CentOS7上安装Docker,如有需求请www.honeok.com留言"
-        completion_message
-        exit 0
-    fi
 
     # 根据地区选择镜像源
     if [ "$country" == 'CN' ]; then
