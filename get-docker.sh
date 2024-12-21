@@ -6,7 +6,9 @@
 # Blog: www.honeok.com
 # https://github.com/honeok/cross
 
-version="v0.0.2 (2024.12.20)"
+# 当前脚本版本号
+version='v0.0.2 (2024.12.20)'
+github_proxy='https://cdn.611611.best/'
 
 yellow='\033[93m'
 red='\033[31m'
@@ -82,13 +84,13 @@ install() {
 
 check_docker() {
     if command -v docker >/dev/null 2>&1 && docker --version >/dev/null 2>&1; then
-        _red "Docker已安装，正在退出安装程序"
+        _err_msg "$(_red 'Docker 已安装，正在退出安装程序！')"
         completion_message
         exit 0
     fi
 
     if docker compose version >/dev/null 2>&1 || command -v docker-compose >/dev/null 2>&1; then
-        _red "Docker Compose已安装，正在退出安装程序"
+        _err_msg "$(_red 'Docker Compose 已安装，正在退出安装程序！')"
         completion_message
         exit 0
     fi
