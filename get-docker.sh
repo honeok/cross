@@ -168,7 +168,7 @@ centos_install_docker(){
     fi
 
     check_docker
-    yum remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine -y >/dev/null 2>&1 || true
+    remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine -y >/dev/null 2>&1 || true
 
     commands=(
         "yum install yum-utils -y >/dev/null 2>&1"
