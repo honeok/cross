@@ -108,50 +108,50 @@ print_progress() {
 
 # 在CentOS上安装Docker
 centos_install_docker(){
-	local repo_url=""
-	local total_steps=5
-	local step=0
+    local repo_url=""
+    local total_steps=5
+    local step=0
 
-	# 检查是否为CentOS7
-	if ! grep -q '^ID="centos"$' /etc/os-release || ! grep -q '^VERSION_ID="7"$' /etc/os-release; then
-		_red "本脚本仅支持在CentOS7上安装Docker,如有需求请www.honeok.com留言"
-		completion_message
-		exit 0
-	fi
+    # 检查是否为CentOS7
+    if ! grep -q '^ID="centos"$' /etc/os-release || ! grep -q '^VERSION_ID="7"$' /etc/os-release; then
+        _red "本脚本仅支持在CentOS7上安装Docker,如有需求请www.honeok.com留言"
+        completion_message
+        exit 0
+    fi
 
-	# 根据地区选择镜像源
-	if [ "$(curl -s https://ipinfo.io/country)" == 'CN' ]; then
-		repo_url="http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo"
-	else
-		repo_url="https://download.docker.com/linux/centos/docker-ce.repo"
-	fi
+# 根据地区选择镜像源
+    if [ "$(curl -s https://ipinfo.io/country)" == 'CN' ]; then
+        repo_url="http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo"
+    else
+        repo_url="https://download.docker.com/linux/centos/docker-ce.repo"
+    fi
 
-	check_docker
-	sudo yum remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine -y >/dev/null 2>&1 || true
+    check_docker
+    sudo yum remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine -y >/dev/null 2>&1 || true
 
-	commands=(
-		"sudo yum install yum-utils -y >/dev/null 2>&1"
-		"sudo yum-config-manager --add-repo \"$repo_url\" >/dev/null 2>&1"
-		"sudo yum makecache fast >/dev/null 2>&1"
-		"sudo yum install docker-ce docker-ce-cli containerd.io -y >/dev/null 2>&1"
-		"sudo systemctl enable docker --now >/dev/null 2>&1"
-	)
+    commands=(
+        "sudo yum install yum-utils -y >/dev/null 2>&1"
+        "sudo yum-config-manager --add-repo \"$repo_url\" >/dev/null 2>&1"
+        "sudo yum makecache fast >/dev/null 2>&1"
+        "sudo yum install docker-ce docker-ce-cli containerd.io -y >/dev/null 2>&1"
+        "sudo systemctl enable docker --now >/dev/null 2>&1"
+    )
 
-	for command in "${commands[@]}"; do
-		eval $command
-		print_progress $((++step)) $total_steps
-	done
+    for command in "${commands[@]}"; do
+        eval $command
+        print_progress $((++step)) $total_steps
+    done
 
-	# 结束进度条
-	printf "\n"
+    # 结束进度条
+    printf "\n"
 
-	# 检查Docker服务是否处于活动状态 
-	if ! sudo systemctl is-active --quiet docker; then
-		_red "Docker状态检查失败或服务无法启动,请检查安装日志或手动启动Docker服务"
-		exit 1
-	else
-		_green "Docker已完成自检,启动并设置开机自启"
-	fi
+    # 检查Docker服务是否处于活动状态 
+    if ! sudo systemctl is-active --quiet docker; then
+        _red "Docker状态检查失败或服务无法启动，请检查安装日志或手动启动Docker服务"
+        exit 1
+    else
+        _green "Docker已完成自检，启动并设置开机自启"
+    fi
 }
 
 #alpine_install_docker(){
