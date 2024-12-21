@@ -78,7 +78,7 @@ install() {
     return 0
 }
 
-# 检查Docker或Docker Compose是否已安装,用于在函数操作系统安装docker中嵌套
+# 检查Docker或Docker Compose是否已安装，用于在函数操作系统安装docker中嵌套
 check_docker() {
     command -v docker >/dev/null 2>&1 && docker --version >/dev/null 2>&1 && {
         _red "Docker已安装,正在退出安装程序"
@@ -95,15 +95,15 @@ check_docker() {
 
 # 打印进度条
 print_progress() {
-	local step=$1
-	local total_steps=$2
-	local progress=$((100 * step / total_steps))
-	local bar_length=50
-	local filled_length=$((bar_length * progress / 100))
-	local empty_length=$((bar_length - filled_length))
-	local bar=$(printf "%${filled_length}s" | tr ' ' '#')
-	local empty=$(printf "%${empty_length}s" | tr ' ' '-')
-	printf "\r[${bar}${empty}] ${progress}%% 完成"
+    local step=$1
+    local total_steps=$2
+    local progress=$((100 * step / total_steps))
+    local bar_length=50
+    local filled_length=$((bar_length * progress / 100))
+    local empty_length=$((bar_length - filled_length))
+    local bar=$(printf "%${filled_length}s" | tr ' ' '#')
+    local empty=$(printf "%${empty_length}s" | tr ' ' '-')
+    printf "\r[${bar}${empty}] ${progress}%% 完成"
 }
 
 # 在CentOS上安装Docker
