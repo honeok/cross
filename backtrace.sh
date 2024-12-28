@@ -2,15 +2,15 @@
 #
 # Description: Three network return routing line testing.
 #
-# From: https://github.com/oneclickvirt/backtrace
-# Modify by: honeok <honeok@duck.com>
+# Original Project: https://github.com/oneclickvirt/backtrace
+# Forked and Modified By: honeok <honeok@duck.com>
 #
 # Archive on GitHub: https://github.com/honeok/archive/raw/master/cross/backtrace.sh
 
 red='\033[31m'
 white='\033[0m'
 _red() { echo -e ${red}$@${white}; }
-_err_msg() { echo -e "\033[41m\033[1m警告${white} $@"; }
+_err_msg() { echo -e "\033[41m\033[1mwarn${white} $@"; }
 
 os_type=$(uname -s | sed 's/[A-Z]/\L&/g')
 os_arch=$(uname -m | sed 's/[A-Z]/\L&/g')
@@ -21,19 +21,18 @@ if [ "$(cd -P -- "$(dirname -- "$0")" && pwd -P)" != "/root" ]; then
     cd /root >/dev/null 2>&1
 fi
 
-[ -f /usr/bin/backtrace ] && rm -rf /usr/bin/backtrace >/dev/null 2>&1
+if [ -f /usr/bin/backtrace ] || command -v backtrace >/dev/null 2>&1; then
+    rm -f /usr/bin/backtrace >/dev/null 2>&1
+fi
 
-geo_check() {
+cdn_check() {
     local cloudflare_api="https://dash.cloudflare.com/cdn-cgi/trace"
     local user_agent="Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/81.0"
 
     country=$(curl -A "$user_agent" -m 10 -s "$cloudflare_api" | sed -n 's/.*loc=\([^ ]*\).*/\1/p')
-    [ -z "$country" ] && _err_msg "$(_red '无法获取服务器所在地区，请检查网络！')" && exit 1
-}
+    [ -z "$country" ] && _err_msg "$(_red 'Failed to obtain the server location. Please check your network connection!')" && exit 1
 
-cdn_check() {
-    geo_check
-    if [[ "$country" == "CN" || $(curl -fsL -o /dev/null -w "%{time_total}" --max-time 5 https://raw.githubusercontent.com/honeok/Tools/master/README.md) > 3 ]]; then
+    if [[ "$country" == "CN" || $(curl -fsL -o /dev/null -w "%{time_total}" --max-time 5 https://raw.githubusercontent.com/honeok/cross/master/README.md) > 3 ]]; then
         github_proxy="https://gh-proxy.com/"
     else
         github_proxy=""
@@ -43,76 +42,25 @@ cdn_check() {
 cdn_check
 
 case $os_type in
-    linux)
+    [Ll][Ii][Nn][Uu][Xx]|[Dd][Aa][Rr][Ww][Ii][Nn]|[Ff][Rr][Ee][Bb][Ss][Dd]|[Oo][Pp][Ee][Nn][Bb][Ss][Dd])
         case $os_arch in
-            "x86_64" | "x86" | "amd64" | "x64")
-                curl -sL -o backtrace "${github_proxy}https://github.com/oneclickvirt/backtrace/releases/download/output/backtrace-linux-amd64"
+            [Xx]86_64|[Xx][86]|[Aa][Mm][Dd]64|[Xx]64)
+                curl -sL -o backtrace "${github_proxy}https://github.com/oneclickvirt/backtrace/releases/download/output/backtrace-${os_type}-amd64"
                 ;;
-            "i386" | "i686")
-                curl -sL -o backtrace "${github_proxy}https://github.com/oneclickvirt/backtrace/releases/download/output/backtrace-linux-386"
+            [Ii]386|[Ii]686)
+                curl -sL -o backtrace "${github_proxy}https://github.com/oneclickvirt/backtrace/releases/download/output/backtrace-${os_type}-386"
                 ;;
-            "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
-                curl -sL -o backtrace "${github_proxy}https://github.com/oneclickvirt/backtrace/releases/download/output/backtrace-linux-arm64"
+            [Aa][Rr][Mm][Vv]7l|[Aa][Rr][Mm][Vv]8|[Aa][Rr][Mm][Vv]8l|[Aa][Aa][Rr][Cc][Hh]64|[Aa][Rr][Mm]64)
+                curl -sL -o backtrace "${github_proxy}https://github.com/oneclickvirt/backtrace/releases/download/output/backtrace-${os_type}-arm64"
                 ;;
             *)
-                echo "Unsupported architecture: $os_arch"
-                exit 1
-                ;;
-        esac
-        ;;
-    darwin)
-        case $os_arch in
-            "x86_64" | "x86" | "amd64" | "x64")
-                curl -sL -o backtrace "${github_proxy}https://github.com/oneclickvirt/backtrace/releases/download/output/backtrace-darwin-amd64"
-                ;;
-            "i386" | "i686")
-                curl -sL -o backtrace "${github_proxy}https://github.com/oneclickvirt/backtrace/releases/download/output/backtrace-darwin-386"
-                ;;
-            "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
-                curl -sL -o backtrace "${github_proxy}https://github.com/oneclickvirt/backtrace/releases/download/output/backtrace-darwin-arm64"
-                ;;
-            *)
-                echo "Unsupported architecture: $os_arch"
-                exit 1
-                ;;
-        esac
-        ;;
-    freebsd)
-        case $os_arch in
-            amd64)
-                curl -sL -o backtrace "${github_proxy}https://github.com/oneclickvirt/backtrace/releases/download/output/backtrace-freebsd-amd64"
-                ;;
-            "i386" | "i686")
-                curl -sL -o backtrace "${github_proxy}https://github.com/oneclickvirt/backtrace/releases/download/output/backtrace-freebsd-386"
-                ;;
-            "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
-                curl -sL -o backtrace "${github_proxy}https://github.com/oneclickvirt/backtrace/releases/download/output/backtrace-freebsd-arm64"
-                ;;
-            *)
-                echo "Unsupported architecture: $os_arch"
-                exit 1
-                ;;
-        esac
-        ;;
-    openbsd)
-        case $os_arch in
-            amd64)
-                curl -sL -o backtrace "${github_proxy}https://github.com/oneclickvirt/backtrace/releases/download/output/backtrace-openbsd-amd64"
-                ;;
-            "i386" | "i686")
-                curl -sL -o backtrace "${github_proxy}https://github.com/oneclickvirt/backtrace/releases/download/output/backtrace-openbsd-386"
-                ;;
-            "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
-                curl -sL -o backtrace "${github_proxy}https://github.com/oneclickvirt/backtrace/releases/download/output/backtrace-openbsd-arm64"
-                ;;
-            *)
-                echo "Unsupported architecture: $os_arch"
+                _red "Unsupported architecture: $os_arch"
                 exit 1
                 ;;
         esac
         ;;
     *)
-        echo "Unsupported operating system: $os_type"
+        _red "Unsupported operating system: $os_type"
         exit 1
         ;;
 esac
