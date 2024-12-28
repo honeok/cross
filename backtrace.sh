@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Description: Three network return routing line testing.
+# Description: test the routing of the three major network return lines on the server side.
 #
 # Original Project: https://github.com/oneclickvirt/backtrace
 # Forked and Modified By: honeok <honeok@duck.com>
