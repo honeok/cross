@@ -54,13 +54,13 @@ case $os_type in
                 curl -sL -o backtrace "${github_proxy}https://github.com/oneclickvirt/backtrace/releases/download/output/backtrace-${os_type}-arm64"
                 ;;
             *)
-                _red "Unsupported architecture: $os_arch"
+                _err_msg "$(_red "Unsupported architecture: $os_arch")"
                 exit 1
                 ;;
         esac
         ;;
     *)
-        _red "Unsupported operating system: $os_type"
+        _err_msg "$(_red "Unsupported operating system: $os_type")"
         exit 1
         ;;
 esac
