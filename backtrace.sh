@@ -5,7 +5,7 @@
 # Original Project: https://github.com/oneclickvirt/backtrace
 # Forked and Modified By: honeok <honeok@duck.com>
 #
-# Archive on GitHub: https://github.com/honeok/archive/raw/master/cross/backtrace.sh
+# https://github.com/honeok/cross/raw/master/backtrace.sh
 
 red='\033[31m'
 white='\033[0m'
