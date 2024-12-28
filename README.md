@@ -73,6 +73,20 @@ bash <(curl -sL https://github.com/honeok/cross/raw/master/memoryCheck.sh)
 bash <(curl -sL https://cdn.611611.best/https://github.com/honeok/cross/raw/master/memoryCheck.sh)
 ```
 
+## Backtrace三网回程路由线路测试
+
+基于 https://github.com/oneclickvirt/backtrace 一键安装脚本的调优
+![](https://cdn.img2ipfs.com/ipfs/QmQ5EnCV9en5aLFSGM4mKwvh5jpMPDy8JsmbkdBtshYUP2?filename=image.png)
+
+国外服务器：
+```shell
+bash <(curl -sL https://github.com/honeok/cross/raw/master/backtrace.sh)
+```
+国内服务器：
+```shell
+bash <(curl -sL https://cdn.611611.best/https://github.com/honeok/cross/raw/master/backtrace.sh)
+```
+
 ## TeamSpeak服务器一键脚本
 
 国外服务器：
