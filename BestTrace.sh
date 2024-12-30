@@ -4,82 +4,20 @@
 #
 # Copyright (C) 2024 honeok <honeok@duck.com>
 # Blog: https://www.honeok.com
-# https://github.com/honeok/cross
+#
+# https://github.com/honeok/cross/raw/master/besttrace.sh
+
+version='v0.0.2 (2024.12.30)'
 
 yellow='\033[93m'
 red='\033[31m'
 green='\033[92m'
 white='\033[0m'
-_yellow() { echo -e "${yellow}$@${white}"; }
-_red() { echo -e "${red}$@${white}"; }
-_green() { echo -e ${green}$@${white}; }
+_yellow() { echo -e "${yellow}$*${white}"; }
+_red() { echo -e "${red}$*${white}"; }
+_green() { echo -e "${green}$*${white}"; }
 
 separator() { printf "%-70s\n" "-" | sed 's/\s/-/g'; }
-
-ip_address() {
-    local ipv4_services=("ipv4.ip.sb" "ipv4.icanhazip.com" "v4.ident.me")
-    local ipv6_services=("ipv6.ip.sb" "ipv6.icanhazip.com" "v6.ident.me")
-    ipv4_address=""
-    ipv6_address=""
-    for service in "${ipv4_services[@]}"; do
-        ipv4_address=$(curl -fskL4 -m 3 "$service")
-        if [[ "$ipv4_address" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            break
-        fi
-    done
-    for service in "${ipv6_services[@]}"; do
-        ipv6_address=$(curl -fskL6 -m 3 "$service")
-        if [[ "$ipv6_address" =~ ^[0-9a-fA-F:]+$ ]]; then
-            break
-        fi
-    done
-}
-
-ip_address
-
-if ! command -v nexttrace >/dev/null 2>&1 && [ ! -f "/usr/local/bin/nexttrace" ] && [ ! -f "/usr/bin/nexttrace" ]; then
-    # bash <(curl -fskL raw.githubusercontent.com/nxtrace/NTrace-core/main/nt_install.sh) || { _red "Nexttrace安装失败"; exit 1; }
-    bash <(curl -sL nxtrace.org/nt) || { _red "Nexttrace安装失败"; exit 1; }
-fi
-
-supported_params=$(cat <<EOF
-默认执行广东、上海、北京、四川三网回程:
-bash BestTrace.sh
-
-可选参数：
-  -nmg  # 内蒙古
-  -hlj  # 黑龙江
-  -xj   # 新疆
-  -tj   # 天津
-  -bj   # 北京
-  -ln   # 辽宁
-  -hb   # 河北
-  -sd   # 山东
-  -js   # 江苏
-  -zj   # 浙江
-  -fj   # 福建
-  -ah   # 安徽
-  -jx   # 江西
-  -xz   # 西藏
-  -sc   # 四川
-  -sh   # 上海
-  -gd   # 广东
-
-指定参数示例:
-  bash BestTrace.sh -h         # 帮助命令
-  bash BestTrace.sh -d         # 单独删除 nexttrace
-  bash BestTrace.sh -nmg       # 测试内蒙古
-  bash BestTrace.sh -nmg -d    # 测试后删除 nexttrace
-EOF
-)
-
-# 卸载逻辑
-uninstall_nexttrace(){
-    separator
-    for file in "/usr/local/bin/nexttrace" "/usr/bin/nexttrace"; do
-        [[ -f $file ]] && rm -f "$file" && _green "nexttrace已成功删除"
-    done
-}
 
 # https://www.nodeseek.com/post-68572-1 https://www.nodeseek.com/post-129987-1
 trace_area_nmg=("内蒙古电信" "内蒙古联通" "内蒙古移动")
@@ -133,6 +71,73 @@ trace_ip_sh_v6=("sh-ct-v6.ip.zstaticcdn.com" "sh-cu-v6.ip.zstaticcdn.com" "sh-cm
 trace_area_gd=("广东电信" "广东联通" "广东移动")
 trace_ip_gd_v4=("gd-ct-v4.ip.zstaticcdn.com" "gd-cu-v4.ip.zstaticcdn.com" "gd-cm-v4.ip.zstaticcdn.com")
 trace_ip_gd_v6=("gd-ct-v6.ip.zstaticcdn.com" "gd-cu-v6.ip.zstaticcdn.com" "gd-cm-v6.ip.zstaticcdn.com")
+
+_yellow "当前脚本版本: $version"
+
+usage=$(cat <<EOF
+默认执行广东、上海、北京、四川三网回程:
+bash besttrace.sh
+
+可选参数：
+  -nmg  # 内蒙古
+  -hlj  # 黑龙江
+  -xj   # 新疆
+  -tj   # 天津
+  -bj   # 北京
+  -ln   # 辽宁
+  -hb   # 河北
+  -sd   # 山东
+  -js   # 江苏
+  -zj   # 浙江
+  -fj   # 福建
+  -ah   # 安徽
+  -jx   # 江西
+  -xz   # 西藏
+  -sc   # 四川
+  -sh   # 上海
+  -gd   # 广东
+
+指定参数示例:
+  bash besttrace.sh -h         # 帮助命令
+  bash besttrace.sh -d         # 单独删除 nexttrace
+  bash besttrace.sh -nmg       # 测试内蒙古
+  bash besttrace.sh -nmg -d    # 测试后删除 nexttrace
+EOF
+)
+
+ip_address() {
+    local ipv4_services=("ipv4.ip.sb" "ipv4.icanhazip.com" "v4.ident.me")
+    local ipv6_services=("ipv6.ip.sb" "ipv6.icanhazip.com" "v6.ident.me")
+    ipv4_address=""
+    ipv6_address=""
+    for service in "${ipv4_services[@]}"; do
+        ipv4_address=$(curl -fsL4 -m 3 "$service")
+        if [[ "$ipv4_address" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            break
+        fi
+    done
+    for service in "${ipv6_services[@]}"; do
+        ipv6_address=$(curl -fsL6 -m 3 "$service")
+        if [[ "$ipv6_address" =~ ^[0-9a-fA-F:]+$ ]]; then
+            break
+        fi
+    done
+}
+
+ip_address
+
+# 卸载逻辑
+uninstall() {
+    separator
+    for file in "/usr/local/bin/nexttrace" "/usr/bin/nexttrace"; do
+        [[ -f $file ]] && rm -f "$file" && _green "nexttrace已成功删除"
+    done
+}
+
+if ! command -v nexttrace >/dev/null 2>&1 && [ ! -f "/usr/local/bin/nexttrace" ] && [ ! -f "/usr/bin/nexttrace" ]; then
+    # bash <(curl -sL https://github.com/nxtrace/NTrace-core/raw/main/nt_install.sh) || { _red "Nexttrace安装失败"; exit 1; }
+    bash <(curl -sL nxtrace.org/nt) || { _red "Nexttrace安装失败"; exit 1; }
+fi
 
 clear
 
@@ -241,10 +246,10 @@ case "$1" in
         $trace_type_v6 && perform_trace trace_area_gd trace_ip_gd_v6
         ;;
     -h)
-        echo -e "$supported_params"
+        echo -e "$usage"
         ;;
     -d)
-        uninstall_nexttrace
+        uninstall
         ;;
     *)
         if [ -z "$1" ]; then
@@ -258,11 +263,11 @@ case "$1" in
             $trace_type_v6 && perform_trace trace_area_sc trace_ip_sc_v6
         else
             _red "错误：无效的参数，参数${1}不被支持！"
-            echo -e "$supported_params"
+            echo -e "$usage"
         fi
         ;;
 esac
 
 if [ "$2" == "-d" ]; then
-    uninstall_nexttrace
+    uninstall
 fi
