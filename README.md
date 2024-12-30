@@ -13,11 +13,11 @@ The towering giant tower, I see it, with people jumping down every moment. When 
 
 国外服务器：
 ```shell
-bash <(curl -sL https://github.com/honeok/cross/raw/master/BestTrace.sh)
+bash <(curl -sL https://github.com/honeok/cross/raw/master/besttrace.sh)
 ```
 国内服务器：
 ```shell
-bash <(curl -sL https://cdn.611611.best/https://github.com/honeok/cross/raw/master/BestTrace.sh)
+bash <(curl -sL https://cdn.611611.best/https://github.com/honeok/cross/raw/master/besttrace.sh)
 ```
 
 ### 参数说明：
@@ -33,33 +33,33 @@ bash <(curl -sL https://cdn.611611.best/https://github.com/honeok/cross/raw/mast
 ```shell
 bash BestTrace.sh
 
-               # -- 可选参数 --
-                  -nmg  # 内蒙古
-                  -hlj  # 黑龙江
-                  -xj   # 新疆
-                  -tj   # 天津
-                  -bj   # 北京
-                  -ln   # 辽宁
-                  -hb   # 河北
-                  -sd   # 山东
-                  -js   # 江苏
-                  -zj   # 浙江
-                  -fj   # 福建
-                  -ah   # 安徽
-                  -jx   # 江西
-                  -xz   # 西藏
-                  -sc   # 四川
-                  -sh   # 上海
-                  -gd   # 广东
+可选参数：
+    -nmg  # 内蒙古
+    -hlj  # 黑龙江
+    -xj   # 新疆
+    -tj   # 天津
+    -bj   # 北京
+    -ln   # 辽宁
+    -hb   # 河北
+    -sd   # 山东
+    -js   # 江苏
+    -zj   # 浙江
+    -fj   # 福建
+    -ah   # 安徽
+    -jx   # 江西
+    -xz   # 西藏
+    -sc   # 四川
+    -sh   # 上海
+    -gd   # 广东
 ```
 
 **指定参数示例**
 
 ```shell
-bash BestTrace.sh -h         # 帮助命令
-bash BestTrace.sh -d         # 单独删除 nexttrace
-bash BestTrace.sh -nmg       # 测试内蒙古
-bash BestTrace.sh -nmg -d    # 测试后删除 nexttrace
+bash besttrace.sh -h         # 帮助命令
+bash besttrace.sh -nmg       # 测试内蒙古
+bash besttrace.sh -nmg -hlj  # 同时测试内蒙古和黑龙江
+bash besttrace.sh -nmg -d    # 测试后删除 nexttrace
 ```
 
 ## 内存超售检测
