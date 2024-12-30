@@ -7,7 +7,7 @@
 #
 # https://github.com/honeok/cross/raw/master/besttrace.sh
 
-version='v0.0.2 (2024.12.30)'
+version='v0.0.2 (2024.12.31)'
 
 yellow='\033[1;33m'
 red='\033[1;31m'
@@ -16,6 +16,7 @@ white='\033[0m'
 _yellow() { echo -e "${yellow}$*${white}"; }
 _red() { echo -e "${red}$*${white}"; }
 _green() { echo -e "${green}$*${white}"; }
+_err_msg() { echo -e "\033[41m\033[1m警告${white} $*"; }
 
 separator() { printf "%-50s\n" "-" | sed 's/\s/-/g'; }
 
@@ -73,32 +74,34 @@ trace_ip_gd_v4=("gd-ct-v4.ip.zstaticcdn.com" "gd-cu-v4.ip.zstaticcdn.com" "gd-cm
 trace_ip_gd_v6=("gd-ct-v6.ip.zstaticcdn.com" "gd-cu-v6.ip.zstaticcdn.com" "gd-cm-v6.ip.zstaticcdn.com")
 
 usage=$(cat <<EOF
-默认执行广东、上海、北京、四川三网回程:
+
+默认执行广东、上海、北京、四川三网回程
+
 bash besttrace.sh
 
 可选参数：
-  -nmg  # 内蒙古
-  -hlj  # 黑龙江
-  -xj   # 新疆
-  -tj   # 天津
-  -bj   # 北京
-  -ln   # 辽宁
-  -hb   # 河北
-  -sd   # 山东
-  -js   # 江苏
-  -zj   # 浙江
-  -fj   # 福建
-  -ah   # 安徽
-  -jx   # 江西
-  -xz   # 西藏
-  -sc   # 四川
-  -sh   # 上海
-  -gd   # 广东
+    -nmg  # 内蒙古
+    -hlj  # 黑龙江
+    -xj   # 新疆
+    -tj   # 天津
+    -bj   # 北京
+    -ln   # 辽宁
+    -hb   # 河北
+    -sd   # 山东
+    -js   # 江苏
+    -zj   # 浙江
+    -fj   # 福建
+    -ah   # 安徽
+    -jx   # 江西
+    -xz   # 西藏
+    -sc   # 四川
+    -sh   # 上海
+    -gd   # 广东
 
 指定参数示例:
   bash besttrace.sh -h         # 帮助命令
-  bash besttrace.sh -d         # 单独删除 nexttrace
   bash besttrace.sh -nmg       # 测试内蒙古
+  bash besttrace.sh -nmg -hlj  # 同时测试内蒙古和黑龙江
   bash besttrace.sh -nmg -d    # 测试后删除 nexttrace
 EOF
 )
@@ -127,31 +130,72 @@ nt_uninstall() {
     [ -f "/usr/bin/nexttrace" ] && rm -f "/usr/bin/nexttrace" >/dev/null 2>&1
 }
 
-nt_install () {
+nt_install() {
     if ! command -v nexttrace >/dev/null 2>&1 && [ ! -f "/usr/local/bin/nexttrace" ] && [ ! -f "/usr/bin/nexttrace" ]; then
         # bash <(curl -sL https://github.com/nxtrace/NTrace-core/raw/main/nt_install.sh) || { _red "Nexttrace安装失败"; exit 1; }
-        bash <(curl -sL nxtrace.org/nt) >/dev/null 2>&1 || { _red "Nexttrace安装失败"; exit 1; }
+        bash <(curl -sL nxtrace.org/nt) || { _err_msg "$(_red 'Nexttrace安装失败')"; exit 1; }
+        clear
     fi
 }
 
-# 遍历IP解析并trace
+# 遍历IP解析并路由追踪
 perform_trace() {
     local -n areas=$1
     local -n ips=$2
-        
-    for i in "${!areas[@]}"; do
+    local resolved_ip
+
+    for region in "${!areas[@]}"; do
         separator
-        analysis=$(getent hosts "${ips[i]}" | awk '{ print $1 }')
-        
-        if [[ -n "$analysis" ]]; then
-            _yellow "${areas[i]} ${analysis}"
+        resolved_ip=$(getent hosts "${ips[region]}" | awk '{ print $1 }')
+        # resolved_ip=$(host "${ips[region]}" | awk '/has address/ { print $4 }')
+
+        if [[ -n "$resolved_ip" ]]; then
+            _yellow "${areas[region]} ${resolved_ip}"
         else
-            _red "${areas[i]} 未能解析域名${ips[i]}"
+            _red "${areas[region]} 未能解析域名${ips[region]}"
         fi
     
-        # 使用域名执行追踪（确保原始域名仍被使用）
-        nexttrace -M "${ips[i]}"
+        # 使用域名执行追踪 (确保原始域名仍被使用)
+        nexttrace -M "${ips[region]}"
     done
+}
+
+# 根据网络栈决定追踪类型
+type_trace() {
+    local ipv4_address=$1
+    local ipv6_address=$2
+
+    trace_type_v4=false
+    trace_type_v6=false
+    if [[ -n "$ipv4_address" && -n "$ipv6_address" ]]; then
+        trace_type_v4=true
+        trace_type_v6=true
+    elif [[ -n "$ipv4_address" ]]; then
+        trace_type_v4=true
+    elif [[ -n "$ipv6_address" ]]; then
+        trace_type_v6=true
+    else
+        _err_msg "$(_red '无法检测到有效的网络栈，请检查网络配置！')"
+        exit 1
+    fi
+
+    # 返回追踪类型
+    echo "$trace_type_v4" "$trace_type_v6"
+}
+
+# 处理并执行追踪操作
+exec_trace() {
+    local area="$1"
+    local ipv4_trace="$2"
+    local ipv6_trace="$3"
+    local trace_results
+
+    trace_results=($(type_trace "$ipv4_address" "$ipv6_address"))
+    trace_type_v4=${trace_results[0]}
+    trace_type_v6=${trace_results[1]}
+
+    $trace_type_v4 && perform_trace "$area" "$ipv4_trace"
+    $trace_type_v6 && perform_trace "$area" "$ipv6_trace"
 }
 
 clear
@@ -159,112 +203,76 @@ _yellow "当前脚本版本: $version"
 ip_address
 nt_install
 
-# 根据网络栈决定追踪类型
-trace_type_v4=false
-trace_type_v6=false
-if [[ -n "$ipv4_address" && -n "$ipv6_address" ]]; then
-    trace_type_v4=true
-    trace_type_v6=true
-elif [[ -n "$ipv4_address" ]]; then
-    trace_type_v4=true
-elif [[ -n "$ipv6_address" ]]; then
-    trace_type_v6=true
+if [ "$#" -eq 0 ]; then
+    exec_trace "trace_area_gd" "trace_ip_gd_v4" "trace_ip_gd_v6"
+    exec_trace "trace_area_sh" "trace_ip_sh_v4" "trace_ip_sh_v6"
+    exec_trace "trace_area_bj" "trace_ip_bj_v4" "trace_ip_bj_v6"
+    exec_trace "trace_area_sc" "trace_ip_sc_v4" "trace_ip_sc_v6"
 else
-    _red "错误：无法检测到有效的网络栈，请检查网络配置！"
-    exit 1
-fi
-
-for arg in "$@"; do
-    case $arg in
-        -nmg)
-            $trace_type_v4 && perform_trace trace_area_nmg trace_ip_nmg_v4
-            $trace_type_v6 && perform_trace trace_area_nmg trace_ip_nmg_v6
-            ;;
-        -hlj)
-            $trace_type_v4 && perform_trace trace_area_hlj trace_ip_hlj_v4
-            $trace_type_v6 && perform_trace trace_area_hlj trace_ip_hlj_v6
-            ;;
-        -xj)
-            $trace_type_v4 && perform_trace trace_area_xj trace_ip_xj_v4
-            $trace_type_v6 && perform_trace trace_area_xj trace_ip_xj_v6
-            ;;
-        -tj)
-            $trace_type_v4 && perform_trace trace_area_tj trace_ip_tj_v4
-            $trace_type_v6 && perform_trace trace_area_tj trace_ip_tj_v6
-            ;;
-        -bj)
-            $trace_type_v4 && perform_trace trace_area_bj trace_ip_bj_v4
-            $trace_type_v6 && perform_trace trace_area_bj trace_ip_bj_v6
-            ;;
-        -ln)
-            $trace_type_v4 && perform_trace trace_area_ln trace_ip_ln_v4
-            $trace_type_v6 && perform_trace trace_area_ln trace_ip_ln_v6
-            ;;
-        -hb)
-            $trace_type_v4 && perform_trace trace_area_hb trace_ip_hb_v4
-            $trace_type_v6 && perform_trace trace_area_hb trace_ip_hb_v6
-            ;;
-        -sd)
-            $trace_type_v4 && perform_trace trace_area_sd trace_ip_sd_v4
-            $trace_type_v6 && perform_trace trace_area_sd trace_ip_sd_v6
-            ;;
-        -js)
-            $trace_type_v4 && perform_trace trace_area_js trace_ip_js_v4
-            $trace_type_v6 && perform_trace trace_area_js trace_ip_js_v6
-            ;;
-        -zj)
-            $trace_type_v4 && perform_trace trace_area_zj trace_ip_zj_v4
-            $trace_type_v6 && perform_trace trace_area_zj trace_ip_zj_v6
-            ;;
-        -fj)
-            $trace_type_v4 && perform_trace trace_area_fj trace_ip_fj_v4
-            $trace_type_v6 && perform_trace trace_area_fj trace_ip_fj_v6
-            ;;
-        -ah)
-            $trace_type_v4 && perform_trace trace_area_ah trace_ip_ah_v4
-            $trace_type_v6 && perform_trace trace_area_ah trace_ip_ah_v6
-            ;;
-        -jx)
-            $trace_type_v4 && perform_trace trace_area_jx trace_ip_jx_v4
-            $trace_type_v6 && perform_trace trace_area_jx trace_ip_jx_v6
-            ;;
-        -xz)
-            $trace_type_v4 && perform_trace trace_area_xz trace_ip_xz_v4
-            $trace_type_v6 && perform_trace trace_area_xz trace_ip_xz_v6
-            ;;
-        -sc)
-            $trace_type_v4 && perform_trace trace_area_sc trace_ip_sc_v4
-            $trace_type_v6 && perform_trace trace_area_sc trace_ip_sc_v6
-            ;;
-        -sh)
-            $trace_type_v4 && perform_trace trace_area_sh trace_ip_sh_v4
-            $trace_type_v6 && perform_trace trace_area_sh trace_ip_sh_v6
-            ;;
-        -gd)
-            $trace_type_v4 && perform_trace trace_area_gd trace_ip_gd_v4
-            $trace_type_v6 && perform_trace trace_area_gd trace_ip_gd_v6
-            ;;
-        -h)
-            echo -e "$usage"
-            ;;
-        -d)
-            nt_uninstall
-            ;;
-        *)
-            if [ -z "$arg" ]; then
-                $trace_type_v4 && perform_trace trace_area_gd trace_ip_gd_v4
-                $trace_type_v4 && perform_trace trace_area_sh trace_ip_sh_v4
-                $trace_type_v4 && perform_trace trace_area_bj trace_ip_bj_v4
-                $trace_type_v4 && perform_trace trace_area_sc trace_ip_sc_v4
-                $trace_type_v6 && perform_trace trace_area_gd trace_ip_gd_v6
-                $trace_type_v6 && perform_trace trace_area_sh trace_ip_sh_v6
-                $trace_type_v6 && perform_trace trace_area_bj trace_ip_bj_v6
-                $trace_type_v6 && perform_trace trace_area_sc trace_ip_sc_v6
-            else
-                _err_msg "$(_red "Invalid option, parameter ${1} is not supported！")"
+    for arg in "$@"; do
+        case $arg in
+            -nmg)
+                exec_trace "trace_area_nmg" "trace_ip_nmg_v4" "trace_ip_nmg_v6"
+                ;;
+            -hlj)
+                exec_trace "trace_area_hlj" "trace_ip_hlj_v4" "trace_ip_hlj_v6"
+                ;;
+            -xj)
+                exec_trace "trace_area_xj" "trace_ip_xj_v4" "trace_ip_xj_v6"
+                ;;
+            -tj)
+                exec_trace "trace_area_tj" "trace_ip_tj_v4" "trace_ip_tj_v6"
+                ;;
+            -bj)
+                exec_trace "trace_area_bj" "trace_ip_bj_v4" "trace_ip_bj_v6"
+                ;;
+            -ln)
+                exec_trace "trace_area_ln" "trace_ip_ln_v4" "trace_ip_ln_v6"
+                ;;
+            -hb)
+                exec_trace "trace_area_hb" "trace_ip_hb_v4" "trace_ip_hb_v6"
+                ;;
+            -sd)
+                exec_trace "trace_area_sd" "trace_ip_sd_v4" "trace_ip_sd_v6"
+                ;;
+            -js)
+                exec_trace "trace_area_js" "trace_ip_js_v4" "trace_ip_js_v6"
+                ;;
+            -zj)
+                exec_trace "trace_area_zj" "trace_ip_zj_v4" "trace_ip_zj_v6"
+                ;;
+            -fj)
+                exec_trace "trace_area_fj" "trace_ip_fj_v4" "trace_ip_fj_v6"
+                ;;
+            -ah)
+                exec_trace "trace_area_ah" "trace_ip_ah_v4" "trace_ip_ah_v6"
+                ;;
+            -jx)
+                exec_trace "trace_area_jx" "trace_ip_jx_v4" "trace_ip_jx_v6"
+                ;;
+            -xz)
+                exec_trace "trace_area_xz" "trace_ip_xz_v4" "trace_ip_xz_v6"
+                ;;
+            -sc)
+                exec_trace "trace_area_sc" "trace_ip_sc_v4" "trace_ip_sc_v6"
+                ;;
+            -sh)
+                exec_trace "trace_area_sh" "trace_ip_sh_v4" "trace_ip_sh_v6"
+                ;;
+            -gd)
+                exec_trace "trace_area_gd" "trace_ip_gd_v4" "trace_ip_gd_v6"
+                ;;
+            -h)
+                echo -e "$usage"
+                ;;
+            -d)
+                nt_uninstall
+                ;;
+            *)
+                _err_msg "$(_red "无效选项, 当前参数${arg}不被支持！")"
                 echo -e "$usage"
                 exit 1
-            fi
-            ;;
-    esac
-done
+                ;;
+        esac
+    done
+fi
