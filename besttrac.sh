@@ -9,15 +9,15 @@
 
 version='v0.0.2 (2024.12.30)'
 
-yellow='\033[93m'
-red='\033[31m'
-green='\033[92m'
+yellow='\033[1;33m'
+red='\033[1;31m'
+green='\033[1;32m'
 white='\033[0m'
 _yellow() { echo -e "${yellow}$*${white}"; }
 _red() { echo -e "${red}$*${white}"; }
 _green() { echo -e "${green}$*${white}"; }
 
-separator() { printf "%-70s\n" "-" | sed 's/\s/-/g'; }
+separator() { printf "%-50s\n" "-" | sed 's/\s/-/g'; }
 
 # https://www.nodeseek.com/post-68572-1 https://www.nodeseek.com/post-129987-1
 trace_area_nmg=("内蒙古电信" "内蒙古联通" "内蒙古移动")
@@ -72,8 +72,6 @@ trace_area_gd=("广东电信" "广东联通" "广东移动")
 trace_ip_gd_v4=("gd-ct-v4.ip.zstaticcdn.com" "gd-cu-v4.ip.zstaticcdn.com" "gd-cm-v4.ip.zstaticcdn.com")
 trace_ip_gd_v6=("gd-ct-v6.ip.zstaticcdn.com" "gd-cu-v6.ip.zstaticcdn.com" "gd-cm-v6.ip.zstaticcdn.com")
 
-_yellow "当前脚本版本: $version"
-
 usage=$(cat <<EOF
 默认执行广东、上海、北京、四川三网回程:
 bash besttrace.sh
@@ -124,22 +122,17 @@ ip_address() {
     done
 }
 
-ip_address
-
-# 卸载逻辑
-uninstall() {
-    separator
-    for file in "/usr/local/bin/nexttrace" "/usr/bin/nexttrace"; do
-        [[ -f $file ]] && rm -f "$file" && _green "nexttrace已成功删除"
-    done
+nt_uninstall() {
+    [ -f "/usr/local/bin/nexttrace" ] && rm -f "/usr/local/bin/nexttrace" >/dev/null 2>&1
+    [ -f "/usr/bin/nexttrace" ] && rm -f "/usr/bin/nexttrace" >/dev/null 2>&1
 }
 
-if ! command -v nexttrace >/dev/null 2>&1 && [ ! -f "/usr/local/bin/nexttrace" ] && [ ! -f "/usr/bin/nexttrace" ]; then
-    # bash <(curl -sL https://github.com/nxtrace/NTrace-core/raw/main/nt_install.sh) || { _red "Nexttrace安装失败"; exit 1; }
-    bash <(curl -sL nxtrace.org/nt) || { _red "Nexttrace安装失败"; exit 1; }
-fi
-
-clear
+nt_install () {
+    if ! command -v nexttrace >/dev/null 2>&1 && [ ! -f "/usr/local/bin/nexttrace" ] && [ ! -f "/usr/bin/nexttrace" ]; then
+        # bash <(curl -sL https://github.com/nxtrace/NTrace-core/raw/main/nt_install.sh) || { _red "Nexttrace安装失败"; exit 1; }
+        bash <(curl -sL nxtrace.org/nt) >/dev/null 2>&1 || { _red "Nexttrace安装失败"; exit 1; }
+    fi
+}
 
 # 遍历IP解析并trace
 perform_trace() {
@@ -161,6 +154,11 @@ perform_trace() {
     done
 }
 
+clear
+_yellow "当前脚本版本: $version"
+ip_address
+nt_install
+
 # 根据网络栈决定追踪类型
 trace_type_v4=false
 trace_type_v6=false
@@ -176,98 +174,97 @@ else
     exit 1
 fi
 
-case "$1" in
-    -nmg)
-        $trace_type_v4 && perform_trace trace_area_nmg trace_ip_nmg_v4
-        $trace_type_v6 && perform_trace trace_area_nmg trace_ip_nmg_v6
-        ;;
-    -hlj)
-        $trace_type_v4 && perform_trace trace_area_hlj trace_ip_hlj_v4
-        $trace_type_v6 && perform_trace trace_area_hlj trace_ip_hlj_v6
-        ;;
-    -xj)
-        $trace_type_v4 && perform_trace trace_area_xj trace_ip_xj_v4
-        $trace_type_v6 && perform_trace trace_area_xj trace_ip_xj_v6
-        ;;
-    -tj)
-        $trace_type_v4 && perform_trace trace_area_tj trace_ip_tj_v4
-        $trace_type_v6 && perform_trace trace_area_tj trace_ip_tj_v6
-        ;;
-    -bj)
-        $trace_type_v4 && perform_trace trace_area_bj trace_ip_bj_v4
-        $trace_type_v6 && perform_trace trace_area_bj trace_ip_bj_v6
-        ;;
-    -ln)
-        $trace_type_v4 && perform_trace trace_area_ln trace_ip_ln_v4
-        $trace_type_v6 && perform_trace trace_area_ln trace_ip_ln_v6
-        ;;
-    -hb)
-        $trace_type_v4 && perform_trace trace_area_hb trace_ip_hb_v4
-        $trace_type_v6 && perform_trace trace_area_hb trace_ip_hb_v6
-        ;;
-    -sd)
-        $trace_type_v4 && perform_trace trace_area_sd trace_ip_sd_v4
-        $trace_type_v6 && perform_trace trace_area_sd trace_ip_sd_v6
-        ;;
-    -js)
-        $trace_type_v4 && perform_trace trace_area_js trace_ip_js_v4
-        $trace_type_v6 && perform_trace trace_area_js trace_ip_js_v6
-        ;;
-    -zj)
-        $trace_type_v4 && perform_trace trace_area_zj trace_ip_zj_v4
-        $trace_type_v6 && perform_trace trace_area_zj trace_ip_zj_v6
-        ;;
-    -fj)
-        $trace_type_v4 && perform_trace trace_area_fj trace_ip_fj_v4
-        $trace_type_v6 && perform_trace trace_area_fj trace_ip_fj_v6
-        ;;
-    -ah)
-        $trace_type_v4 && perform_trace trace_area_ah trace_ip_ah_v4
-        $trace_type_v6 && perform_trace trace_area_ah trace_ip_ah_v6
-        ;;
-    -jx)
-        $trace_type_v4 && perform_trace trace_area_jx trace_ip_jx_v4
-        $trace_type_v6 && perform_trace trace_area_jx trace_ip_jx_v6
-        ;;
-    -xz)
-        $trace_type_v4 && perform_trace trace_area_xz trace_ip_xz_v4
-        $trace_type_v6 && perform_trace trace_area_xz trace_ip_xz_v6
-        ;;
-    -sc)
-        $trace_type_v4 && perform_trace trace_area_sc trace_ip_sc_v4
-        $trace_type_v6 && perform_trace trace_area_sc trace_ip_sc_v6
-        ;;
-    -sh)
-        $trace_type_v4 && perform_trace trace_area_sh trace_ip_sh_v4
-        $trace_type_v6 && perform_trace trace_area_sh trace_ip_sh_v6
-        ;;
-    -gd)
-        $trace_type_v4 && perform_trace trace_area_gd trace_ip_gd_v4
-        $trace_type_v6 && perform_trace trace_area_gd trace_ip_gd_v6
-        ;;
-    -h)
-        echo -e "$usage"
-        ;;
-    -d)
-        uninstall
-        ;;
-    *)
-        if [ -z "$1" ]; then
-            $trace_type_v4 && perform_trace trace_area_gd trace_ip_gd_v4
-            $trace_type_v4 && perform_trace trace_area_sh trace_ip_sh_v4
+for arg in "$@"; do
+    case $arg in
+        -nmg)
+            $trace_type_v4 && perform_trace trace_area_nmg trace_ip_nmg_v4
+            $trace_type_v6 && perform_trace trace_area_nmg trace_ip_nmg_v6
+            ;;
+        -hlj)
+            $trace_type_v4 && perform_trace trace_area_hlj trace_ip_hlj_v4
+            $trace_type_v6 && perform_trace trace_area_hlj trace_ip_hlj_v6
+            ;;
+        -xj)
+            $trace_type_v4 && perform_trace trace_area_xj trace_ip_xj_v4
+            $trace_type_v6 && perform_trace trace_area_xj trace_ip_xj_v6
+            ;;
+        -tj)
+            $trace_type_v4 && perform_trace trace_area_tj trace_ip_tj_v4
+            $trace_type_v6 && perform_trace trace_area_tj trace_ip_tj_v6
+            ;;
+        -bj)
             $trace_type_v4 && perform_trace trace_area_bj trace_ip_bj_v4
-            $trace_type_v4 && perform_trace trace_area_sc trace_ip_sc_v4
-            $trace_type_v6 && perform_trace trace_area_gd trace_ip_gd_v6
-            $trace_type_v6 && perform_trace trace_area_sh trace_ip_sh_v6
             $trace_type_v6 && perform_trace trace_area_bj trace_ip_bj_v6
+            ;;
+        -ln)
+            $trace_type_v4 && perform_trace trace_area_ln trace_ip_ln_v4
+            $trace_type_v6 && perform_trace trace_area_ln trace_ip_ln_v6
+            ;;
+        -hb)
+            $trace_type_v4 && perform_trace trace_area_hb trace_ip_hb_v4
+            $trace_type_v6 && perform_trace trace_area_hb trace_ip_hb_v6
+            ;;
+        -sd)
+            $trace_type_v4 && perform_trace trace_area_sd trace_ip_sd_v4
+            $trace_type_v6 && perform_trace trace_area_sd trace_ip_sd_v6
+            ;;
+        -js)
+            $trace_type_v4 && perform_trace trace_area_js trace_ip_js_v4
+            $trace_type_v6 && perform_trace trace_area_js trace_ip_js_v6
+            ;;
+        -zj)
+            $trace_type_v4 && perform_trace trace_area_zj trace_ip_zj_v4
+            $trace_type_v6 && perform_trace trace_area_zj trace_ip_zj_v6
+            ;;
+        -fj)
+            $trace_type_v4 && perform_trace trace_area_fj trace_ip_fj_v4
+            $trace_type_v6 && perform_trace trace_area_fj trace_ip_fj_v6
+            ;;
+        -ah)
+            $trace_type_v4 && perform_trace trace_area_ah trace_ip_ah_v4
+            $trace_type_v6 && perform_trace trace_area_ah trace_ip_ah_v6
+            ;;
+        -jx)
+            $trace_type_v4 && perform_trace trace_area_jx trace_ip_jx_v4
+            $trace_type_v6 && perform_trace trace_area_jx trace_ip_jx_v6
+            ;;
+        -xz)
+            $trace_type_v4 && perform_trace trace_area_xz trace_ip_xz_v4
+            $trace_type_v6 && perform_trace trace_area_xz trace_ip_xz_v6
+            ;;
+        -sc)
+            $trace_type_v4 && perform_trace trace_area_sc trace_ip_sc_v4
             $trace_type_v6 && perform_trace trace_area_sc trace_ip_sc_v6
-        else
-            _red "错误：无效的参数，参数${1}不被支持！"
+            ;;
+        -sh)
+            $trace_type_v4 && perform_trace trace_area_sh trace_ip_sh_v4
+            $trace_type_v6 && perform_trace trace_area_sh trace_ip_sh_v6
+            ;;
+        -gd)
+            $trace_type_v4 && perform_trace trace_area_gd trace_ip_gd_v4
+            $trace_type_v6 && perform_trace trace_area_gd trace_ip_gd_v6
+            ;;
+        -h)
             echo -e "$usage"
-        fi
-        ;;
-esac
-
-if [ "$2" == "-d" ]; then
-    uninstall
-fi
+            ;;
+        -d)
+            nt_uninstall
+            ;;
+        *)
+            if [ -z "$arg" ]; then
+                $trace_type_v4 && perform_trace trace_area_gd trace_ip_gd_v4
+                $trace_type_v4 && perform_trace trace_area_sh trace_ip_sh_v4
+                $trace_type_v4 && perform_trace trace_area_bj trace_ip_bj_v4
+                $trace_type_v4 && perform_trace trace_area_sc trace_ip_sc_v4
+                $trace_type_v6 && perform_trace trace_area_gd trace_ip_gd_v6
+                $trace_type_v6 && perform_trace trace_area_sh trace_ip_sh_v6
+                $trace_type_v6 && perform_trace trace_area_bj trace_ip_bj_v6
+                $trace_type_v6 && perform_trace trace_area_sc trace_ip_sc_v6
+            else
+                _err_msg "$(_red "Invalid option, parameter ${1} is not supported！")"
+                echo -e "$usage"
+                exit 1
+            fi
+            ;;
+    esac
+done
