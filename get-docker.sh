@@ -2,13 +2,12 @@
 #
 # Description: Script for quickly installing the latest Docker-CE on supported Linux distros.
 #
-# Copyright (C) 2023-2024 honeok <honeok@duck.com>
-# Blog: www.honeok.com
-# https://github.com/honeok/cross
+# Copyright (C) 2023 - 2024 honeok <honeok@duck.com>
+#
+# https://github.com/honeok/cross/raw/master/get-docker.sh
 
 # 当前脚本版本号
-version='v0.0.2 (2024.12.20)'
-github_proxy='https://cdn.611611.best/'
+version='v0.0.2 (2024.12.31)'
 
 yellow='\033[93m'
 red='\033[31m'
@@ -19,37 +18,43 @@ purple='\033[95m'
 gray='\033[37m'
 orange='\033[38;5;214m'
 white='\033[0m'
-_yellow() { echo -e ${yellow}$@${white}; }
-_red() { echo -e ${red}$@${white}; }
-_green() { echo -e ${green}$@${white}; }
-_blue() { echo -e ${blue}$@${white}; }
-_cyan() { echo -e ${cyan}$@${white}; }
-_purple() { echo -e ${purple}$@${white}; }
-_gray() { echo -e ${gray}$@${white}; }
-_orange() { echo -e ${orange}$@${white}; }
+_yellow() { echo -e "${yellow}$*${white}"; }
+_red() { echo -e "${red}$*${white}"; }
+_green() { echo -e "${green}$*${white}"; }
+_blue() { echo -e "${blue}$*${white}"; }
+_cyan() { echo -e "${cyan}$*${white}"; }
+_purple() { echo -e "${purple}$*${white}"; }
+_gray() { echo -e "${gray}$*${white}"; }
+_orange() { echo -e "${orange}$*${white}"; }
+_white() { echo -e "${white}$*${white}"; }
 
-err_msg=$(_bg_red 警告)
-_err_msg() { echo -e "$err_msg $@"; }
+_err_msg() { echo -e "\033[41m\033[1m警告${white} $*"; }
 
 export DEBIAN_FRONTEND=noninteractive
 
-os_name=$(grep ^ID= /etc/*release | awk -F'=' '{print $2}' | sed 's/"//g')
-[[ "$os_name" != "debian" && "$os_name" != "ubuntu" && "$os_name" != "centos" && "$os_name" != "rocky" && "$os_name" != "almalinux" ]] && exit 0
-[ "$(id -u)" -ne "0" ] && exit 1
+github_proxy='https://cdn.611611.best/'
+getdocker_pid='/tmp/get-docker.pid'
+
+# 操作系统和权限校验
+[ "$(id -ru)" -ne "0" ] && _err_msg "$(_red '需要root用户才能运行！')" && exit 1
+os_info=$(grep ^ID= /etc/*release | awk -F'=' '{print $2}' | sed 's/"//g')
+[[ "$os_info" != "debian" && "$os_info" != "ubuntu" && "$os_info" != "centos" && "$os_info" != "rhel" && "$os_info" != "rocky" && "$os_info" != "almalinux" "$os_info" != "alpine" ]] && exit 0
+
+trap "cleanup_exit ; echo "" ; exit 0" SIGINT SIGQUIT SIGTERM EXIT
+
+cleanup_exit() {
+    [ -f "$getdocker_pid" ] && rm -f "$getdocker_pid"
+}
+
+if [ -f "$getdocker_pid" ] && kill -0 "$(cat "$getdocker_pid")" 2>/dev/null; then
+    exit 1
+fi
+
+echo $$ > "$getdocker_pid"
 
 if [ "$(cd -P -- "$(dirname -- "$0")" && pwd -P)" != "/root" ]; then
     cd /root >/dev/null 2>&1
 fi
-
-geo_check() {
-    local cloudflare_api="https://dash.cloudflare.com/cdn-cgi/trace"
-    local user_agent="Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/81.0"
-
-    country=$(curl -A "$user_agent" -m 10 -s "$cloudflare_api" | grep -oP 'loc=\K\w+')
-    [ -z "$country" ] && _err_msg "$(_red '无法获取服务器所在地区，请检查网络！')" && exit 1
-}
-
-geo_check
 
 install() {
     if [ $# -eq 0 ]; then
@@ -75,7 +80,7 @@ install() {
                 apk update
                 apk add "$package"
             else
-                _red "未知的包管理器"
+                _red "未知的包管理器！"
                 return 1
             fi
         else
@@ -126,6 +131,16 @@ remove() {
     done
     return 0
 }
+
+geo_check() {
+    local cloudflare_api="https://dash.cloudflare.com/cdn-cgi/trace"
+    local user_agent="Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/81.0"
+
+    country=$(curl -A "$user_agent" -m 10 -s "$cloudflare_api" | sed -n 's/.*loc=\([^ ]*\).*/\1/p')
+    [ -z "$country" ] && _err_msg "$(_red '无法获取服务器所在地区，请检查网络！')" && exit 1
+}
+
+geo_check
 
 check_docker() {
     if command -v docker >/dev/null 2>&1 && docker --version >/dev/null 2>&1; then
