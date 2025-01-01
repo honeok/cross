@@ -154,9 +154,9 @@ check_docker() {
 }
 
 install_docker() {
-	local codename repo_url gpgkey_url
+    local codename repo_url gpgkey_url
 
-	geo_check
+    geo_check
 
     if [[ "$os_name" == 'rhel' && "$os_name" == 'rocky' && "$os_name" == 'almalinux' ]]; then
         if ! dnf config-manager --help >/dev/null 2>&1; then
