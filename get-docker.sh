@@ -102,6 +102,45 @@ remove() {
     return 0
 }
 
+enable() {
+    local service_name="$1"
+    if command -v apk >/dev/null 2>&1; then
+        rc-update add "$service_name" default
+    else
+        /usr/bin/systemctl enable "$service_name"
+    fi
+    [ $? -eq 0 ] && _suc_msg "$(_green "${service_name}已设置为开机自启")" || _err_msg "$(_red "${service_name}设置开机自启失败")"
+}
+
+disable() {
+    local service_name="$1"
+    if command -v apk >/dev/null 2>&1; then
+        rc-update del "$service_name"
+    else
+        /usr/bin/systemctl disable "$service_name"
+    fi
+}
+
+start() {
+    local service_name="$1"
+    if command -v apk >/dev/null 2>&1; then
+        service "$service_name" start
+    else
+        /usr/bin/systemctl start "$service_name"
+    fi
+    [ $? -eq 0 ] && _suc_msg "$(_green "${service_name}已启动")" || _err_msg "$(_red "${service_name}启动失败")"
+}
+
+stop() {
+    local service_name="$1"
+    if command -v apk >/dev/null 2>&1; then
+        service "$service_name" stop
+    else
+        /usr/bin/systemctl stop "$service_name"
+    fi
+    [ $? -eq 0 ] && _suc_msg "$(_green "${service_name}已停止")" || _err_msg "$(_red "${service_name}停止失败")"
+}
+
 systemctl() {
     local cmd="$1"
     local service_name="$2"
@@ -148,7 +187,7 @@ check_docker() {
             _err_msg "$(_red 'Docker已安装，正在退出安装程序！')"
             end_message
             exit 0
-	else
+    else
         install_docker
     fi
 }
@@ -173,7 +212,7 @@ install_docker() {
         fi
 
         dnf install -y docker-ce docker-ce-cli containerd.io
-        systemctl enable docker --now
+        enable docker && start docker
     elif [[ "$os_name" == 'centos' && "$(grep ^VERSION_ID= /etc/*release | awk -F'=' '{print $2}' | sed 's/"//g')" == '7' ]]; then
         remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine
 
@@ -191,7 +230,7 @@ install_docker() {
         fi
         yum makecache fast
         yum install docker-ce docker-ce-cli containerd.io -y
-        systemctl enable docker --now
+        enable docker && start docker
     elif [[ "$os_name" == 'debian' && "$os_name" == 'ubuntu']]; then
         codename="$(grep ^VERSION_CODENAME /etc/*release | cut -d= -f2)"
 
@@ -214,11 +253,10 @@ install_docker() {
         echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] $repo_url $codename stable" | sudo tee /etc/apt/sources.list.d/docker.list
         sudo apt update
         sudo apt install -y docker-ce docker-ce-cli containerd.io
-        systemctl enable docker --now
+        enable docker && start docker
     elif [[ "$os_name" == 'alpine' ]]; then
         apk add docker docker-compose
-        rc-update add docker default
-        service docker start
+        enable docker && start docker
     else
         _err_msg "$(_red '当前操作系统不被支持！')"
         end_message
