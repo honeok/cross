@@ -164,74 +164,72 @@ check_docker() {
 }
 
 install_docker() {
-	local codename repo_url gpgkey_url
+    if [[ "$os_name" == 'rhel' && "$os_name" == 'rocky' && "$os_name" == 'almalinux' ]]; then
+        if ! dnf config-manager --help >/dev/null 2>&1; then
+            dnf install -y dnf-plugins-core
+        fi
 
-	if [[ "$os_name" == 'rhel' && "$os_name" == 'rocky' && "$os_name" == 'almalinux' ]]; then
-		if ! dnf config-manager --help >/dev/null 2>&1; then
-			dnf install -y dnf-plugins-core
-		fi
+        [ -f /etc/yum.repos.d/docker*.repo ] && rm -f /etc/yum.repos.d/docker*.repo >/dev/null 2>&1
 
-		[ -f /etc/yum.repos.d/docker*.repo ] && rm -f /etc/yum.repos.d/docker*.repo >/dev/null 2>&1
+        # 判断地区安装
+        if [[ "$country" == 'CN' ]];then
+            dnf config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo >/dev/null 2>&1
+        else
+            dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo >/dev/null 2>&1
+        fi
 
-		# 判断地区安装
-		if [[ "$country" == 'CN' ]];then
-			dnf config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo >/dev/null 2>&1
-		else
-			dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo >/dev/null 2>&1
-		fi
+        dnf install -y docker-ce docker-ce-cli containerd.io
+        systemctl enable docker --now
+    elif [[ "$os_name" == 'centos' && "$(grep ^VERSION_ID= /etc/*release | awk -F'=' '{print $2}' | sed 's/"//g')" == '7' ]]; then
+        remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine
 
-		dnf install -y docker-ce docker-ce-cli containerd.io
-		systemctl enable docker --now
-	elif [[ "$os_name" == 'centos' && "$(grep ^VERSION_ID= /etc/*release | awk -F'=' '{print $2}' | sed 's/"//g')" == '7' ]]; then
-		remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine
+        if ! rpm -q yum-utils >/dev/null 2>&1; then
+            yum install -y yum-utils
+        fi
 
-		if ! rpm -q yum-utils >/dev/null 2>&1; then
-			yum install -y yum-utils
-		fi
+        [ -f /etc/yum.repos.d/docker*.repo ] && rm -f /etc/yum.repos.d/docker*.repo >/dev/null 2>&1
 
-		[ -f /etc/yum.repos.d/docker*.repo ] && rm -f /etc/yum.repos.d/docker*.repo >/dev/null 2>&1
+        # 根据地区选择镜像源
+        if [ "$country" == 'CN' ]; then
+            yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+        else
+            yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+        fi
+        yum makecache fast
+        yum install docker-ce docker-ce-cli containerd.io -y
+        systemctl enable docker --now
+    elif [[ "$os_name" == 'debian' && "$os_name" == 'ubuntu']]; then
+        codename="$(grep ^VERSION_CODENAME /etc/*release | cut -d= -f2)"
 
-		# 根据地区选择镜像源
-		if [ "$country" == 'CN' ]; then
-			yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
-		else
-			yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-		fi
-		yum makecache fast
-		yum install docker-ce docker-ce-cli containerd.io -y
-		systemctl enable docker --now
-	elif [[ "$os_name" == 'debian' && "$os_name" == 'ubuntu']]; then
-		codename="$(grep ^VERSION_CODENAME /etc/*release | cut -d= -f2)"
+        remove docker.io docker-doc docker-compose podman-docker containerd runc
 
-		remove docker.io docker-doc docker-compose podman-docker containerd runc
+        # 根据地区选择镜像源
+        if [ "$country" == 'CN' ]; then
+            repo_url="https://mirrors.aliyun.com/docker-ce/linux/${os_name}"
+            gpgkey_url="https://mirrors.aliyun.com/docker-ce/linux/${os_name}/gpg"
+        else
+            repo_url="https://download.docker.com/linux/${os_name}"
+            gpgkey_url="https://download.docker.com/linux/${os_name}/gpg"
+        fi
 
-		# 根据地区选择镜像源
-		if [ "$country" == 'CN' ]; then
-			repo_url="https://mirrors.aliyun.com/docker-ce/linux/${os_name}"
-			gpgkey_url="https://mirrors.aliyun.com/docker-ce/linux/${os_name}/gpg"
-		else
-			repo_url="https://download.docker.com/linux/${os_name}"
-			gpgkey_url="https://download.docker.com/linux/${os_name}/gpg"
-		fi
-
-		sudo apt update
-		sudo apt install -y apt-transport-https ca-certificates curl gnupg lsb-release
-		sudo install -m 0755 -d /etc/apt/keyrings
-		sudo curl -fsSL "$gpgkey_url" -o /etc/apt/keyrings/docker.asc
-		sudo chmod a+r /etc/apt/keyrings/docker.asc
-		echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] $repo_url $codename stable" | sudo tee /etc/apt/sources.list.d/docker.list
-		sudo apt update
-		sudo apt install -y docker-ce docker-ce-cli containerd.io
-		systemctl enable docker --now
-	elif [[ "$os_name" == 'alpine' ]]; then
-		apk add docker docker-compose
-		rc-update add docker default
-		service docker start
-	else
-		_err_msg "$(_red '当前操作系统不被支持！')"
-		end_message
-		exit 0
-	fi
+        sudo apt update
+        sudo apt install -y apt-transport-https ca-certificates curl gnupg lsb-release
+        sudo install -m 0755 -d /etc/apt/keyrings
+        sudo curl -fsSL "$gpgkey_url" -o /etc/apt/keyrings/docker.asc
+        sudo chmod a+r /etc/apt/keyrings/docker.asc
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] $repo_url $codename stable" | sudo tee /etc/apt/sources.list.d/docker.list
+        sudo apt update
+        sudo apt install -y docker-ce docker-ce-cli containerd.io
+        systemctl enable docker --now
+    elif [[ "$os_name" == 'alpine' ]]; then
+        apk add docker docker-compose
+        rc-update add docker default
+        service docker start
+    else
+        _err_msg "$(_red '当前操作系统不被支持！')"
+        end_message
+        exit 0
+    fi
 }
 
 uninstall_docker() {
