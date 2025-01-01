@@ -116,7 +116,7 @@ systemctl() {
 # 脚本当天及累计运行次数统计
 statistics_runtime() {
     local runcount
-	runcount=$(wget --no-check-certificate -qO- --tries=2 --timeout=2 "https://hit.forvps.gq/https://raw.githubusercontent.com/honeok/cross/master/get-docker.sh" 2>&1 | grep -m1 -oE "[0-9]+[ ]+/[ ]+[0-9]+") &&
+    runcount=$(wget --no-check-certificate -qO- --tries=2 --timeout=2 "https://hit.forvps.gq/https://raw.githubusercontent.com/honeok/cross/master/get-docker.sh" 2>&1 | grep -m1 -oE "[0-9]+[ ]+/[ ]+[0-9]+") &&
     today_runcount=$(awk -F ' ' '{print $1}' <<< "$runcount") &&
     total_runcount=$(awk -F ' ' '{print $3}' <<< "$runcount")
 }
@@ -132,10 +132,10 @@ geo_check() {
 end_message() {
     local current_time current_timezone
 
-	statistics_runtime
+    statistics_runtime
 
-	current_time=$(date '+%Y-%m-%d %H:%M:%S')
-	current_timezone=$(date +"%Z %z")
+    current_time=$(date '+%Y-%m-%d %H:%M:%S')
+    current_timezone=$(date +"%Z %z")
 
     printf "${green}服务器当前时间: ${current_time} 时区: ${current_timezone} 脚本执行完成${white}\n"
     _purple "感谢使用本脚本！如有疑问，请访问honeok.com获取更多信息"
@@ -149,7 +149,7 @@ check_docker() {
             end_message
             exit 0
 	else
-		install_docker
+        install_docker
     fi
 }
 
@@ -295,39 +295,39 @@ docker_version() {
     echo "Docker版本: v${docker_v}"
     echo "Docker Compose版本: v${docker_compose_v}"
 
-	_yellow "正在获取Docker信息"
-	sleep 2s
-	sudo docker version
+    _yellow "正在获取Docker信息"
+    sleep 2s
+    sudo docker version
 
-	# intentionally mixed spaces and tabs here -- tabs are stripped by "<<-EOF", spaces are kept in the output
-	echo
-	echo "================================================================================"
-	echo
-	echo "To run the Docker daemon as a fully privileged service, but granting non-root"
-	echo "users access, refer to https://docs.docker.com/go/daemon-access/"
-	echo
-	echo "WARNING: Access to the remote API on a privileged Docker daemon is equivalent"
-	echo "         to root access on the host. Refer to the 'Docker daemon attack surface'"
-	echo "         documentation for details: https://docs.docker.com/go/attack-surface/"
-	echo
-	echo "================================================================================"
- 	echo
+    # intentionally mixed spaces and tabs here -- tabs are stripped by "<<-EOF", spaces are kept in the output
+    echo
+    echo "================================================================================"
+    echo
+    echo "To run the Docker daemon as a fully privileged service, but granting non-root"
+    echo "users access, refer to https://docs.docker.com/go/daemon-access/"
+    echo
+    echo "WARNING: Access to the remote API on a privileged Docker daemon is equivalent"
+    echo "         to root access on the host. Refer to the 'Docker daemon attack surface'"
+    echo "         documentation for details: https://docs.docker.com/go/attack-surface/"
+    echo
+    echo "================================================================================"
+    echo
 }
 
 main() {
-	print_logo
+    print_logo
 
-	# 执行卸载 Docker
-	if [ "$1" == "uninstall" ]; then
-		uninstall_docker
-		end_message
-		exit 0
-	fi
+    # 执行卸载 Docker
+    if [ "$1" == "uninstall" ]; then
+        uninstall_docker
+        end_message
+        exit 0
+    fi
 
     check_docker
 
-	# 完成脚本
-	end_message
+    # 完成脚本
+    end_message
 }
 
 main "$@"
