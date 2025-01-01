@@ -7,32 +7,22 @@
 # https://github.com/honeok/cross/raw/master/get-docker.sh
 
 # 当前脚本版本号
-version='v0.0.2 (2025.01.01)'
+version='v0.0.2 (2025.01.02)'
 
 yellow='\033[93m'
 red='\033[31m'
 green='\033[92m'
-blue='\033[94m'
-cyan='\033[96m'
 purple='\033[95m'
-gray='\033[37m'
-orange='\033[38;5;214m'
 white='\033[0m'
 _yellow() { echo -e "${yellow}$*${white}"; }
 _red() { echo -e "${red}$*${white}"; }
 _green() { echo -e "${green}$*${white}"; }
-_blue() { echo -e "${blue}$*${white}"; }
-_cyan() { echo -e "${cyan}$*${white}"; }
 _purple() { echo -e "${purple}$*${white}"; }
-_gray() { echo -e "${gray}$*${white}"; }
-_orange() { echo -e "${orange}$*${white}"; }
-_white() { echo -e "${white}$*${white}"; }
 
 _err_msg() { echo -e "\033[41m\033[1m警告${white} $*"; }
 
 export DEBIAN_FRONTEND=noninteractive
 
-github_proxy='https://cdn.611611.best/'
 getdocker_pid='/tmp/getdocker.pid'
 
 # 操作系统和权限校验
