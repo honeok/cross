@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 #
 # Description: Script for quickly installing the latest Docker-CE on supported Linux distros.
+# System Required:  Debian11+ Ubuntu18+ Centos7+ rhel9+ Rocky8+ Almalinux8+ Alpine19+
 #
 # Copyright (C) 2023 - 2025 honeok <honeok@duck.com>
 #
