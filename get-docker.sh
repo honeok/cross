@@ -217,6 +217,7 @@ install_docker() {
 
     geo_check
 
+    _info_msg "$(_yellow '正在安装docker环境！')"
     if [[ "$os_name" == "rocky" || "$os_name" == "almalinux" || "$os_name" == "centos" ]]; then
 
         remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine >/dev/null 2>&1
