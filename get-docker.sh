@@ -397,7 +397,7 @@ docker_version() {
 
     echo "Docker版本: v${docker_v}"
     echo "Docker Compose版本: v${docker_compose_v}"
-
+    echo
     _yellow "正在获取Docker信息"
     sleep 2s
     sudo docker version
