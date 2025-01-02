@@ -161,23 +161,37 @@ disable() {
 }
 
 start() {
+    local cmd
     local service_name="$1"
+    
     if command -v apk >/dev/null 2>&1; then
-        sudo service "$service_name" start
+        cmd="sudo service $service_name start"
     else
-        sudo /usr/bin/systemctl start "$service_name"
+        cmd="sudo /usr/bin/systemctl start $service_name"
     fi
-    [ $? -eq 0 ] && _suc_msg "$(_green "${service_name}已启动")" || _err_msg "$(_red "${service_name}启动失败")"
+
+    if $cmd; then
+        _suc_msg "$(_green "${service_name}已启动")"
+    else
+        _err_msg "$(_red "${service_name}启动失败")"
+    fi
 }
 
 stop() {
+    local cmd
     local service_name="$1"
+    
     if command -v apk >/dev/null 2>&1; then
-        sudo service "$service_name" stop
+        cmd="sudo service $service_name stop"
     else
-        sudo /usr/bin/systemctl stop "$service_name"
+        cmd="sudo /usr/bin/systemctl stop $service_name"
     fi
-    [ $? -eq 0 ] && _suc_msg "$(_green "${service_name}已停止")" || _err_msg "$(_red "${service_name}停止失败")"
+
+    if $cmd; then
+        _suc_msg "$(_green "${service_name}已停止")"
+    else
+        _err_msg "$(_red "${service_name}停止失败")"
+    fi
 }
 
 systemctl() {
@@ -238,7 +252,7 @@ install_docker() {
             exit 1
         fi
 
-        [ -f /etc/yum.repos.d/docker*.repo ] && sudo rm -f /etc/yum.repos.d/docker*.repo >/dev/null 2>&1
+        sudo rm -f /etc/yum.repos.d/docker*.repo >/dev/null 2>&1
 
         if [[ "$country" == "CN" ]]; then
             repo_url="https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo"
@@ -265,7 +279,7 @@ install_docker() {
             dnf install -y dnf-plugins-core
         fi
 
-        [ -f /etc/yum.repos.d/docker*.repo ] && sudo rm -f /etc/yum.repos.d/docker*.repo >/dev/null 2>&1
+        sudo rm -f /etc/yum.repos.d/docker*.repo >/dev/null 2>&1
 
         if [[ "$country" == "CN" ]];then
             sudo dnf config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/rhel/docker-ce.repo >/dev/null 2>&1
@@ -351,7 +365,7 @@ uninstall_docker() {
     # 移除Docker文件和仓库文件
     cleanup_files() {
         for pattern in "${docker_depend_files[@]}"; do
-            for file in "$pattern"; do
+            for file in $pattern; do
                 [ -e "$file" ] && sudo rm -f "$file" >/dev/null 2>&1
             done
         done
@@ -445,7 +459,8 @@ end_message() {
     current_time=$(date '+%Y-%m-%d %H:%M:%S')
     current_timezone=$(date +"%Z %z")
 
-    printf "${orange}服务器当前时间: ${current_time} 时区: ${current_timezone} 脚本执行完成${white}\n"
+    printf "%s服务器当前时间: %s 时区: %s 脚本执行完成%s\n" \
+        "${orange}" "$current_time" "$current_timezone" "${white}"
     _purple "感谢使用本脚本！如有疑问，请访问 https://www.honeok.com 获取更多信息"
     _yellow "脚本当天运行次数: ${today_runcount} 累计运行次数: ${total_runcount}"
 }
