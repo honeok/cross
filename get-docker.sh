@@ -253,6 +253,7 @@ install_docker() {
         fi
 
         [ -f "/etc/yum.repos.d/docker-ce.repo" ] && sudo rm -f /etc/yum.repos.d/docker-ce.repo >/dev/null 2>&1
+        [ -f "/etc/yum.repos.d/docker-ce-staging.repo" ] && sudo rm -f /etc/yum.repos.d/docker-ce-staging.repo >/dev/null 2>&1
 
         if [[ "$country" == "CN" ]]; then
             repo_url="https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo"
@@ -280,6 +281,7 @@ install_docker() {
         fi
 
         [ -f "/etc/yum.repos.d/docker-ce.repo" ] && sudo rm -f /etc/yum.repos.d/docker-ce.repo >/dev/null 2>&1
+        [ -f "/etc/yum.repos.d/docker-ce-staging.repo" ] && sudo rm -f /etc/yum.repos.d/docker-ce-staging.repo >/dev/null 2>&1
 
         if [[ "$country" == "CN" ]];then
             sudo dnf config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/rhel/docker-ce.repo >/dev/null 2>&1
