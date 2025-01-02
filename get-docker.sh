@@ -34,7 +34,7 @@ os_name=$(grep ^ID= /etc/*release | awk -F'=' '{print $2}' | sed 's/"//g')
 trap "cleanup_exit ; echo "" ; exit 0" SIGINT SIGQUIT SIGTERM EXIT
 
 cleanup_exit() {
-    [ -f "$getdocker_pid" ] && rm -f "$getdocker_pid"
+    [ -f "$getdocker_pid" ] && sudo rm -f "$getdocker_pid"
 }
 
 if [ -f "$getdocker_pid" ] && kill -0 "$(cat "$getdocker_pid")" 2>/dev/null; then
@@ -44,7 +44,7 @@ fi
 echo $$ > "$getdocker_pid"
 
 if [ "$(cd -P -- "$(dirname -- "$0")" && pwd -P)" != "/root" ]; then
-    cd /root >/dev/null 2>&1
+    sudo cd /root >/dev/null 2>&1
 fi
 
 # https://www.lddgo.net/string/text-to-ascii-art
@@ -118,7 +118,7 @@ sudo() {
 enable() {
     local service_name="$1"
     if command -v apk >/dev/null 2>&1; then
-        rc-update add "$service_name" default
+        sudo rc-update add "$service_name" default
     else
         sudo /usr/bin/systemctl enable "$service_name"
     fi
@@ -128,18 +128,18 @@ enable() {
 disable() {
     local service_name="$1"
     if command -v apk >/dev/null 2>&1; then
-        rc-update del "$service_name"
+        sudo rc-update del "$service_name"
     else
-        /usr/bin/systemctl disable "$service_name"
+        sudo /usr/bin/systemctl disable "$service_name"
     fi
 }
 
 start() {
     local service_name="$1"
     if command -v apk >/dev/null 2>&1; then
-        service "$service_name" start
+        sudo service "$service_name" start
     else
-        /usr/bin/systemctl start "$service_name"
+        sudo /usr/bin/systemctl start "$service_name"
     fi
     [ $? -eq 0 ] && _suc_msg "$(_green "${service_name}已启动")" || _err_msg "$(_red "${service_name}启动失败")"
 }
@@ -147,7 +147,7 @@ start() {
 stop() {
     local service_name="$1"
     if command -v apk >/dev/null 2>&1; then
-        service "$service_name" stop
+        sudo service "$service_name" stop
     else
         sudo /usr/bin/systemctl stop "$service_name"
     fi
@@ -159,13 +159,12 @@ systemctl() {
     local service_name="$2"
 
     if command -v apk >/dev/null 2>&1; then
-        service "$service_name" "$cmd"
+        sudo service "$service_name" "$cmd"
     else
-        /usr/bin/systemctl "$cmd" "$service_name"
+        sudo /usr/bin/systemctl "$cmd" "$service_name"
     fi
 }
 
-# 脚本当天及累计运行次数统计
 statistics_runtime() {
     local runcount
     runcount=$(curl -fskL --max-time 2 --retry 2 "https://hit.forvps.gq/https://raw.githubusercontent.com/honeok/cross/master/get-docker.sh" -o - | grep -m1 -oE "[0-9]+[ ]+/[ ]+[0-9]+") &&
@@ -198,7 +197,7 @@ check_docker() {
     if command -v docker >/dev/null 2>&1 || \
         sudo docker --version >/dev/null 2>&1 || \
         sudo docker compose version >/dev/null 2>&1 || \
-        sudo command -v docker-compose >/dev/null 2>&1; then
+        command -v docker-compose >/dev/null 2>&1; then
         _err_msg "$(_red 'Docker已安装，正在退出安装程序！')"
         end_message
         exit 0
@@ -213,16 +212,16 @@ install_docker() {
     geo_check
 
     if [[ "$os_name" == "rocky" && "$os_name" == "almalinux" && "$os_name" == "centos" ]]; then
-        if command -v yum >/dev/null 2>&1; then
-            if ! sudo rpm -q yum-utils >/dev/null 2>&1; then
-                sudo yum install -y yum-utils
-            fi
-            pkg_cmd='yum'
-        elif command -v dnf >/dev/null 2>&1; then
+        if command -v dnf >/dev/null 2>&1; then
             if ! sudo dnf config-manager --help >/dev/null 2>&1; then
                 sudo dnf install -y dnf-plugins-core
             fi
             pkg_cmd='dnf'
+        elif command -v yum >/dev/null 2>&1; then
+            if ! sudo rpm -q yum-utils >/dev/null 2>&1; then
+                sudo yum install -y yum-utils
+            fi
+            pkg_cmd='yum'
         else
             _err_msg "$(_red '未知的包管理器！')"
             end_message
@@ -237,13 +236,13 @@ install_docker() {
             repo_url="https://download.docker.com/linux/centos/docker-ce.repo"
         fi
 
-        if [[ "$pkg_cmd" == "yum" ]]; then
+        if [[ "$pkg_cmd" == "dnf" ]]; then
+            sudo dnf config-manager --add-repo "$repo_url" >/dev/null 2>&1
+            sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+        elif [[ "$pkg_cmd" == "yum" ]]; then
             sudo yum-config-manager --add-repo "$repo_url" >/dev/null 2>&1
             sudo yum makecache fast
             sudo yum install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-        elif [[ "$pkg_cmd" == "dnf" ]]; then
-            sudo dnf config-manager --add-repo "$repo_url" >/dev/null 2>&1
-            sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
         fi
 
         enable docker
@@ -306,8 +305,8 @@ install_docker() {
             echo "$repo_url" >> /etc/apk/repositories
         fi
 
-        apk update
-        apk add docker docker-compose
+        sudo apk update
+        sudo apk add docker docker-compose
         enable docker
         start docker
     else
@@ -318,73 +317,69 @@ install_docker() {
 }
 
 uninstall_docker() {
-    local docker_data_files=("/var/lib/docker" "/var/lib/containerd" "/etc/docker" "/opt/containerd" "/data/docker_data")
+    local docker_datadir=("/var/lib/docker" "/var/lib/containerd" "/etc/docker" "/opt/containerd")
     local docker_depend_files=("/etc/yum.repos.d/docker*" "/etc/apt/sources.list.d/docker.*" "/etc/apt/keyrings/docker.*" "/var/log/docker.*")
-    local binary_files=("/usr/bin/docker" "/usr/bin/docker-compose")  # 删除二进制文件路径
+    local bin_files=("/usr/bin/docker" "/usr/bin/docker-compose")
 
     # 停止并删除Docker服务和容器
     stop_and_remove_docker() {
-        local running_containers=$(docker ps -aq)
-        [ -n "$running_containers" ] && docker rm -f "$running_containers" >/dev/null 2>&1
-        stop docker >/dev/null 2>&1
-        disable docker >/dev/null 2>&1
+        local running_containers
+        running_containers=$(docker ps -aq)
+        [ -n "$running_containers" ] && sudo docker rm -f "$running_containers" >/dev/null 2>&1
+        stop docker
+        disable docker
     }
 
     # 移除Docker文件和仓库文件
     cleanup_files() {
         for pattern in "${docker_depend_files[@]}"; do
-            for file in $pattern; do
-                [ -e "$file" ] && rm -rf "$file" >/dev/null 2>&1
+            for file in "$pattern"; do
+                [ -e "$file" ] && sudo rm -f "$file" >/dev/null 2>&1
             done
         done
 
-        for file in "${docker_data_files[@]}" "${binary_files[@]}"; do
-            [ -e "$file" ] && rm -rf "$file" >/dev/null 2>&1
+        for file in "${docker_datadir[@]}" "${bin_files[@]}"; do
+            [ -e "$file" ] && sudo rm -rf "$file" >/dev/null 2>&1
         done
     }
 
     # 检查Docker是否安装
     if ! command -v docker >/dev/null 2>&1; then
-        _red "Docker未安装在系统上，无法继续卸载"
+        _err_msg "$(_red 'Docker未安装在系统上，无法继续卸载')"
         return 1
     fi
 
     stop_and_remove_docker
-
-    remove docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin docker-ce-rootless-extras
+    remove docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
     cleanup_files
 
-    # 清除命令缓存
     hash -r
-
     sleep 2
 
-    # 检查卸载是否成功
     if command -v docker >/dev/null 2>&1 || [ -e "/usr/bin/docker" ]; then
-        _red "Docker卸载失败，请手动检查"
+        _err_msg "$(_red 'Docker卸载失败，请手动检查')"
         return 1
     else
-        _green "Docker和Docker Compose已卸载，并清理文件夹和相关依赖"
+        _suc_msg "$(_green 'Docker和Docker Compose已卸载，并清理文件夹和相关依赖')"
     fi
 }
 
-# 显示已安装Docker和Docker Compose版本
 docker_version() {
     local docker_v=""
     local docker_compose_v=""
 
     # 获取Docker版本
     if command -v docker >/dev/null 2>&1; then
-        docker_v=$(docker --version | awk -F '[ ,]' '{print $3}')
+        docker_v=$(sudo docker --version | awk -F '[ ,]' '{print $3}')
     elif command -v docker.io >/dev/null 2>&1; then
-        docker_v=$(docker.io --version | awk -F '[ ,]' '{print $3}')
+        docker_v=$(sudo docker.io --version | awk -F '[ ,]' '{print $3}')
     fi
 
     # 获取Docker Compose版本
     if docker compose version >/dev/null 2>&1; then
-        docker_compose_v=$(docker compose version --short)
+        docker_compose_v=$(sudo docker compose version --short)
     elif command -v docker-compose >/dev/null 2>&1; then
-        docker_compose_v=$(docker-compose version --short)
+        docker_compose_v=$(sudo docker-compose version --short)
     fi
 
     echo "Docker版本: v${docker_v}"
@@ -412,8 +407,8 @@ docker_version() {
 docker_status() {
     if sudo systemctl is-active --quiet docker || \
         sudo docker info >/dev/null 2>&1 || \
-        /etc/init.d/docker status | grep -q 'started' || \
-        service docker status >/dev/null 2>&1 || \
+        sudo /etc/init.d/docker status | grep -q 'started' || \
+        sudo service docker status >/dev/null 2>&1 || \
         curl -s --unix-socket /var/run/docker.sock http://localhost/version >/dev/null 2>&1; then
         _suc_msg "$(_green 'Docker已完成自检，启动并设置开机自启！')"
     else
@@ -426,7 +421,6 @@ docker_status() {
 main() {
     print_logo
 
-    # 执行卸载 Docker
     if [ "$1" == "uninstall" ]; then
         uninstall_docker
         end_message
@@ -434,8 +428,6 @@ main() {
     fi
 
     check_docker
-
-    # 完成脚本
     end_message
 }
 
