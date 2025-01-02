@@ -212,7 +212,7 @@ install_docker() {
 
     geo_check
 
-    if [[ "$os_name" == "rocky" && "$os_name" == "almalinux" && "$os_name" == "centos" ]]; then
+    if [[ "$os_name" == "rocky" || "$os_name" == "almalinux" || "$os_name" == "centos" ]]; then
         if command -v dnf >/dev/null 2>&1; then
             if ! sudo dnf config-manager --help >/dev/null 2>&1; then
                 sudo dnf install -y dnf-plugins-core
@@ -264,7 +264,7 @@ install_docker() {
         sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
         enable docker
         start docker
-    elif [[ "$os_name" == "debian" && "$os_name" == "ubuntu" ]]; then
+    elif [[ "$os_name" == "debian" || "$os_name" == "ubuntu" ]]; then
         # os_name="$(lsb_release -si)"
         # version_codename="$(lsb_release -cs)"
         # version_codename="$(. /etc/os-release && echo "$VERSION_CODENAME")"
@@ -301,6 +301,7 @@ install_docker() {
             repo_url="https://mirrors.aliyun.com/alpine/latest-stable/community"
         else
             repo_url="http://dl-cdn.alpinelinux.org/alpine/latest-stable/community"
+        fi
 
         if ! grep -q "$repo_url" /etc/apk/repositories; then
             echo "$repo_url" >> /etc/apk/repositories
