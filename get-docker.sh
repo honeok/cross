@@ -13,7 +13,6 @@ version='v0.0.2 (2025.01.02)'
 yellow='\033[93m'
 red='\033[31m'
 green='\033[92m'
-blue='\033[94m'
 cyan='\033[96m'
 purple='\033[95m'
 orange='\033[38;5;214m'
@@ -108,6 +107,21 @@ remove() {
     return 0
 }
 
+geo_check() {
+    local cloudflare_api="https://dash.cloudflare.com/cdn-cgi/trace"
+    local user_agent="Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/81.0"
+
+    country=$(curl -A "$user_agent" -m 10 -s "$cloudflare_api" | sed -n 's/.*loc=\([^ ]*\).*/\1/p')
+    [ -z "$country" ] && _err_msg "$(_red '无法获取服务器所在地区，请检查网络！')" && exit 1
+}
+
+statistics_runtime() {
+    local runcount
+    runcount=$(curl -fskL --max-time 2 --retry 2 "https://hit.forvps.gq/https://raw.githubusercontent.com/honeok/cross/master/get-docker.sh" -o - | grep -m1 -oE "[0-9]+[ ]+/[ ]+[0-9]+") &&
+    today_runcount=$(awk -F ' ' '{print $1}' <<< "$runcount") &&
+    total_runcount=$(awk -F ' ' '{print $3}' <<< "$runcount")
+}
+
 sudo() {
     if [ "$(id -ru)" -ne 0 ]; then
         if command -v sudo >/dev/null 2>&1; then
@@ -171,32 +185,12 @@ systemctl() {
     fi
 }
 
-statistics_runtime() {
-    local runcount
-    runcount=$(curl -fskL --max-time 2 --retry 2 "https://hit.forvps.gq/https://raw.githubusercontent.com/honeok/cross/master/get-docker.sh" -o - | grep -m1 -oE "[0-9]+[ ]+/[ ]+[0-9]+") &&
-    today_runcount=$(awk -F ' ' '{print $1}' <<< "$runcount") &&
-    total_runcount=$(awk -F ' ' '{print $3}' <<< "$runcount")
-}
-
-geo_check() {
-    local cloudflare_api="https://dash.cloudflare.com/cdn-cgi/trace"
-    local user_agent="Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/81.0"
-
-    country=$(curl -A "$user_agent" -m 10 -s "$cloudflare_api" | sed -n 's/.*loc=\([^ ]*\).*/\1/p')
-    [ -z "$country" ] && _err_msg "$(_red '无法获取服务器所在地区，请检查网络！')" && exit 1
-}
-
-end_message() {
-    local current_time current_timezone
-
-    statistics_runtime
-
-    current_time=$(date '+%Y-%m-%d %H:%M:%S')
-    current_timezone=$(date +"%Z %z")
-
-    printf "${orange}服务器当前时间: ${current_time} 时区: ${current_timezone} 脚本执行完成${white}\n"
-    _purple "感谢使用本脚本！如有疑问，请访问 https://www.honeok.com 获取更多信息"
-    _yellow "脚本当天运行次数: ${today_runcount} 累计运行次数: ${total_runcount}"
+fix_dpkg() {
+    pkill -f -15 'apt|dpkg' || pkill -f -9 'apt|dpkg'
+    for lockfile in "/var/lib/dpkg/lock" "/var/lib/dpkg/lock-frontend"; do
+        [ -f "$lockfile" ] && sudo rm -f "$lockfile" >/dev/null 2>&1
+    done
+    sudo dpkg --configure -a
 }
 
 check_docker() {
@@ -295,9 +289,10 @@ install_docker() {
             gpgkey_url="https://download.docker.com/linux/${os_name}/gpg"
         fi
 
+        fix_dpkg
         sudo apt-get -qq update
         # sudo apt install -y apt-transport-https ca-certificates curl gnupg lsb-release
-        sudo apt-get install -y -qq ca-certificates curl
+        sudo apt-get install -y ca-certificates curl
         sudo install -m 0755 -d /etc/apt/keyrings
         sudo curl -fsSL "$gpgkey_url" -o /etc/apt/keyrings/docker.asc
         sudo chmod a+r /etc/apt/keyrings/docker.asc
@@ -431,6 +426,19 @@ docker_status() {
         end_message
         exit 1
     fi
+}
+
+end_message() {
+    local current_time current_timezone
+
+    statistics_runtime
+
+    current_time=$(date '+%Y-%m-%d %H:%M:%S')
+    current_timezone=$(date +"%Z %z")
+
+    printf "${orange}服务器当前时间: ${current_time} 时区: ${current_timezone} 脚本执行完成${white}\n"
+    _purple "感谢使用本脚本！如有疑问，请访问 https://www.honeok.com 获取更多信息"
+    _yellow "脚本当天运行次数: ${today_runcount} 累计运行次数: ${total_runcount}"
 }
 
 clear
