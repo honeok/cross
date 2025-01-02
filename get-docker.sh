@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Description: Script for quickly installing the latest Docker-CE on supported Linux distros.
-# System Required:  Debian11+ Ubuntu18+ Centos7+ rhel9+ Rocky8+ Almalinux8+ Alpine19+
+# System Required:  Debian11+ Ubuntu18+ Centos7+ rhel8+ Rocky8+ Almalinux8+ Alpine19+
 #
 # Copyright (C) 2023 - 2025 honeok <honeok@duck.com>
 #
@@ -13,13 +13,18 @@ version='v0.0.2 (2025.01.02)'
 yellow='\033[93m'
 red='\033[31m'
 green='\033[92m'
+blue='\033[94m'
+cyan='\033[96m'
 purple='\033[95m'
+orange='\033[38;5;214m'
 white='\033[0m'
 _yellow() { echo -e "${yellow}$*${white}"; }
 _red() { echo -e "${red}$*${white}"; }
 _green() { echo -e "${green}$*${white}"; }
+_cyan() { echo -e "${cyan}$*${white}"; }
 _purple() { echo -e "${purple}$*${white}"; }
 
+_info_msg() { echo -e "\033[48;5;220m\033[1m提示${white} $*"; }
 _err_msg() { echo -e "\033[41m\033[1m警告${white} $*"; }
 _suc_msg() { echo -e "\033[42m\033[1m成功${white} $*"; }
 
@@ -32,7 +37,7 @@ os_info=$(grep '^PRETTY_NAME=' /etc/*release | cut -d '"' -f 2 | sed 's/ (.*)//'
 os_name=$(grep ^ID= /etc/*release | awk -F'=' '{print $2}' | sed 's/"//g')
 [[ "$os_name" != "debian" && "$os_name" != "ubuntu" && "$os_name" != "centos" && "$os_name" != "rhel" && "$os_name" != "rocky" && "$os_name" != "almalinux" && "$os_name" != "alpine" ]] && { _err_msg "$(_red '当前操作系统不被支持！')" && exit 0; }
 
-trap "cleanup_exit ; echo "" ; exit 0" SIGINT SIGQUIT SIGTERM EXIT
+trap "cleanup_exit ; exit 0" SIGINT SIGQUIT SIGTERM EXIT
 
 cleanup_exit() {
     [ -f "$getdocker_pid" ] && sudo rm -f "$getdocker_pid"
@@ -56,9 +61,9 @@ echo -e "${yellow}            __     __        __
  \_, /\__/\__/\_,_/\___\__/_/\_\\__/_/
 /___/
 "
-    local os_text="当前操作系统: ${os_info}"
+    local os_text="操作系统: ${os_info}"
     _green "${os_text}"
-    _purple "当前脚本版本: ${version}"
+    _cyan "脚本版本: ${version}"
 }
 
 remove() {
@@ -189,8 +194,8 @@ end_message() {
     current_time=$(date '+%Y-%m-%d %H:%M:%S')
     current_timezone=$(date +"%Z %z")
 
-    printf "${green}服务器当前时间: ${current_time} 时区: ${current_timezone} 脚本执行完成${white}\n"
-    _purple "感谢使用本脚本！如有疑问，请访问honeok.com获取更多信息"
+    printf "${orange}服务器当前时间: ${current_time} 时区: ${current_timezone} 脚本执行完成${white}\n"
+    _purple "感谢使用本脚本！如有疑问，请访问 https://www.honeok.com 获取更多信息"
     _yellow "脚本当天运行次数: ${today_runcount} 累计运行次数: ${total_runcount}"
 }
 
@@ -213,6 +218,9 @@ install_docker() {
     geo_check
 
     if [[ "$os_name" == "rocky" || "$os_name" == "almalinux" || "$os_name" == "centos" ]]; then
+
+        remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine >/dev/null 2>&1
+
         if command -v dnf >/dev/null 2>&1; then
             if ! sudo dnf config-manager --help >/dev/null 2>&1; then
                 sudo dnf install -y dnf-plugins-core
@@ -249,6 +257,9 @@ install_docker() {
         enable docker
         start docker
     elif [[ "$os_name" == "rhel" ]]; then
+
+        remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine podman runc >/dev/null 2>&1
+
         if ! dnf config-manager --help >/dev/null 2>&1; then
             dnf install -y dnf-plugins-core
         fi
@@ -270,7 +281,7 @@ install_docker() {
         # version_codename="$(. /etc/os-release && echo "$VERSION_CODENAME")"
         version_codename="$(grep ^VERSION_CODENAME /etc/*release | cut -d= -f2)"
 
-        remove docker.io docker-doc docker-compose podman-docker containerd runc
+        remove docker.io docker-doc docker-compose podman-docker containerd runc >/dev/null 2>&1
 
         [ -f /etc/apt/keyrings/docker.asc ] && sudo rm -f /etc/apt/keyrings/docker.asc >/dev/null 2>&1
         [ -f /etc/apt/sources.list.d/docker.list ] && sudo rm -f /etc/apt/sources.list.d/docker.list >/dev/null 2>&1
@@ -326,8 +337,9 @@ uninstall_docker() {
     # 停止并删除Docker服务和容器
     stop_and_remove_docker() {
         local running_containers
-        running_containers=$(docker ps -aq)
+        running_containers=$(docker ps -a -q)
         [ -n "$running_containers" ] && sudo docker rm -f "$running_containers" >/dev/null 2>&1
+        stop docker.socket >/dev/null 2>&1
         stop docker
         disable docker
     }
@@ -407,7 +419,7 @@ docker_version() {
 }
 
 docker_status() {
-    if sudo systemctl is-active --quiet docker || \
+    if sudo /usr/bin/systemctl is-active --quiet docker || \
         sudo docker info >/dev/null 2>&1 || \
         sudo /etc/init.d/docker status | grep -q 'started' || \
         sudo service docker status >/dev/null 2>&1 || \
@@ -420,7 +432,9 @@ docker_status() {
     fi
 }
 
+clear
 if [ "$#" -eq 0 ]; then
+    print_logo
     check_docker
     docker_version
     docker_status
@@ -430,6 +444,7 @@ else
     for arg in "$@"; do
         case $arg in
             -d|d|-D|D)
+                print_logo
                 uninstall_docker
                 end_message
                 exit 0
