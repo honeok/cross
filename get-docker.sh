@@ -49,7 +49,7 @@ fi
 echo $$ > "$pid_file"
 
 if [ "$(cd -P -- "$(dirname -- "$0")" && pwd -P)" != "/root" ]; then
-    sudo cd /root >/dev/null 2>&1
+    sudo sh -c "cd /root >/dev/null 2>&1"
 fi
 
 # https://www.lddgo.net/string/text-to-ascii-art
@@ -136,13 +136,19 @@ sudo() {
 }
 
 enable() {
+    local cmd
     local service_name="$1"
     if command -v apk >/dev/null 2>&1; then
-        sudo rc-update add "$service_name" default
+        cmd="sudo rc-update add $service_name default"
     else
-        sudo /usr/bin/systemctl enable "$service_name"
+        cmd="sudo /usr/bin/systemctl enable $service_name"
     fi
-    [ $? -eq 0 ] && _suc_msg "$(_green "${service_name}已设置为开机自启")" || _err_msg "$(_red "${service_name}设置开机自启失败")"
+
+    if $cmd; then
+        _suc_msg "$(_green "${service_name}已设置为开机自启")"
+    else
+        _err_msg "$(_red "${service_name}设置开机自启失败")"
+    fi
 }
 
 disable() {
