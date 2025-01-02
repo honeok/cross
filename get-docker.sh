@@ -156,7 +156,7 @@ systemctl() {
 # 脚本当天及累计运行次数统计
 statistics_runtime() {
     local runcount
-    runcount=$(wget --no-check-certificate -qO- --tries=2 --timeout=2 "https://hit.forvps.gq/https://raw.githubusercontent.com/honeok/cross/master/get-docker.sh" 2>&1 | grep -m1 -oE "[0-9]+[ ]+/[ ]+[0-9]+") &&
+    runcount=$(curl -fskL --max-time 2 --retry 2 "https://hit.forvps.gq/https://raw.githubusercontent.com/honeok/cross/master/get-docker.sh" -o - | grep -m1 -oE "[0-9]+[ ]+/[ ]+[0-9]+") &&
     today_runcount=$(awk -F ' ' '{print $1}' <<< "$runcount") &&
     total_runcount=$(awk -F ' ' '{print $3}' <<< "$runcount")
 }
@@ -183,38 +183,54 @@ end_message() {
 }
 
 check_docker() {
-    if command -v docker >/dev/null 2>&1 || docker --version >/dev/null 2>&1 || \
-        docker compose version >/dev/null 2>&1 || command -v docker-compose >/dev/null 2>&1; then
-            _err_msg "$(_red 'Docker已安装，正在退出安装程序！')"
-            end_message
-            exit 0
+    if command -v docker >/dev/null 2>&1 || \
+        docker --version >/dev/null 2>&1 || \
+        docker compose version >/dev/null 2>&1 || \
+        command -v docker-compose >/dev/null 2>&1; then
+        _err_msg "$(_red 'Docker已安装，正在退出安装程序！')"
+        end_message
+        exit 0
     else
         install_docker
     fi
 }
 
 install_docker() {
-    local codename repo_url gpgkey_url
+    local version_codename repo_url gpgkey_url
 
     geo_check
 
-    if [[ "$os_name" == 'rhel' && "$os_name" == 'rocky' && "$os_name" == 'almalinux' ]]; then
+    if [[ "$os_name" == "rocky" && "$os_name" == "almalinux" ]]; then
         if ! dnf config-manager --help >/dev/null 2>&1; then
             dnf install -y dnf-plugins-core
         fi
 
         [ -f /etc/yum.repos.d/docker*.repo ] && rm -f /etc/yum.repos.d/docker*.repo >/dev/null 2>&1
 
-        # 判断地区安装
-        if [[ "$country" == 'CN' ]];then
+        if [[ "$country" == "CN" ]];then
             dnf config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo >/dev/null 2>&1
         else
             dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo >/dev/null 2>&1
         fi
 
-        dnf install -y docker-ce docker-ce-cli containerd.io
+        sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
         enable docker && start docker
-    elif [[ "$os_name" == 'centos' && "$(grep ^VERSION_ID= /etc/*release | awk -F'=' '{print $2}' | sed 's/"//g')" == '7' ]]; then
+    elif [[ "$os_name" == "rhel" ]]; then
+        if ! dnf config-manager --help >/dev/null 2>&1; then
+            dnf install -y dnf-plugins-core
+        fi
+
+        [ -f /etc/yum.repos.d/docker*.repo ] && rm -f /etc/yum.repos.d/docker*.repo >/dev/null 2>&1
+
+        if [[ "$country" == "CN" ]];then
+            dnf config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/rhel/docker-ce.repo >/dev/null 2>&1
+        else
+            dnf config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo >/dev/null 2>&1
+        fi
+
+        sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+        enable docker && start docker
+    elif [[ "$os_name" == "centos" && "$(grep ^VERSION_ID= /etc/*release | awk -F'=' '{print $2}' | sed 's/"//g')" == '7' ]]; then
         remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine
 
         if ! rpm -q yum-utils >/dev/null 2>&1; then
@@ -223,22 +239,42 @@ install_docker() {
 
         [ -f /etc/yum.repos.d/docker*.repo ] && rm -f /etc/yum.repos.d/docker*.repo >/dev/null 2>&1
 
-        # 根据地区选择镜像源
-        if [ "$country" == 'CN' ]; then
+        if [ "$country" == "CN" ]; then
             yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
         else
             yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
         fi
         yum makecache fast
-        yum install docker-ce docker-ce-cli containerd.io -y
+        yum install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
         enable docker && start docker
-    elif [[ "$os_name" == 'debian' && "$os_name" == 'ubuntu']]; then
-        codename="$(grep ^VERSION_CODENAME /etc/*release | cut -d= -f2)"
+    elif [[ "$os_name" == "centos" && $(grep ^VERSION_ID= /etc/*release | awk -F'=' '{print $2}' | sed 's/"//g') -gt 7 ]]; then
+        remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine
+
+        if ! dnf config-manager --help >/dev/null 2>&1; then
+            dnf install -y dnf-plugins-core
+        fi
+
+        [ -f /etc/yum.repos.d/docker*.repo ] && rm -f /etc/yum.repos.d/docker*.repo >/dev/null 2>&1
+
+        if [[ "$country" == "CN" ]];then
+            dnf config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo >/dev/null 2>&1
+        else
+            dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo >/dev/null 2>&1
+        fi
+        sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+        enable docker && start docker
+    elif [[ "$os_name" == "debian" && "$os_name" == "ubuntu" ]]; then
+        # os_name="$(lsb_release -si)"
+        # version_codename="$(lsb_release -cs)"
+        # version_codename="$(. /etc/os-release && echo "$VERSION_CODENAME")"
+        version_codename="$(grep ^VERSION_CODENAME /etc/*release | cut -d= -f2)"
 
         remove docker.io docker-doc docker-compose podman-docker containerd runc
 
-        # 根据地区选择镜像源
-        if [ "$country" == 'CN' ]; then
+        [ -f /etc/apt/keyrings/docker.asc ] && rm -f /etc/apt/keyrings/docker.asc >/dev/null 2>&1
+        [ -f /etc/apt/sources.list.d/docker.list ] && rm -f /etc/apt/sources.list.d/docker.list >/dev/null 2>&1
+
+        if [ "$country" == "CN" ]; then
             repo_url="https://mirrors.aliyun.com/docker-ce/linux/${os_name}"
             gpgkey_url="https://mirrors.aliyun.com/docker-ce/linux/${os_name}/gpg"
         else
@@ -246,16 +282,19 @@ install_docker() {
             gpgkey_url="https://download.docker.com/linux/${os_name}/gpg"
         fi
 
-        sudo apt update
-        sudo apt install -y apt-transport-https ca-certificates curl gnupg lsb-release
+        sudo apt-get update
+        sudo apt-get install -y ca-certificates curl
+        # sudo apt install -y apt-transport-https ca-certificates curl gnupg lsb-release
         sudo install -m 0755 -d /etc/apt/keyrings
         sudo curl -fsSL "$gpgkey_url" -o /etc/apt/keyrings/docker.asc
         sudo chmod a+r /etc/apt/keyrings/docker.asc
-        echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] $repo_url $codename stable" | sudo tee /etc/apt/sources.list.d/docker.list
-        sudo apt update
-        sudo apt install -y docker-ce docker-ce-cli containerd.io
+
+        # add the repository to apt sources
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] $repo_url $version_codename stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
+        sudo apt-get update
+        sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
         enable docker && start docker
-    elif [[ "$os_name" == 'alpine' ]]; then
+    elif [[ "$os_name" == "alpine" ]]; then
         apk add docker docker-compose
         enable docker && start docker
     else
@@ -355,6 +394,20 @@ docker_version() {
     echo
     echo "================================================================================"
     echo
+}
+
+docker_status() {
+    if sudo systemctl is-active --quiet docker || \
+        sudo docker info >/dev/null 2>&1 || \
+        /etc/init.d/docker status | grep -q 'started' || \
+        service docker status >/dev/null 2>&1 || \
+        curl -s --unix-socket /var/run/docker.sock http://localhost/version >/dev/null 2>&1; then
+        _suc_msg "$(_green 'Docker已完成自检，启动并设置开机自启！')"
+    else
+        _err_msg "$(_red 'Docker状态检查失败或服务无法启动，请检查安装日志或手动启动Docker服务')"
+        end_message
+        exit 1
+    fi
 }
 
 main() {
