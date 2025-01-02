@@ -29,7 +29,7 @@ _suc_msg() { echo -e "\033[42m\033[1m成功${white} $*"; }
 
 export DEBIAN_FRONTEND=noninteractive
 
-getdocker_pid='/tmp/getdocker.pid'
+pid_file='/tmp/get-docker.pid'
 
 # 操作系统和权限校验
 os_info=$(grep '^PRETTY_NAME=' /etc/*release | cut -d '"' -f 2 | sed 's/ (.*)//')
@@ -39,14 +39,14 @@ os_name=$(grep ^ID= /etc/*release | awk -F'=' '{print $2}' | sed 's/"//g')
 trap "cleanup_exit ; exit 0" SIGINT SIGQUIT SIGTERM EXIT
 
 cleanup_exit() {
-    [ -f "$getdocker_pid" ] && sudo rm -f "$getdocker_pid"
+    [ -f "$pid_file" ] && sudo rm -f "$pid_file"
 }
 
-if [ -f "$getdocker_pid" ] && kill -0 "$(cat "$getdocker_pid")" 2>/dev/null; then
+if [ -f "$pid_file" ] && kill -0 "$(cat "$pid_file")" 2>/dev/null; then
     exit 1
 fi
 
-echo $$ > "$getdocker_pid"
+echo $$ > "$pid_file"
 
 if [ "$(cd -P -- "$(dirname -- "$0")" && pwd -P)" != "/root" ]; then
     sudo cd /root >/dev/null 2>&1
