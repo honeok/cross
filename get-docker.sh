@@ -24,7 +24,7 @@ _green() { echo -e "${green}$*${white}"; }
 _cyan() { echo -e "${cyan}$*${white}"; }
 _purple() { echo -e "${purple}$*${white}"; }
 
-_info_msg() { echo -e "\033[48;5;220m\033[1m提示${white} $*"; }
+_info_msg() { echo -e "\033[48;5;178m\033[1m\033[97m提示${white} $*"; }
 _err_msg() { echo -e "\033[41m\033[1m警告${white} $*"; }
 _suc_msg() { echo -e "\033[42m\033[1m成功${white} $*"; }
 
@@ -216,7 +216,7 @@ install_docker() {
     local pkg_cmd version_codename repo_url gpgkey_url
 
     geo_check
-
+    echo ""
     _info_msg "$(_yellow '正在安装docker环境！')"
     if [[ "$os_name" == "rocky" || "$os_name" == "almalinux" || "$os_name" == "centos" ]]; then
 
