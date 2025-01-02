@@ -209,8 +209,8 @@ check_docker() {
 install_docker() {
     local pkg_cmd version_codename repo_url gpgkey_url
 
+    echo
     geo_check
-    echo ""
     _info_msg "$(_yellow '正在安装docker环境！')"
     if [[ "$os_name" == "rocky" || "$os_name" == "almalinux" || "$os_name" == "centos" ]]; then
 
@@ -323,6 +323,7 @@ install_docker() {
         end_message
         exit 0
     fi
+    echo
 }
 
 uninstall_docker() {
@@ -330,6 +331,7 @@ uninstall_docker() {
     local docker_depend_files=("/etc/yum.repos.d/docker*" "/etc/apt/sources.list.d/docker.*" "/etc/apt/keyrings/docker.*" "/var/log/docker.*")
     local bin_files=("/usr/bin/docker" "/usr/bin/docker-compose")
 
+    echo
     # 停止并删除Docker服务和容器
     stop_and_remove_docker() {
         local running_containers
@@ -372,6 +374,7 @@ uninstall_docker() {
     else
         _suc_msg "$(_green 'Docker和Docker Compose已卸载，并清理文件夹和相关依赖')"
     fi
+    echo
 }
 
 docker_version() {
