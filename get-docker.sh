@@ -293,9 +293,7 @@ install_docker() {
         enable docker
         start docker
     elif [[ "$os_name" == "debian" || "$os_name" == "ubuntu" ]]; then
-        # os_name="$(lsb_release -si)"
-        # version_codename="$(lsb_release -cs)"
-        # version_codename="$(. /etc/os-release && echo "$VERSION_CODENAME")"
+        # version_codename="$(. /etc/*release && echo "$VERSION_CODENAME")"
         version_codename="$(grep ^VERSION_CODENAME /etc/*release | cut -d= -f2)"
 
         remove docker.io docker-doc docker-compose podman-docker containerd runc >/dev/null 2>&1
@@ -314,7 +312,7 @@ install_docker() {
         fix_dpkg
         sudo apt-get -qq update
         # sudo apt install -y apt-transport-https ca-certificates curl gnupg lsb-release
-        sudo apt-get install -y ca-certificates curl
+        sudo apt-get install -y -qq ca-certificates curl
         sudo install -m 0755 -d /etc/apt/keyrings
         sudo curl -fsSL "$gpgkey_url" -o /etc/apt/keyrings/docker.asc
         sudo chmod a+r /etc/apt/keyrings/docker.asc
