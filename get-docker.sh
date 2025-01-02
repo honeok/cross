@@ -418,18 +418,23 @@ docker_status() {
     fi
 }
 
-main() {
-    print_logo
-
-    if [ "$1" == "uninstall" ]; then
-        uninstall_docker
-        end_message
-        exit 0
-    fi
-
+if [ "$#" -eq 0 ]; then
     check_docker
+    docker_version
+    docker_status
     end_message
-}
-
-main "$@"
-exit 0
+    exit 0
+else
+    for arg in "$@"; do
+        case $arg in
+            -d|d|-D|D)
+                uninstall_docker
+                end_message
+                exit 0
+                ;;
+            *)
+                _err_msg "$(_red "无效选项, 当前参数${arg}不被支持！")"
+                ;;
+        esac
+    done
+fi
