@@ -54,7 +54,7 @@ fi
 
 # https://www.lddgo.net/string/text-to-ascii-art
 print_logo() {
-echo -e "${yellow}            __     __        __
+    echo -e "${yellow}            __     __        __
   ___ ____ / /____/ ___ ____/ /_____ ____ 
  / _ \`/ -_/ __/ _  / _ / __/  '_/ -_/ __/ 
  \_, /\__/\__/\_,_/\___\__/_/\_\\__/_/
