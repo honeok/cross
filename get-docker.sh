@@ -21,6 +21,7 @@ _green() { echo -e "${green}$*${white}"; }
 _purple() { echo -e "${purple}$*${white}"; }
 
 _err_msg() { echo -e "\033[41m\033[1m警告${white} $*"; }
+_suc_msg() { echo -e "\033[42m\033[1m成功${white} $*"; }
 
 export DEBIAN_FRONTEND=noninteractive
 
