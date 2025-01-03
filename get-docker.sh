@@ -105,9 +105,11 @@ remove() {
 
 geo_check() {
     local country=""
-    local cloudflare_api=$(curl -A "Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/81.0" -m 10 -s "https://dash.cloudflare.com/cdn-cgi/trace" | sed -n 's/.*loc=\([^ ]*\).*/\1/p')
-    local ipinfo_api=$(curl -fsL --connect-timeout 5 ipinfo.io/country)
-    local ipsb_api=$(curl -fsL --connect-timeout 5 -A Mozilla https://api.ip.sb/geoip | sed -n 's/.*"country_code":"\([^"]*\)".*/\1/p')
+    local cloudflare_api ipinfo_api ipsb_api
+
+    cloudflare_api=$(curl -A "Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/81.0" -m 10 -s "https://dash.cloudflare.com/cdn-cgi/trace" | sed -n 's/.*loc=\([^ ]*\).*/\1/p')
+    ipinfo_api=$(curl -fsL --connect-timeout 5 ipinfo.io/country)
+    ipsb_api=$(curl -fsL --connect-timeout 5 -A Mozilla https://api.ip.sb/geoip | sed -n 's/.*"country_code":"\([^"]*\)".*/\1/p')
 
     for api in "$cloudflare_api" "$ipinfo_api" "$ipsb_api"; do
         if [ -n "$api" ]; then
@@ -291,9 +293,9 @@ install_docker() {
         [ -f "/etc/yum.repos.d/docker-ce-staging.repo" ] && sudo rm -f /etc/yum.repos.d/docker-ce-staging.repo >/dev/null 2>&1
 
         if [[ "$country" == "CN" ]]; then
-            sudo dnf${os_name=="fedora" && echo "-3"} config-manager --add-repo "https://mirrors.aliyun.com/docker-ce/linux/$os_name/docker-ce.repo" >/dev/null 2>&1
+            sudo dnf$( [[ "$os_name" == "fedora" ]] && echo "-3" ) config-manager --add-repo "https://mirrors.aliyun.com/docker-ce/linux/$os_name/docker-ce.repo" >/dev/null 2>&1
         else
-            sudo dnf${os_name=="fedora" && echo "-3"} config-manager --add-repo "https://download.docker.com/linux/$os_name/docker-ce.repo" >/dev/null 2>&1
+            sudo dnf$( [[ "$os_name" == "fedora" ]] && echo "-3" ) config-manager --add-repo "https://download.docker.com/linux/$os_name/docker-ce.repo" >/dev/null 2>&1
         fi
 
         sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
