@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Description: Script for quickly installing the latest Docker-CE on supported Linux distros.
-# System Required:  debian11+ ubuntu20+ centos7+ rhel8+ fedora40+ rocky8+ almalinux8+ alpine3.19+
+# System Required:  debian11+ ubuntu20+ centos7+ rhel8+ rocky8+ almalinux8+ alpine3.19+
 #
 # Copyright (C) 2023 - 2025 honeok <honeok@duck.com>
 #
@@ -224,6 +224,13 @@ fix_dpkg() {
     sudo dpkg --configure -a
 }
 
+clean_repo_files() {
+    [ -f "/etc/yum.repos.d/docker-ce.repo" ] && sudo rm -f /etc/yum.repos.d/docker-ce.repo >/dev/null 2>&1
+    [ -f "/etc/yum.repos.d/docker-ce-staging.repo" ] && sudo rm -f /etc/yum.repos.d/docker-ce-staging.repo >/dev/null 2>&1
+    [ -f "/etc/apt/keyrings/docker.asc" ] && sudo rm -f /etc/apt/keyrings/docker.asc >/dev/null 2>&1
+    [ -f "/etc/apt/sources.list.d/docker.list" ] && sudo rm -f /etc/apt/sources.list.d/docker.list >/dev/null 2>&1
+}
+
 check_docker() {
     if command -v docker >/dev/null 2>&1 || \
         sudo docker --version >/dev/null 2>&1 || \
@@ -253,7 +260,7 @@ install_docker() {
             pkg_cmd='dnf'
         elif command -v yum >/dev/null 2>&1; then
             if ! sudo rpm -q yum-utils >/dev/null 2>&1; then
-                sudo yum install -y yum-utils
+                sudo yum install -y yum-utils device-mapper-persistent-data lvm2
             fi
             pkg_cmd='yum'
         else
@@ -262,8 +269,7 @@ install_docker() {
             exit 1
         fi
 
-        [ -f "/etc/yum.repos.d/docker-ce.repo" ] && sudo rm -f /etc/yum.repos.d/docker-ce.repo >/dev/null 2>&1
-        [ -f "/etc/yum.repos.d/docker-ce-staging.repo" ] && sudo rm -f /etc/yum.repos.d/docker-ce-staging.repo >/dev/null 2>&1
+        clean_repo_files
 
         if [[ "$country" == "CN" ]]; then
             repo_url="https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo"
@@ -282,20 +288,19 @@ install_docker() {
 
         enable docker
         start docker
-    elif [[ "$os_name" == "rhel" || "$os_name" == "fedora" ]]; then
-        remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine podman runc docker-selinux docker-engine-selinux >/dev/null 2>&1
+    elif [[ "$os_name" == "rhel" ]]; then
+        remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine podman runc >/dev/null 2>&1
 
         if ! dnf config-manager --help >/dev/null 2>&1; then
             dnf install -y dnf-plugins-core
         fi
 
-        [ -f "/etc/yum.repos.d/docker-ce.repo" ] && sudo rm -f /etc/yum.repos.d/docker-ce.repo >/dev/null 2>&1
-        [ -f "/etc/yum.repos.d/docker-ce-staging.repo" ] && sudo rm -f /etc/yum.repos.d/docker-ce-staging.repo >/dev/null 2>&1
+        clean_repo_files
 
         if [[ "$country" == "CN" ]]; then
-            sudo dnf$( [[ "$os_name" == "fedora" ]] && echo "-3" ) config-manager --add-repo "https://mirrors.aliyun.com/docker-ce/linux/$os_name/docker-ce.repo" >/dev/null 2>&1
+            sudo dnf config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/rhel/docker-ce.repo >/dev/null 2>&1
         else
-            sudo dnf$( [[ "$os_name" == "fedora" ]] && echo "-3" ) config-manager --add-repo "https://download.docker.com/linux/$os_name/docker-ce.repo" >/dev/null 2>&1
+            sudo dnf config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo >/dev/null 2>&1
         fi
 
         sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
@@ -307,8 +312,7 @@ install_docker() {
 
         remove docker.io docker-doc docker-compose podman-docker containerd runc >/dev/null 2>&1
 
-        [ -f /etc/apt/keyrings/docker.asc ] && sudo rm -f /etc/apt/keyrings/docker.asc >/dev/null 2>&1
-        [ -f /etc/apt/sources.list.d/docker.list ] && sudo rm -f /etc/apt/sources.list.d/docker.list >/dev/null 2>&1
+        clean_repo_files
 
         if [ "$country" == "CN" ]; then
             repo_url="https://mirrors.aliyun.com/docker-ce/linux/${os_name}"
@@ -364,7 +368,7 @@ uninstall_docker() {
     # 停止并删除Docker服务和容器
     stop_and_remove_docker() {
         local running_containers
-        running_containers=$(docker ps -a -q)
+        running_containers=$(sudo docker ps -a -q)
         [ -n "$running_containers" ] && sudo docker rm -f "$running_containers" >/dev/null 2>&1
         stop docker.socket >/dev/null 2>&1
         stop docker
