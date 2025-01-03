@@ -3,10 +3,12 @@
 # Description: Detects whether the server's memory is oversold.
 #
 # Original Project: https://github.com/uselibrary/memoryCheck
-# forked and modified by: honeok <honeok@duck.com>
+# Forked and Modified By: honeok <honeok@duck.com>
 #
 # https://www.honeok.com
 # https://github.com/honeok/cross/raw/master/memoryCheck.sh
+#
+# shellcheck disable=SC2164
 
 export LANG=en_US.UTF-8
 
@@ -42,7 +44,7 @@ short_separator
 _yellow "检查是否使用了swap超售内存"
 memSize=$(free -m | awk '/Mem/ {print $2}')
 memSpeed=$(dd if=/dev/zero of=/dev/null bs=1M count="$memSize" 2>&1 | awk 'END {print $(NF-1)}' | awk '{printf("%.0f\n", $1)}')
-_cyan "内存IO速度: "$memSpeed" GB/s"
+_cyan "内存IO速度: ${memSpeed} GB/s"
 if [ "$memSpeed" -lt 10 ]; then
     _err_msg "$(_red '内存IO速度低于10 GB/s')"
     _info_msg "$(_red '可能存在swap超售内存')"
