@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 #
 # Description: Script for quickly installing the latest Docker-CE on supported Linux distros.
-# System Required:  Debian11+ Ubuntu20+ Centos7+ rhel8+ Rocky8+ Almalinux8+ Alpine3.19+
+# System Required:  debian11+ ubuntu20+ centos7+ rhel8+ fedora40+ rocky8+ almalinux8+ alpine3.19+
 #
 # Copyright (C) 2023 - 2025 honeok <honeok@duck.com>
 #
 # https://github.com/honeok/cross/raw/master/get-docker.sh
 
 # 当前脚本版本号
-version='v0.0.2 (2025.01.02)'
+version='v0.0.2 (2025.01.03)'
 
 yellow='\033[93m'
 red='\033[31m'
@@ -34,7 +34,7 @@ pid_file='/tmp/get-docker.pid'
 # 操作系统和权限校验
 os_info=$(grep '^PRETTY_NAME=' /etc/*release | cut -d '"' -f 2 | sed 's/ (.*)//')
 os_name=$(grep ^ID= /etc/*release | awk -F'=' '{print $2}' | sed 's/"//g')
-[[ "$os_name" != "debian" && "$os_name" != "ubuntu" && "$os_name" != "centos" && "$os_name" != "rhel" && "$os_name" != "rocky" && "$os_name" != "almalinux" && "$os_name" != "alpine" ]] && { _err_msg "$(_red '当前操作系统不被支持！')" && exit 0; }
+[[ "$os_name" != "debian" && "$os_name" != "ubuntu" && "$os_name" != "centos" && "$os_name" != "rhel" && "$os_name" != "fedora" && "$os_name" != "rocky" && "$os_name" != "almalinux" && "$os_name" != "alpine" ]] && { _err_msg "$(_red '当前操作系统不被支持！')" && end_message && exit 0; }
 
 trap "cleanup_exit ; exit 0" SIGINT SIGQUIT SIGTERM EXIT
 
@@ -73,46 +73,54 @@ remove() {
 
     check_installed() {
         local package="$1"
-        if command -v dnf >/dev/null 2>&1; then
-            sudo rpm -q "$package" >/dev/null 2>&1
-        elif command -v yum >/dev/null 2>&1; then
+        if command -v dnf >/dev/null 2>&1 || command -v yum >/dev/null 2>&1; then
             sudo rpm -q "$package" >/dev/null 2>&1
         elif command -v apt >/dev/null 2>&1; then
             sudo dpkg -l | grep -qw "$package"
         elif command -v apk >/dev/null 2>&1; then
             sudo apk info | grep -qw "$package"
         else
-            _err_msg "$(_red "未知的包管理器")"
+            _err_msg "$(_red '未知的包管理器')"
             return 1
         fi
         return 0
     }
 
     for package in "$@"; do
-        _yellow "正在卸载$package"
+        _yellow "正在卸载 $package"
         if check_installed "$package"; then
-            if command -v dnf >/dev/null 2>&1; then
-                sudo dnf remove "$package"* -y
-            elif command -v yum >/dev/null 2>&1; then
-                sudo yum remove "$package"* -y
+            if command -v dnf >/dev/null 2>&1 || command -v yum >/dev/null 2>&1; then
+                sudo dnf remove "$package"* -y || sudo yum remove "$package"* -y
             elif command -v apt >/dev/null 2>&1; then
                 sudo apt purge "$package"* -y
             elif command -v apk >/dev/null 2>&1; then
                 sudo apk del "$package"* -y
             fi
         else
-            _err_msg "$(_red "${package}没有安装，跳过卸载！")"
+            _err_msg "$(_red "${package} 没有安装，跳过卸载！")"
         fi
     done
     return 0
 }
 
 geo_check() {
-    local cloudflare_api="https://dash.cloudflare.com/cdn-cgi/trace"
-    local user_agent="Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/81.0"
+    local country=""
+    local cloudflare_api=$(curl -A "Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/81.0" -m 10 -s "https://dash.cloudflare.com/cdn-cgi/trace" | sed -n 's/.*loc=\([^ ]*\).*/\1/p')
+    local ipinfo_api=$(curl -fsL --connect-timeout 5 ipinfo.io/country)
+    local ipsb_api=$(curl -fsL --connect-timeout 5 -A Mozilla https://api.ip.sb/geoip | sed -n 's/.*"country_code":"\([^"]*\)".*/\1/p')
 
-    country=$(curl -A "$user_agent" -m 10 -s "$cloudflare_api" | sed -n 's/.*loc=\([^ ]*\).*/\1/p')
-    [ -z "$country" ] && _err_msg "$(_red '无法获取服务器所在地区，请检查网络！')" && exit 1
+    for api in "$cloudflare_api" "$ipinfo_api" "$ipsb_api"; do
+        if [ -n "$api" ]; then
+            country="$api"
+            break
+        fi
+    done
+
+    if [ -z "$country" ]; then
+        _err_msg "$(_red '无法获取服务器所在地区，请检查网络后重试！')"
+        end_message
+        exit 1
+    fi
 }
 
 statistics_runtime() {
@@ -128,6 +136,7 @@ sudo() {
             sudo "$@"
         else
             _err_msg "$(_red '您的系统未安装sudo，因此无法进行该项操作')"
+            end_message
             exit 1
         fi
     else
@@ -233,7 +242,6 @@ install_docker() {
     geo_check
     _info_msg "$(_yellow '正在安装docker环境！')"
     if [[ "$os_name" == "rocky" || "$os_name" == "almalinux" || "$os_name" == "centos" ]]; then
-
         remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine >/dev/null 2>&1
 
         if command -v dnf >/dev/null 2>&1; then
@@ -272,9 +280,8 @@ install_docker() {
 
         enable docker
         start docker
-    elif [[ "$os_name" == "rhel" ]]; then
-
-        remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine podman runc >/dev/null 2>&1
+    elif [[ "$os_name" == "rhel" || "$os_name" == "fedora" ]]; then
+        remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine podman runc docker-selinux docker-engine-selinux >/dev/null 2>&1
 
         if ! dnf config-manager --help >/dev/null 2>&1; then
             dnf install -y dnf-plugins-core
@@ -283,10 +290,10 @@ install_docker() {
         [ -f "/etc/yum.repos.d/docker-ce.repo" ] && sudo rm -f /etc/yum.repos.d/docker-ce.repo >/dev/null 2>&1
         [ -f "/etc/yum.repos.d/docker-ce-staging.repo" ] && sudo rm -f /etc/yum.repos.d/docker-ce-staging.repo >/dev/null 2>&1
 
-        if [[ "$country" == "CN" ]];then
-            sudo dnf config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/rhel/docker-ce.repo >/dev/null 2>&1
+        if [[ "$country" == "CN" ]]; then
+            sudo dnf${os_name=="fedora" && echo "-3"} config-manager --add-repo "https://mirrors.aliyun.com/docker-ce/linux/$os_name/docker-ce.repo" >/dev/null 2>&1
         else
-            sudo dnf config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo >/dev/null 2>&1
+            sudo dnf${os_name=="fedora" && echo "-3"} config-manager --add-repo "https://download.docker.com/linux/$os_name/docker-ce.repo" >/dev/null 2>&1
         fi
 
         sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
