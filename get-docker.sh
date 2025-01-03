@@ -260,7 +260,7 @@ install_docker() {
             pkg_cmd='dnf'
         elif command -v yum >/dev/null 2>&1; then
             if ! sudo rpm -q yum-utils >/dev/null 2>&1; then
-                sudo yum install -y yum-utils device-mapper-persistent-data lvm2
+                sudo yum install -y yum-utils
             fi
             pkg_cmd='yum'
         else
