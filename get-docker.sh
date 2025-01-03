@@ -97,7 +97,7 @@ remove() {
                 sudo apk del "$package"* -y
             fi
         else
-            _err_msg "$(_red "${package} 没有安装，跳过卸载！")"
+            _err_msg "$(_red "${package}没有安装，跳过卸载！")"
         fi
     done
     return 0
