@@ -4,7 +4,7 @@
 # System Required:  debian11+ ubuntu20+ centos7+ rhel8+ rocky8+ almalinux8+ alpine3.19+
 #
 # Copyright (C) 2023 - 2025 honeok <honeok@duck.com>
-#
+# https://www.honeok.com
 # https://github.com/honeok/cross/raw/master/get-docker.sh
 
 # 当前脚本版本号
