@@ -6,6 +6,8 @@
 # Copyright (C) 2023 - 2025 honeok <honeok@duck.com>
 # https://www.honeok.com
 # https://github.com/honeok/cross/raw/master/get-docker.sh
+#
+# shellcheck disable=SC2059
 
 # 当前脚本版本号
 version='v0.0.2 (2025.01.03)'
@@ -15,7 +17,6 @@ red='\033[31m'
 green='\033[92m'
 cyan='\033[96m'
 purple='\033[95m'
-orange='\033[38;5;214m'
 white='\033[0m'
 _yellow() { echo -e "${yellow}$*${white}"; }
 _red() { echo -e "${red}$*${white}"; }
