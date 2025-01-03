@@ -472,8 +472,7 @@ end_message() {
     current_time=$(date '+%Y-%m-%d %H:%M:%S')
     current_timezone=$(date +"%Z %z")
 
-    printf "%s服务器当前时间: %s 时区: %s 脚本执行完成%s\n" \
-        "${orange}" "$current_time" "$current_timezone" "${white}"
+    printf "${green}服务器当前时间: ${current_time} 时区: ${current_timezone} 脚本执行完成${white}\n"
     _purple "感谢使用本脚本！如有疑问，请访问 https://www.honeok.com 获取更多信息"
     _yellow "脚本当天运行次数: ${today_runcount} 累计运行次数: ${total_runcount}"
 }
