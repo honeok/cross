@@ -147,15 +147,15 @@ sudo() {
 }
 
 enable() {
-    local cmd
+    local _cmd
     local service_name="$1"
     if command -v apk >/dev/null 2>&1; then
-        cmd="sudo rc-update add $service_name default"
+        _cmd="sudo rc-update add $service_name default"
     else
-        cmd="sudo /usr/bin/systemctl enable $service_name"
+        _cmd="sudo /usr/bin/systemctl enable $service_name"
     fi
 
-    if $cmd; then
+    if $_cmd; then
         _suc_msg "$(_green "${service_name}已设置为开机自启")"
     else
         _err_msg "$(_red "${service_name}设置开机自启失败")"
@@ -172,16 +172,16 @@ disable() {
 }
 
 start() {
-    local cmd
+    local _cmd
     local service_name="$1"
     
     if command -v apk >/dev/null 2>&1; then
-        cmd="sudo service $service_name start"
+        _cmd="sudo service $service_name start"
     else
-        cmd="sudo /usr/bin/systemctl start $service_name"
+        _cmd="sudo /usr/bin/systemctl start $service_name"
     fi
 
-    if $cmd; then
+    if $_cmd; then
         _suc_msg "$(_green "${service_name}已启动")"
     else
         _err_msg "$(_red "${service_name}启动失败")"
@@ -189,16 +189,16 @@ start() {
 }
 
 stop() {
-    local cmd
+    local _cmd
     local service_name="$1"
     
     if command -v apk >/dev/null 2>&1; then
-        cmd="sudo service $service_name stop"
+        _cmd="sudo service $service_name stop"
     else
-        cmd="sudo /usr/bin/systemctl stop $service_name"
+        _cmd="sudo /usr/bin/systemctl stop $service_name"
     fi
 
-    if $cmd; then
+    if $_cmd; then
         _suc_msg "$(_green "${service_name}已停止")"
     else
         _err_msg "$(_red "${service_name}停止失败")"
@@ -206,13 +206,13 @@ stop() {
 }
 
 systemctl() {
-    local cmd="$1"
+    local _cmd="$1"
     local service_name="$2"
 
     if command -v apk >/dev/null 2>&1; then
-        sudo service "$service_name" "$cmd"
+        sudo service "$service_name" "$_cmd"
     else
-        sudo /usr/bin/systemctl "$cmd" "$service_name"
+        sudo /usr/bin/systemctl "$_cmd" "$service_name"
     fi
 }
 
@@ -324,7 +324,7 @@ install_docker() {
 
         fix_dpkg
         sudo apt-get -qq update
-        # sudo apt install -y apt-transport-https ca-certificates curl gnupg lsb-release
+        # sudo apt-get install -y -qq ca-certificates curl apt-transport-https lsb-release gnupg
         sudo apt-get install -y -qq ca-certificates curl
         sudo install -m 0755 -d /etc/apt/keyrings
         sudo curl -fsSL "$gpgkey_url" -o /etc/apt/keyrings/docker.asc
