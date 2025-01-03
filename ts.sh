@@ -5,6 +5,8 @@
 # Copyright (C) 2023 - 2025 honeok <honeok@duck.com>
 # https://www.honeok.com
 # https://github.com/honeok/cross/raw/master/play/ts.sh
+#
+# shellcheck disable=SC2164
 
 yellow='\033[1;33m'
 red='\033[1;31m'
@@ -105,7 +107,7 @@ pre_check() {
         exit 1
     fi
 
-    if [[ "$country" == "CN" || $(curl -fsL -o /dev/null -w "%{time_total}" --max-time 5 https://raw.githubusercontent.com/honeok/cross/master/README.md) > 3 ]]; then
+    if [[ "$country" == "CN" || $(curl -fsL -o /dev/null -w "%{time_total}" --max-time 5 https://raw.githubusercontent.com/honeok/cross/master/README.md) -gt 3 ]]; then
         github_proxy="https://gh-proxy.com/"
     else
         github_proxy=""
@@ -134,7 +136,7 @@ install_docker() {
 }
 
 install_teamspeak() {
-    mkdir -p "${teamspeak_workdir}" && cd "${teamspeak_workdir}"
+    mkdir -p "${teamspeak_workdir}" && cd "${teamspeak_workdir}" || exit 1
 
     curl -fsL "${github_proxy}https://raw.githubusercontent.com/honeok/config/master/docker/compose/ts-docker-compose.yml" -o docker-compose.yml
 
