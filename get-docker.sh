@@ -12,11 +12,11 @@
 # 当前脚本版本号
 version='v0.0.2 (2025.01.03)'
 
-yellow='\033[93m'
-red='\033[31m'
-green='\033[92m'
-cyan='\033[96m'
-purple='\033[95m'
+yellow='\033[1;33m'
+red='\033[1;31m'
+green='\033[1;32m'
+cyan='\033[1;36m'
+purple='\033[1;35m'
 white='\033[0m'
 _yellow() { echo -e "${yellow}$*${white}"; }
 _red() { echo -e "${red}$*${white}"; }
