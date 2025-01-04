@@ -245,7 +245,7 @@ check_docker() {
 }
 
 install_docker() {
-    local pkg_cmd version_code repo_url gpgkey_url alpine_major_version
+    local pkg_cmd version_code repo_url gpgkey_url
 
     geo_check
 
@@ -338,16 +338,10 @@ install_docker() {
         enable docker
         start docker
     elif [[ "$os_name" == "alpine" ]]; then
-        alpine_major_version="$(grep ^VERSION_ID /etc/*-release | cut -d '=' -f 2 | cut -d '.' -f 1,2)"
 
         if [[ "$country" == "CN" ]]; then
-            repo_url="https://mirrors.aliyun.com/alpine/v${alpine_major_version}/community"
-        else
-            repo_url="http://dl-cdn.alpinelinux.org/alpine/v${alpine_major_version}/community"
-        fi
-
-        if ! grep -q "$repo_url" /etc/apk/repositories; then
-            echo "$repo_url" >> /etc/apk/repositories
+            # s#old#new#g
+            sed -i "s#dl-cdn.alpinelinux.org#mirrors.aliyun.com#g" /etc/apk/repositories
         fi
 
         sudo apk update
