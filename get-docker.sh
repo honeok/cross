@@ -91,11 +91,11 @@ remove() {
         _yellow "正在卸载 $package"
         if check_installed "$package"; then
             if command -v dnf >/dev/null 2>&1 || command -v yum >/dev/null 2>&1; then
-                sudo dnf remove "$package"* -y || sudo yum remove "$package"* -y
+                sudo dnf remove -y "$package"* || sudo yum remove -y "$package"*
             elif command -v apt >/dev/null 2>&1; then
-                sudo apt purge "$package"* -y
+                sudo apt purge -y "$package"*
             elif command -v apk >/dev/null 2>&1; then
-                sudo apk del "$package"* -y
+                sudo apk del -y "$package"*
             fi
         else
             _err_msg "$(_red "${package}没有安装，跳过卸载！")"
@@ -109,7 +109,7 @@ geo_check() {
     local cloudflare_api ipinfo_api ipsb_api
 
     cloudflare_api=$(curl -A "Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/81.0" -m 10 -s "https://dash.cloudflare.com/cdn-cgi/trace" | sed -n 's/.*loc=\([^ ]*\).*/\1/p')
-    ipinfo_api=$(curl -fsL --connect-timeout 5 ipinfo.io/country)
+    ipinfo_api=$(curl -fsL --connect-timeout 5 https://ipinfo.io/country)
     ipsb_api=$(curl -fsL --connect-timeout 5 -A Mozilla https://api.ip.sb/geoip | sed -n 's/.*"country_code":"\([^"]*\)".*/\1/p')
 
     for api in "$cloudflare_api" "$ipinfo_api" "$ipsb_api"; do
@@ -128,7 +128,7 @@ geo_check() {
 
 statistics_runtime() {
     local runcount
-    runcount=$(curl -fskL --max-time 2 --retry 2 "https://hit.forvps.gq/https://raw.githubusercontent.com/honeok/cross/master/get-docker.sh" -o - | grep -m1 -oE "[0-9]+[ ]+/[ ]+[0-9]+") &&
+    runcount=$(curl -fskL -m 2 --retry 2 -o - "https://hit.forvps.gq/https://raw.githubusercontent.com/honeok/cross/master/get-docker.sh" | grep -m1 -oE "[0-9]+[ ]+/[ ]+[0-9]+") &&
     today_runcount=$(awk -F ' ' '{print $1}' <<< "$runcount") &&
     total_runcount=$(awk -F ' ' '{print $3}' <<< "$runcount")
 }
@@ -246,10 +246,11 @@ check_docker() {
 }
 
 install_docker() {
-    local pkg_cmd version_codename repo_url gpgkey_url
+    local pkg_cmd version_code repo_url gpgkey_url
+
+    geo_check
 
     echo
-    geo_check
     _info_msg "$(_yellow '正在安装docker环境！')"
     if [[ "$os_name" == "rocky" || "$os_name" == "almalinux" || "$os_name" == "centos" ]]; then
         remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine >/dev/null 2>&1
@@ -308,8 +309,8 @@ install_docker() {
         enable docker
         start docker
     elif [[ "$os_name" == "debian" || "$os_name" == "ubuntu" ]]; then
-        # version_codename="$(. /etc/*release && echo "$VERSION_CODENAME")"
-        version_codename="$(grep ^VERSION_CODENAME /etc/*release | cut -d= -f2)"
+        # version_code="$(. /etc/*release && echo "$VERSION_CODENAME")"
+        version_code="$(grep ^VERSION_CODENAME /etc/*release | cut -d= -f2)"
 
         remove docker.io docker-doc docker-compose podman-docker containerd runc >/dev/null 2>&1
 
@@ -332,7 +333,7 @@ install_docker() {
         sudo chmod a+r /etc/apt/keyrings/docker.asc
 
         # add the repository to apt sources
-        echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] $repo_url $version_codename stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] $repo_url $version_code stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
         sudo apt-get -qq update
         sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
         enable docker
