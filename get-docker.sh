@@ -299,9 +299,9 @@ install_docker() {
         clean_repo_files
 
         if [[ "$country" == "CN" ]]; then
-            sudo dnf config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/rhel/docker-ce.repo >/dev/null 2>&1
+            sudo dnf config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/rhel/docker-ce.repo
         else
-            sudo dnf config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo >/dev/null 2>&1
+            sudo dnf config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo
         fi
 
         sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
