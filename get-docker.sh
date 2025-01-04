@@ -105,12 +105,11 @@ remove() {
 }
 
 geo_check() {
-    local country=""
     local cloudflare_api ipinfo_api ipsb_api
 
-    cloudflare_api=$(curl -A "Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/81.0" -m 10 -s "https://dash.cloudflare.com/cdn-cgi/trace" | sed -n 's/.*loc=\([^ ]*\).*/\1/p')
-    ipinfo_api=$(curl -fsL --connect-timeout 5 https://ipinfo.io/country)
-    ipsb_api=$(curl -fsL --connect-timeout 5 -A Mozilla https://api.ip.sb/geoip | sed -n 's/.*"country_code":"\([^"]*\)".*/\1/p')
+    cloudflare_api=$(curl -sL -m 10 -A "Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/81.0" "https://dash.cloudflare.com/cdn-cgi/trace" | sed -n 's/.*loc=\([^ ]*\).*/\1/p')
+    ipinfo_api=$(curl -sL --connect-timeout 5 https://ipinfo.io/country)
+    ipsb_api=$(curl -sL --connect-timeout 5 -A Mozilla https://api.ip.sb/geoip | sed -n 's/.*"country_code":"\([^"]*\)".*/\1/p')
 
     for api in "$cloudflare_api" "$ipinfo_api" "$ipsb_api"; do
         if [ -n "$api" ]; then
