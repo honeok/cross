@@ -245,7 +245,7 @@ check_docker() {
 }
 
 install_docker() {
-    local pkg_cmd version_code repo_url gpgkey_url
+    local pkg_cmd version_code repo_url gpgkey_url alpine_major_version
 
     geo_check
 
@@ -315,7 +315,7 @@ install_docker() {
 
         clean_repo_files
 
-        if [ "$country" == "CN" ]; then
+        if [[ "$country" == "CN" ]]; then
             repo_url="https://mirrors.aliyun.com/docker-ce/linux/${os_name}"
             gpgkey_url="https://mirrors.aliyun.com/docker-ce/linux/${os_name}/gpg"
         else
@@ -338,10 +338,12 @@ install_docker() {
         enable docker
         start docker
     elif [[ "$os_name" == "alpine" ]]; then
-        if [ "$country" == "CN" ]; then
-            repo_url="https://mirrors.aliyun.com/alpine/latest-stable/community"
+        alpine_major_version="$(grep ^VERSION_ID /etc/*-release | cut -d '=' -f 2 | cut -d '.' -f 1,2)"
+
+        if [[ "$country" == "CN" ]]; then
+            repo_url="https://mirrors.aliyun.com/alpine/v${alpine_major_version}/community"
         else
-            repo_url="http://dl-cdn.alpinelinux.org/alpine/latest-stable/community"
+            repo_url="http://dl-cdn.alpinelinux.org/alpine/v${alpine_major_version}/community"
         fi
 
         if ! grep -q "$repo_url" /etc/apk/repositories; then
