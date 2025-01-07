@@ -1,16 +1,20 @@
 #!/usr/bin/env bash
 #
-# Description: test the routing of the three major network return lines on the server side.
+# Description: Test the routing of the three major network return lines on the server side.
 #
-# Original Project: https://github.com/oneclickvirt/backtrace
 # Forked and Modified By: honeok <honeok@duck.com>
+# Original Project: https://github.com/oneclickvirt/backtrace
 #
-# https://github.com/honeok/cross/raw/master/backtrace.sh
+# https://www.honeok.com
+# https://github.com/honeok/cross/raw/master/backTrace.sh
+#
+# shellcheck disable=SC2164
 
 red='\033[31m'
 white='\033[0m'
-_red() { echo -e ${red}$@${white}; }
-_err_msg() { echo -e "\033[41m\033[1mwarn${white} $@"; }
+_red() { echo -e "${red}$*${white}"; }
+
+_err_msg() { echo -e "\033[41m\033[1mwarn${white} $*"; }
 
 os_type=$(uname -s 2>/dev/null | sed 's/[A-Z]/\L&/g' || echo 'unknown')
 os_arch=$(uname -m 2>/dev/null | sed 's/[A-Z]/\L&/g' || echo 'unknown')
@@ -27,14 +31,27 @@ uninstall() {
 }
 
 pre_check() {
-    local cloudflare_api="https://dash.cloudflare.com/cdn-cgi/trace"
-    local user_agent="Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/81.0"
+    local cloudflare_api ipinfo_api ipsb_api
 
     uninstall
-    country=$(curl -A "$user_agent" -m 10 -s "$cloudflare_api" | sed -n 's/.*loc=\([^ ]*\).*/\1/p')
-    [ -z "$country" ] && _err_msg "$(_red 'Failed to obtain the server location. Please check your network connection!')" && exit 1
 
-    if [[ "$country" == "CN" || $(curl -fsL -o /dev/null -w "%{time_total}" --max-time 5 https://raw.githubusercontent.com/honeok/cross/master/README.md) > 3 ]]; then
+    cloudflare_api=$(curl -sL -m 10 -A "Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/81.0" "https://dash.cloudflare.com/cdn-cgi/trace" | sed -n 's/.*loc=\([^ ]*\).*/\1/p')
+    ipinfo_api=$(curl -sL --connect-timeout 5 https://ipinfo.io/country)
+    ipsb_api=$(curl -sL --connect-timeout 5 -A Mozilla https://api.ip.sb/geoip | sed -n 's/.*"country_code":"\([^"]*\)".*/\1/p')
+
+    for api in "$cloudflare_api" "$ipinfo_api" "$ipsb_api"; do
+        if [ -n "$api" ]; then
+            country="$api"
+            break
+        fi
+    done
+
+    if [[ -z "$country" ]]; then
+        _err_msg "$(_red 'Failed to obtain the server location. Please check your network connection!')"
+        exit 1
+    fi
+
+    if [[ "$country" == "CN" || $(curl -fsL -o /dev/null -w "%{time_total}" --max-time 5 https://github.com/honeok/cross/raw/master/README.md) -gt 3 ]]; then
         github_proxy="https://gh-proxy.com/"
     else
         github_proxy=""
