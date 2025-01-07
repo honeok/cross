@@ -6,7 +6,7 @@
 # Forked and Modified By: honeok <honeok@duck.com>
 #
 # https://www.honeok.com
-# https://github.com/honeok/cross/raw/master/backtrace.sh
+# https://github.com/honeok/cross/raw/master/backTrace.sh
 #
 # shellcheck disable=SC2164
 
