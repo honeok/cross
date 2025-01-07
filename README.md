@@ -9,15 +9,15 @@
 
 The towering giant tower, I see it, with people jumping down every moment. When I was young, I didn’t understand and thought they were snowflakes.
 
-## BestTrace路由追踪
+## bestTrace路由追踪
 
 国外服务器：
 ```shell
-bash <(curl -sL https://github.com/honeok/cross/raw/master/besttrace.sh)
+bash <(curl -sL https://github.com/honeok/cross/raw/master/bestTrace.sh)
 ```
 国内服务器：
 ```shell
-bash <(curl -sL https://cdn.611611.best/https://github.com/honeok/cross/raw/master/besttrace.sh)
+bash <(curl -sL https://cdn.611611.best/https://github.com/honeok/cross/raw/master/bestTrace.sh)
 ```
 
 ### 参数说明：
@@ -31,7 +31,7 @@ bash <(curl -sL https://cdn.611611.best/https://github.com/honeok/cross/raw/mast
 默认执行广东、上海、北京、四川三网回程
 
 ```shell
-bash BestTrace.sh
+bash bestTrace.sh
 
 可选参数：
     -nmg  # 内蒙古
@@ -56,10 +56,35 @@ bash BestTrace.sh
 **指定参数示例**
 
 ```shell
-bash besttrace.sh -h         # 帮助命令
-bash besttrace.sh -nmg       # 测试内蒙古
-bash besttrace.sh -nmg -hlj  # 同时测试内蒙古和黑龙江
-bash besttrace.sh -nmg -d    # 测试后删除 nexttrace
+bash bestTrace.sh -h         # 帮助命令
+bash bestTrace.sh -nmg       # 测试内蒙古
+bash bestTrace.sh -nmg -hlj  # 同时测试内蒙古和黑龙江
+bash bestTrace.sh -nmg -d    # 测试后删除 nexttrace
+```
+
+## backTrace三网回程路由线路测试
+
+基于 https://github.com/oneclickvirt/backtrace 一键安装脚本的调优
+![](https://cdn.img2ipfs.com/ipfs/QmQ5EnCV9en5aLFSGM4mKwvh5jpMPDy8JsmbkdBtshYUP2?filename=image.png)
+
+国外服务器：
+```shell
+bash <(curl -sL https://github.com/honeok/cross/raw/master/backTrace.sh)
+```
+国内服务器：
+```shell
+bash <(curl -sL https://cdn.611611.best/https://github.com/honeok/cross/raw/master/backTrace.sh)
+```
+
+## Docker一键安装脚本
+
+国外服务器
+```shell
+bash <(curl -sL https://github.com/honeok/cross/raw/master/get-docker.sh)
+```
+国内服务器
+```shell
+bash <(curl -sL https://cdn.611611.best/https://github.com/honeok/cross/raw/master/get-docker.sh)
 ```
 
 ## 内存超售检测
@@ -71,20 +96,6 @@ bash <(curl -sL https://github.com/honeok/cross/raw/master/memoryCheck.sh)
 国内服务器：
 ```shell
 bash <(curl -sL https://cdn.611611.best/https://github.com/honeok/cross/raw/master/memoryCheck.sh)
-```
-
-## Backtrace三网回程路由线路测试
-
-基于 https://github.com/oneclickvirt/backtrace 一键安装脚本的调优
-![](https://cdn.img2ipfs.com/ipfs/QmQ5EnCV9en5aLFSGM4mKwvh5jpMPDy8JsmbkdBtshYUP2?filename=image.png)
-
-国外服务器：
-```shell
-bash <(curl -sL https://github.com/honeok/cross/raw/master/backtrace.sh)
-```
-国内服务器：
-```shell
-bash <(curl -sL https://cdn.611611.best/https://github.com/honeok/cross/raw/master/backtrace.sh)
 ```
 
 ## TeamSpeak服务器一键脚本
