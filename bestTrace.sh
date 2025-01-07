@@ -159,19 +159,18 @@ nt_uninstall() {
 }
 
 nt_install() {
-
     geo_check
 
     if [[ "$country" == "CN" || ( -z "$ipv4_address" && -n "$ipv6_address" ) || \
-        $(curl -fsL -o /dev/null -w "%{time_total}" --max-time 5 https://github.com/honeok/cross/raw/master/README.md) > 3 ]]; then
+        $(curl -fsL -o /dev/null -w "%{time_total}" --max-time 5 https://github.com/honeok/cross/raw/master/README.md) -gt 3 ]]; then
         github_proxy="https://gh-proxy.com/"
     else
         github_proxy=""
     fi
 
     if ! command -v nexttrace >/dev/null 2>&1 && [ ! -f "/usr/local/bin/nexttrace" ] && [ ! -f "/usr/bin/nexttrace" ]; then
-        bash <(curl -sL "${github_proxy}https://github.com/nxtrace/NTrace-core/raw/main/nt_install.sh") || { _red "Nexttrace安装失败"; exit 1; }
         # bash <(curl -sL https://nxtrace.org/nt) || { _err_msg "$(_red 'Nexttrace安装失败')"; exit 1; }
+        bash <(curl -sL "${github_proxy}https://github.com/nxtrace/NTrace-core/raw/main/nt_install.sh") || { _red "Nexttrace安装失败"; exit 1; }
         clear
     fi
 }
