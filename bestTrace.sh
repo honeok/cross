@@ -1,13 +1,21 @@
 #!/usr/bin/env bash
 #
-# Description: The most convenient route tracing.
+# Description: The most convenient route tracing tool based on NextTrace.
 #
-# Copyright (C) 2024 honeok <honeok@duck.com>
-# Blog: https://www.honeok.com
+# Copyright (C) 2024 - 2025 honeok <honeok@duck.com>
+# https://www.honeok.com
 #
-# https://github.com/honeok/cross/raw/master/besttrace.sh
+# https://github.com/honeok/cross/raw/master/bestTrace.sh
+#
+# License: GPL-3.0
+#
+# This script utilizes NextTrace, a powerful network diagnostic tool.
+# NextTrace is copyrighted and developed by the NextTrace project team.
+# For more details about NextTrace, visit: https://github.com/nxtrace
 
-version='v0.0.2 (2024.12.31)'
+# shellcheck disable=SC2034,SC2207
+
+version='v0.0.3 (2025.01.07)'
 
 yellow='\033[1;33m'
 red='\033[1;31m'
@@ -18,7 +26,7 @@ _red() { echo -e "${red}$*${white}"; }
 _green() { echo -e "${green}$*${white}"; }
 _err_msg() { echo -e "\033[41m\033[1m警告${white} $*"; }
 
-separator() { printf "%-50s\n" "-" | sed 's/\s/-/g'; }
+short_separator() { printf "%-50s\n" "-" | sed 's/\s/-/g'; }
 
 # https://www.nodeseek.com/post-68572-1 https://www.nodeseek.com/post-129987-1
 trace_area_nmg=("内蒙古电信" "内蒙古联通" "内蒙古移动")
@@ -77,7 +85,7 @@ usage=$(cat <<EOF
 
 默认执行广东、上海、北京、四川三网回程
 
-bash besttrace.sh
+bash bestTrace.sh
 
 可选参数：
     -nmg  # 内蒙古
@@ -99,10 +107,10 @@ bash besttrace.sh
     -gd   # 广东
 
 指定参数示例:
-  bash besttrace.sh -h         # 帮助命令
-  bash besttrace.sh -nmg       # 测试内蒙古
-  bash besttrace.sh -nmg -hlj  # 同时测试内蒙古和黑龙江
-  bash besttrace.sh -nmg -d    # 测试后删除 nexttrace
+  bash bestTrace.sh -h         # 帮助命令
+  bash bestTrace.sh -nmg       # 测试内蒙古
+  bash bestTrace.sh -nmg -hlj  # 同时测试内蒙古和黑龙江
+  bash bestTrace.sh -nmg -d    # 测试后删除 nexttrace
 EOF
 )
 
@@ -125,15 +133,44 @@ ip_address() {
     done
 }
 
+geo_check() {
+    local cloudflare_api ipinfo_api ipsb_api
+
+    cloudflare_api=$(curl -sL -m 10 -A "Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/81.0" "https://dash.cloudflare.com/cdn-cgi/trace" | sed -n 's/.*loc=\([^ ]*\).*/\1/p')
+    ipinfo_api=$(curl -sL --connect-timeout 5 https://ipinfo.io/country)
+    ipsb_api=$(curl -sL --connect-timeout 5 -A Mozilla https://api.ip.sb/geoip | sed -n 's/.*"country_code":"\([^"]*\)".*/\1/p')
+
+    for api in "$cloudflare_api" "$ipinfo_api" "$ipsb_api"; do
+        if [ -n "$api" ]; then
+            country="$api"
+            break
+        fi
+    done
+
+    if [ -z "$country" ]; then
+        _err_msg "$(_red '无法获取服务器所在地区，请检查网络后重试！')"
+        exit 1
+    fi
+}
+
 nt_uninstall() {
     [ -f "/usr/local/bin/nexttrace" ] && rm -f "/usr/local/bin/nexttrace" >/dev/null 2>&1
     [ -f "/usr/bin/nexttrace" ] && rm -f "/usr/bin/nexttrace" >/dev/null 2>&1
 }
 
 nt_install() {
+    geo_check
+
+    if [[ "$country" == "CN" || ( -z "$ipv4_address" && -n "$ipv6_address" ) || \
+        $(curl -fsL -o /dev/null -w "%{time_total}" --max-time 5 https://github.com/honeok/cross/raw/master/README.md) -gt 3 ]]; then
+        github_proxy="https://gh-proxy.com/"
+    else
+        github_proxy=""
+    fi
+
     if ! command -v nexttrace >/dev/null 2>&1 && [ ! -f "/usr/local/bin/nexttrace" ] && [ ! -f "/usr/bin/nexttrace" ]; then
-        # bash <(curl -sL https://github.com/nxtrace/NTrace-core/raw/main/nt_install.sh) || { _red "Nexttrace安装失败"; exit 1; }
-        bash <(curl -sL nxtrace.org/nt) || { _err_msg "$(_red 'Nexttrace安装失败')"; exit 1; }
+        # bash <(curl -sL https://nxtrace.org/nt) || { _err_msg "$(_red 'Nexttrace安装失败')"; exit 1; }
+        bash <(curl -sL "${github_proxy}https://github.com/nxtrace/NTrace-core/raw/main/nt_install.sh") || { _red "Nexttrace安装失败"; exit 1; }
         clear
     fi
 }
@@ -145,7 +182,7 @@ perform_trace() {
     local resolved_ip
 
     for region in "${!areas[@]}"; do
-        separator
+        short_separator
         resolved_ip=$(getent hosts "${ips[region]}" | awk '{ print $1 }')
         # resolved_ip=$(host "${ips[region]}" | awk '/has address/ { print $4 }')
 
