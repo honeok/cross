@@ -7,7 +7,7 @@
 [![GitHub Stars](https://img.shields.io/github/stars/honeok/cross?style=flat)](https://github.com/honeok/cross)
 [![Issues](https://img.shields.io/github/issues/honeok/cross.svg)](https://img.shields.io/github/issues/honeok/cross.svg)
 
-The towering giant tower, I see it, with people jumping down every moment. When I was young, I didn’t understand and thought they were snowflakes.
+Life is vast and unpredictable, yet ultimately insignificant.
 
 ## bestTrace路由追踪
 
@@ -33,7 +33,7 @@ bash <(curl -sL https://cdn.611611.best/https://github.com/honeok/cross/raw/mast
 ```shell
 bash bestTrace.sh
 
-可选参数：
+可选参数:
     -nmg  # 内蒙古
     -hlj  # 黑龙江
     -xj   # 新疆
@@ -59,7 +59,7 @@ bash bestTrace.sh
 bash bestTrace.sh -h         # 帮助命令
 bash bestTrace.sh -nmg       # 测试内蒙古
 bash bestTrace.sh -nmg -hlj  # 同时测试内蒙古和黑龙江
-bash bestTrace.sh -nmg -d    # 测试后删除 nexttrace
+bash bestTrace.sh -nmg -d    # 测试后删除 NextTrace
 ```
 
 ## backTrace三网回程路由线路测试
@@ -77,6 +77,8 @@ bash <(curl -sL https://cdn.611611.best/https://github.com/honeok/cross/raw/mast
 ```
 
 ## Docker一键安装脚本
+
+![](https://cdn.img2ipfs.com/ipfs/QmUbYENaH5ZUaAAdNydhW4Vr22Le6mPyykMpYv1Z4VgcpN?filename=image.png)
 
 国外服务器
 ```shell
