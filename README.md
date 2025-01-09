@@ -1,11 +1,13 @@
-# cross
+<p align="center">
+  <img src="https://github.com/honeok/cross/actions/workflows/shellcheck.yml/badge.svg" alt="Build Status" />
+  <img src="https://img.shields.io/github/license/honeok/cross.svg?style=flat" alt="License" />
+  <img src="https://img.shields.io/github/last-commit/honeok/cross" alt="Commit" />
+  <img src="https://img.shields.io/github/commit-activity/m/honeok/cross.svg" alt="Commit Activity" />
+  <img src="https://img.shields.io/github/stars/honeok/cross?style=flat" alt="GitHub Stars" />
+  <img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Fhoneok%2Fcross&count_bg=%233944BC&title_bg=%2363C5DA&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false" alt="Hits" />
+</p>
 
-[![Build Status](https://github.com/honeok/cross/actions/workflows/shellcheck.yml/badge.svg)](https://github.com/honeok/cross/actions/workflows/shellcheck.yml/badge.svg)
-[![License](https://img.shields.io/github/license/honeok/cross.svg?style=flat)](./LICENSE)
-[![Commit](https://img.shields.io/github/last-commit/honeok/cross)](https://github.com/honeok/cross)
-[![Commit Activity](https://img.shields.io/github/commit-activity/m/honeok/cross.svg)](https://github.com/honeok/cross)
-[![GitHub Stars](https://img.shields.io/github/stars/honeok/cross?style=flat)](https://github.com/honeok/cross)
-[![Issues](https://img.shields.io/github/issues/honeok/cross.svg)](https://img.shields.io/github/issues/honeok/cross.svg)
+# cross
 
 Life is vast and unpredictable, yet ultimately insignificant.
 
