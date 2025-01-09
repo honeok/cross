@@ -1,16 +1,21 @@
 #!/usr/bin/env bash
 #
-# Description: Script for quickly installing the latest Docker-CE on supported Linux distros.
+# Description: Used for quickly installing the latest Docker CE on supported Linux distributions
 # System Required:  debian11+ ubuntu20+ centos7+ rhel8+ rocky8+ alma8+ alpine3.19+
 #
 # Copyright (C) 2023 - 2025 honeok <honeok@duck.com>
+#
 # https://www.honeok.com
 # https://github.com/honeok/cross/raw/master/get-docker.sh
 #
 # shellcheck disable=SC2059
 
+set \
+    -o errexit \
+    -o nounset
+
 # 当前脚本版本号
-version='v0.0.2 (2025.01.03)'
+version='v0.0.3 (2025.01.09)'
 
 yellow='\033[1;33m'
 red='\033[1;31m'
@@ -30,7 +35,7 @@ _suc_msg() { echo -e "\033[42m\033[1m成功${white} $*"; }
 
 export DEBIAN_FRONTEND=noninteractive
 
-pid_file="/tmp/getdocker.pid"
+getdocker_pid="/tmp/getdocker.pid"
 
 # 操作系统和权限校验
 os_info=$(grep '^PRETTY_NAME=' /etc/*release | cut -d '"' -f 2 | sed 's/ (.*)//')
@@ -40,18 +45,14 @@ os_name=$(grep ^ID= /etc/*release | awk -F'=' '{print $2}' | sed 's/"//g')
 trap "cleanup_exit ; exit 0" SIGINT SIGQUIT SIGTERM EXIT
 
 cleanup_exit() {
-    [ -f "$pid_file" ] && sudo rm -f "$pid_file"
+    [ -f "$getdocker_pid" ] && sudo rm -f "$getdocker_pid"
 }
 
-if [ -f "$pid_file" ] && kill -0 "$(cat "$pid_file")" 2>/dev/null; then
+if [ -f "$getdocker_pid" ] && kill -0 "$(cat "$getdocker_pid")" 2>/dev/null; then
     exit 1
 fi
 
-echo $$ > "$pid_file"
-
-if [ "$(cd -P -- "$(dirname -- "$0")" && pwd -P)" != "/root" ]; then
-    sudo sh -c "cd /root >/dev/null 2>&1"
-fi
+echo $$ > "$getdocker_pid"
 
 # https://www.lddgo.net/string/text-to-ascii-art
 print_logo() {
@@ -127,7 +128,7 @@ geo_check() {
 
 statistics_runtime() {
     local runcount
-    runcount=$(curl -fskL -m 2 --retry 2 -o - "https://hit.forvps.gq/https://raw.githubusercontent.com/honeok/cross/master/get-docker.sh" | grep -m1 -oE "[0-9]+[ ]+/[ ]+[0-9]+") &&
+    runcount=$(curl -fskL -m 2 --retry 2 -o - "https://hit.forvps.gq/https://github.com/honeok/cross/raw/master/get-docker.sh" | grep -m1 -oE "[0-9]+[ ]+/[ ]+[0-9]+") &&
     today_runcount=$(awk -F ' ' '{print $1}' <<< "$runcount") &&
     total_runcount=$(awk -F ' ' '{print $3}' <<< "$runcount")
 }
