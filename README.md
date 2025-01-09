@@ -80,6 +80,10 @@ bash <(curl -sL https://cdn.611611.best/https://github.com/honeok/cross/raw/mast
 
 ## Docker一键安装脚本
 
+<p align="center">
+  <img src="https://hits.seeyoufarm.com/api/count/keep/badge.svg?url=https%3A%2F%2Fgithub.com%2Fhoneok%2Fcross%2Fraw%2Fmaster%2Fget-docker.sh" alt="Hits" />
+</p>
+
 ![](https://cdn.img2ipfs.com/ipfs/QmUbYENaH5ZUaAAdNydhW4Vr22Le6mPyykMpYv1Z4VgcpN?filename=image.png)
 
 国外服务器
