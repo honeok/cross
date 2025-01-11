@@ -7,22 +7,20 @@
 #
 # https://www.honeok.com
 # https://github.com/honeok/cross/raw/master/get-docker.sh
-#
-# shellcheck disable=SC2059
 
 set \
     -o errexit \
     -o nounset
 
 # 当前脚本版本号
-version='v0.0.3 (2025.01.09)'
+readonly version='v0.0.3 (2025.01.12)'
 
-yellow='\033[1;33m'
-red='\033[1;31m'
-green='\033[1;32m'
-cyan='\033[1;36m'
-purple='\033[1;35m'
-white='\033[0m'
+readonly yellow='\033[1;33m'
+readonly red='\033[1;31m'
+readonly green='\033[1;32m'
+readonly cyan='\033[1;36m'
+readonly purple='\033[1;35m'
+readonly white='\033[0m'
 _yellow() { echo -e "${yellow}$*${white}"; }
 _red() { echo -e "${red}$*${white}"; }
 _green() { echo -e "${green}$*${white}"; }
@@ -35,12 +33,17 @@ _suc_msg() { echo -e "\033[42m\033[1m成功${white} $*"; }
 
 export DEBIAN_FRONTEND=noninteractive
 
-getdocker_pid="/tmp/getdocker.pid"
+readonly getdocker_pid="/tmp/getdocker.pid"
 
 # 操作系统和权限校验
-os_info=$(grep '^PRETTY_NAME=' /etc/*release | cut -d '"' -f 2 | sed 's/ (.*)//')
-os_name=$(grep ^ID= /etc/*release | awk -F'=' '{print $2}' | sed 's/"//g')
-[[ "$os_name" != "debian" && "$os_name" != "ubuntu" && "$os_name" != "centos" && "$os_name" != "rhel" && "$os_name" != "rocky" && "$os_name" != "almalinux" && "$os_name" != "alpine" ]] && { _err_msg "$(_red '当前操作系统不被支持！')" && end_message && exit 1; }
+readonly os_info=$(grep "^PRETTY_NAME=" /etc/*release | cut -d '"' -f 2 | sed 's/ (.*)//')
+readonly os_name=$(grep "^ID=" /etc/*release | awk -F'=' '{print $2}' | sed 's/"//g')
+
+if [[ "$os_name" != "debian" && "$os_name" != "ubuntu" && "$os_name" != "centos" && "$os_name" != "rhel" && "$os_name" != "rocky" && "$os_name" != "almalinux" && "$os_name" != "alpine" ]]; then
+    _err_msg "$(_red '当前操作系统不被支持！')"
+    end_message
+    exit 1
+fi
 
 trap "cleanup_exit ; exit 0" SIGINT SIGQUIT SIGTERM EXIT
 
@@ -463,14 +466,16 @@ docker_status() {
 }
 
 end_message() {
-    local current_time current_timezone
+    local current_time current_timezone message_time
 
     statistics_runtime
 
     current_time=$(date '+%Y-%m-%d %H:%M:%S')
     current_timezone=$(date +"%Z %z")
 
-    printf "${green}服务器当前时间: ${current_time} 时区: ${current_timezone} 脚本执行完成${white}\n"
+    # https://github.com/koalaman/shellcheck/issues/3093
+    message_time="服务器当前时间: ${current_time} 时区: ${current_timezone} 脚本执行完成"
+    printf "\033[1;32m%s\033[0m\n" "$message_time"
     _purple "感谢使用本脚本！如有疑问，请访问 https://www.honeok.com 获取更多信息"
     _yellow "脚本当天运行次数: ${today_runcount} 累计运行次数: ${total_runcount}"
 }
