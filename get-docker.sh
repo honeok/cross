@@ -15,12 +15,12 @@ set \
 # 当前脚本版本号
 readonly version='v0.0.3 (2025.01.12)'
 
-readonly yellow='\033[1;33m'
-readonly red='\033[1;31m'
-readonly green='\033[1;32m'
-readonly cyan='\033[1;36m'
-readonly purple='\033[1;35m'
-readonly white='\033[0m'
+yellow='\033[1;33m'
+red='\033[1;31m'
+green='\033[1;32m'
+cyan='\033[1;36m'
+purple='\033[1;35m'
+white='\033[0m'
 _yellow() { echo -e "${yellow}$*${white}"; }
 _red() { echo -e "${red}$*${white}"; }
 _green() { echo -e "${green}$*${white}"; }
@@ -36,8 +36,8 @@ export DEBIAN_FRONTEND=noninteractive
 readonly getdocker_pid="/tmp/getdocker.pid"
 
 # 操作系统和权限校验
-readonly os_info=$(grep "^PRETTY_NAME=" /etc/*release | cut -d '"' -f 2 | sed 's/ (.*)//')
-readonly os_name=$(grep "^ID=" /etc/*release | awk -F'=' '{print $2}' | sed 's/"//g')
+os_info=$(grep "^PRETTY_NAME=" /etc/*release | cut -d '"' -f 2 | sed 's/ (.*)//')
+os_name=$(grep "^ID=" /etc/*release | awk -F'=' '{print $2}' | sed 's/"//g')
 
 if [[ "$os_name" != "debian" && "$os_name" != "ubuntu" && "$os_name" != "centos" && "$os_name" != "rhel" && "$os_name" != "rocky" && "$os_name" != "almalinux" && "$os_name" != "alpine" ]]; then
     _err_msg "$(_red '当前操作系统不被支持！')"
