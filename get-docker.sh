@@ -13,7 +13,7 @@ set \
     -o nounset
 
 # 当前脚本版本号
-readonly version='v0.0.3 (2025.01.12)'
+readonly version='v0.0.4 (2025.01.12)'
 
 yellow='\033[1;33m'
 red='\033[1;31m'
