@@ -7,6 +7,9 @@
 #
 # https://www.honeok.com
 # https://github.com/honeok/cross/raw/master/get-docker.sh
+#
+# Reference:
+# https://docs.docker.com/engine/install
 
 set \
     -o errexit \
@@ -35,15 +38,8 @@ export DEBIAN_FRONTEND=noninteractive
 
 readonly getdocker_pid="/tmp/getdocker.pid"
 
-# 操作系统和权限校验
 os_info=$(grep "^PRETTY_NAME=" /etc/*release | cut -d '"' -f 2 | sed 's/ (.*)//')
 os_name=$(grep "^ID=" /etc/*release | awk -F'=' '{print $2}' | sed 's/"//g')
-
-if [[ "$os_name" != "debian" && "$os_name" != "ubuntu" && "$os_name" != "centos" && "$os_name" != "rhel" && "$os_name" != "rocky" && "$os_name" != "almalinux" && "$os_name" != "alpine" ]]; then
-    _err_msg "$(_red '当前操作系统不被支持！')"
-    end_message
-    exit 1
-fi
 
 trap "cleanup_exit ; exit 0" SIGINT SIGQUIT SIGTERM EXIT
 
@@ -68,6 +64,13 @@ print_logo() {
     local os_text="操作系统: ${os_info}"
     _green "${os_text}"
     _cyan "脚本版本: ${version}"
+}
+
+# 安全清屏
+clear_screen() {
+    if [ -t 1 ]; then
+        tput clear 2>/dev/null || echo -e "\033[2J\033[H" || clear
+    fi
 }
 
 remove() {
@@ -313,7 +316,7 @@ install_docker() {
         start docker
     elif [[ "$os_name" == "debian" || "$os_name" == "ubuntu" ]]; then
         # version_code="$(. /etc/*release && echo "$VERSION_CODENAME")"
-        version_code="$(grep ^VERSION_CODENAME /etc/*release | cut -d= -f2)"
+        version_code="$(grep "^VERSION_CODENAME" /etc/*release | cut -d= -f2)"
 
         remove docker.io docker-doc docker-compose podman-docker containerd runc >/dev/null 2>&1
 
@@ -344,7 +347,7 @@ install_docker() {
     elif [[ "$os_name" == "alpine" ]]; then
 
         if [[ "$country" == "CN" ]]; then
-            # s#old#new#g
+            #s#old#new#g
             sed -i "s#dl-cdn.alpinelinux.org#mirrors.aliyun.com#g" /etc/apk/repositories
         fi
 
@@ -480,7 +483,15 @@ end_message() {
     _yellow "脚本当天运行次数: ${today_runcount} 累计运行次数: ${total_runcount}"
 }
 
-clear
+### Main logic
+clear_screen
+# 操作系统和权限校验
+if [[ "$os_name" != "debian" && "$os_name" != "ubuntu" && "$os_name" != "centos" && "$os_name" != "rhel" && "$os_name" != "rocky" && "$os_name" != "almalinux" && "$os_name" != "alpine" ]]; then
+    _err_msg "$(_red '当前操作系统不被支持！')"
+    end_message
+    exit 1
+fi
+
 if [ "$#" -eq 0 ]; then
     print_logo
     check_docker
