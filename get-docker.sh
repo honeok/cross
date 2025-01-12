@@ -483,34 +483,40 @@ end_message() {
     _yellow "脚本当天运行次数: ${today_runcount} 累计运行次数: ${total_runcount}"
 }
 
-### Main logic
-clear_screen
-# 操作系统和权限校验
-if [[ "$os_name" != "debian" && "$os_name" != "ubuntu" && "$os_name" != "centos" && "$os_name" != "rhel" && "$os_name" != "rocky" && "$os_name" != "almalinux" && "$os_name" != "alpine" ]]; then
-    _err_msg "$(_red '当前操作系统不被支持！')"
-    end_message
-    exit 1
-fi
+standalone_logic() {
+    clear_screen
 
-if [ "$#" -eq 0 ]; then
+    # 操作系统和权限校验
+    if [[ "$os_name" != "debian" && "$os_name" != "ubuntu" && "$os_name" != "centos" && "$os_name" != "rhel" && "$os_name" != "rocky" && "$os_name" != "almalinux" && "$os_name" != "alpine" ]]; then
+        _err_msg "$(_red '当前操作系统不被支持！')"
+        end_message
+        exit 1
+    fi
+
     print_logo
     check_docker
     docker_version
     docker_status
     end_message
-    exit 0
+}
+
+if [ "$#" -eq 0 ]; then
+    standalone_logic
 else
-    for arg in "$@"; do
-        case $arg in
-            -d|d|-D|D)
-                print_logo
-                uninstall_docker
-                end_message
-                exit 0
-                ;;
-            *)
-                _err_msg "$(_red "无效选项, 当前参数${arg}不被支持！")"
-                ;;
-        esac
-    done
+    case "$1" in
+        -y | --install)
+            standalone_logic
+            shift
+            ;;
+        -d | --remove)
+            print_logo
+            uninstall_docker
+            end_message
+            exit 1
+            ;;
+        *)
+            _err_msg "$(_red "无效选项, 当前参数"$1"不被支持！")"
+            exit 1
+            ;;
+    esac
 fi
