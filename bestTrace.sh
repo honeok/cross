@@ -3,11 +3,9 @@
 # Description: The most convenient route tracing tool based on NextTrace.
 #
 # Copyright (C) 2024 - 2025 honeok <honeok@duck.com>
+#
 # https://www.honeok.com
-#
 # https://github.com/honeok/cross/raw/master/bestTrace.sh
-#
-# License: GPL-3.0
 #
 # This script utilizes NextTrace, a powerful network diagnostic tool.
 # NextTrace is copyrighted and developed by the NextTrace project team.
