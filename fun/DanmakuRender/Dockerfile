@@ -1,25 +1,17 @@
-FROM python:3.9.21-alpine3.21 AS build
+FROM python:3.9.21-alpine3.21
 
-WORKDIR /app
+WORKDIR /DanmakuRender
 
 COPY . .
 
 RUN set -ex \
-    && apk add --no-cache curl rust cargo \
+    && apk add --no-cache curl nodejs ffmpeg npm rust cargo \
     && curl -O -L https://github.com/biliup/biliup-rs/releases/download/v0.2.1/biliupR-v0.2.1-x86_64-linux.tar.xz \
-    && tar -xf biliupR-v0.2.1-x86_64-linux.tar.xz --strip-components=1 -C ./tools \
+    && tar xvf biliupR-v0.2.1-x86_64-linux.tar.xz --strip-components=1 -C ./tools \
     && rm -rf biliupR-v0.2.1-x86_64-linux.tar.xz \
     && pip install -r requirements.txt \
-    && rm -rf /var/cache/apk/*
+    && apk del curl rust cargo \
+    && rm -rf /var/cache/apk/* \
+    && chmod +x docker-entrypoint.sh && ln -sf docker-entrypoint.sh /docker-entrypoint.sh
 
-FROM python:3.9.21-alpine3.21
-
-WORKDIR /app
-
-COPY --from=build /app /app
-
-RUN set -ex \
-    && apk add --no-cache nodejs ffmpeg npm \
-    && rm -rf /var/cache/apk/*
-
-ENTRYPOINT ["python3", "-u", "main.py"]
+ENTRYPOINT ["/docker-entrypoint.sh"]
