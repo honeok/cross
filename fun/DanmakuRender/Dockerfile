@@ -1,10 +1,10 @@
-# Dockerfile for DanmakuRender automation
+# Dockerfile from DanmakuRender automated recording containerized
 # Copyright (C) 2025 honeok <honeok@duck.com>
 #
 # Reference:
 # https://github.com/SmallPeaches/DanmakuRender
 
-FROM python:3.9.21-alpine3.21
+FROM python:3.9.20-alpine3.20
 
 WORKDIR /DanmakuRender
 
