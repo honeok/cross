@@ -12,6 +12,6 @@ RUN set -ex \
     && pip install -r requirements.txt \
     && apk del curl rust cargo \
     && rm -rf /var/cache/apk/* \
-    && chmod +x docker-entrypoint.sh && ln -sf docker-entrypoint.sh /docker-entrypoint.sh
+    && chmod +x docker-entrypoint.sh
 
-ENTRYPOINT ["/docker-entrypoint.sh"]
+ENTRYPOINT ["docker-entrypoint.sh"]
