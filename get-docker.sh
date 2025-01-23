@@ -8,14 +8,23 @@
 # https://www.honeok.com
 # https://github.com/honeok/cross/raw/master/get-docker.sh
 #
-# shellcheck disable=SC2059
+# Reference:
+# https://docs.docker.com/engine/install
+#               __      __             __             
+#   ___ _ ___  / /_ ___/ / ___  ____  / /__ ___   ____
+#  / _ `// -_)/ __// _  / / _ \/ __/ /  '_// -_) / __/
+#  \_, / \__/ \__/ \_,_/  \___/\__/ /_/\_\ \__/ /_/   
+# /___/                                               
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 3 or later.
+# See <https://www.gnu.org/licenses/>
 
 set \
     -o errexit \
     -o nounset
 
 # 当前脚本版本号
-version='v0.0.3 (2025.01.09)'
+readonly version='v0.0.5 (2025.01.23)'
 
 yellow='\033[1;33m'
 red='\033[1;31m'
@@ -29,18 +38,20 @@ _green() { echo -e "${green}$*${white}"; }
 _cyan() { echo -e "${cyan}$*${white}"; }
 _purple() { echo -e "${purple}$*${white}"; }
 
-_info_msg() { echo -e "\033[48;5;178m\033[1m\033[97m提示${white} $*"; }
 _err_msg() { echo -e "\033[41m\033[1m警告${white} $*"; }
 _suc_msg() { echo -e "\033[42m\033[1m成功${white} $*"; }
+_info_msg() { echo -e "\033[43m\033[1;37m提示${white} $*"; }
 
 export DEBIAN_FRONTEND=noninteractive
 
-getdocker_pid="/tmp/getdocker.pid"
+# https://github.com/koalaman/shellcheck/wiki/SC2155
+os_info=$(grep "^PRETTY_NAME=" /etc/*release | cut -d '"' -f 2 | sed 's/ (.*)//')
+os_name=$(grep "^ID=" /etc/*release | awk -F'=' '{print $2}' | sed 's/"//g')
+readonly os_info os_name
 
-# 操作系统和权限校验
-os_info=$(grep '^PRETTY_NAME=' /etc/*release | cut -d '"' -f 2 | sed 's/ (.*)//')
-os_name=$(grep ^ID= /etc/*release | awk -F'=' '{print $2}' | sed 's/"//g')
-[[ "$os_name" != "debian" && "$os_name" != "ubuntu" && "$os_name" != "centos" && "$os_name" != "rhel" && "$os_name" != "rocky" && "$os_name" != "almalinux" && "$os_name" != "alpine" ]] && { _err_msg "$(_red '当前操作系统不被支持！')" && end_message && exit 1; }
+getdocker_pid='/tmp/getdocker.pid'
+systemctl_cmd=$(which systemctl 2>/dev/null)
+readonly getdocker_pid systemctl_cmd
 
 trap "cleanup_exit ; exit 0" SIGINT SIGQUIT SIGTERM EXIT
 
@@ -64,7 +75,14 @@ print_logo() {
 "
     local os_text="操作系统: ${os_info}"
     _green "${os_text}"
-    _cyan "脚本版本: ${version}"
+    _cyan "当前脚本版本: ${version} 💀 \n"
+}
+
+# 安全清屏
+clear_screen() {
+    if [ -t 1 ]; then
+        tput clear 2>/dev/null || echo -e "\033[2J\033[H" || clear
+    fi
 }
 
 remove() {
@@ -119,6 +137,8 @@ geo_check() {
         fi
     done
 
+    readonly country
+
     if [ -z "$country" ]; then
         _err_msg "$(_red '无法获取服务器所在地区，请检查网络后重试！')"
         end_message
@@ -129,8 +149,7 @@ geo_check() {
 statistics_runtime() {
     local runcount
     runcount=$(curl -fskL -m 2 --retry 2 -o - "https://hit.forvps.gq/https://github.com/honeok/cross/raw/master/get-docker.sh" | grep -m1 -oE "[0-9]+[ ]+/[ ]+[0-9]+") &&
-    today_runcount=$(awk -F ' ' '{print $1}' <<< "$runcount") &&
-    total_runcount=$(awk -F ' ' '{print $3}' <<< "$runcount")
+    today_runcount=$(awk -F ' ' '{print $1}' <<< "$runcount") && total_runcount=$(awk -F ' ' '{print $3}' <<< "$runcount")
 }
 
 sudo() {
@@ -153,7 +172,7 @@ enable() {
     if command -v apk >/dev/null 2>&1; then
         _cmd="sudo rc-update add $service_name default"
     else
-        _cmd="sudo /usr/bin/systemctl enable $service_name"
+        _cmd="sudo ${systemctl_cmd} enable $service_name"
     fi
 
     if $_cmd; then
@@ -168,7 +187,7 @@ disable() {
     if command -v apk >/dev/null 2>&1; then
         sudo rc-update del "$service_name"
     else
-        sudo /usr/bin/systemctl disable "$service_name"
+        sudo "${systemctl_cmd}" disable "$service_name"
     fi
 }
 
@@ -179,7 +198,7 @@ start() {
     if command -v apk >/dev/null 2>&1; then
         _cmd="sudo service $service_name start"
     else
-        _cmd="sudo /usr/bin/systemctl start $service_name"
+        _cmd="sudo ${systemctl_cmd} start $service_name"
     fi
 
     if $_cmd; then
@@ -196,7 +215,7 @@ stop() {
     if command -v apk >/dev/null 2>&1; then
         _cmd="sudo service $service_name stop"
     else
-        _cmd="sudo /usr/bin/systemctl stop $service_name"
+        _cmd="sudo ${systemctl_cmd} stop $service_name"
     fi
 
     if $_cmd; then
@@ -213,7 +232,7 @@ systemctl() {
     if command -v apk >/dev/null 2>&1; then
         sudo service "$service_name" "$_cmd"
     else
-        sudo /usr/bin/systemctl "$_cmd" "$service_name"
+        sudo "${systemctl_cmd}" "$_cmd" "$service_name"
     fi
 }
 
@@ -310,7 +329,7 @@ install_docker() {
         start docker
     elif [[ "$os_name" == "debian" || "$os_name" == "ubuntu" ]]; then
         # version_code="$(. /etc/*release && echo "$VERSION_CODENAME")"
-        version_code="$(grep ^VERSION_CODENAME /etc/*release | cut -d= -f2)"
+        version_code="$(grep "^VERSION_CODENAME" /etc/*release | cut -d= -f2)"
 
         remove docker.io docker-doc docker-compose podman-docker containerd runc >/dev/null 2>&1
 
@@ -341,7 +360,7 @@ install_docker() {
     elif [[ "$os_name" == "alpine" ]]; then
 
         if [[ "$country" == "CN" ]]; then
-            # s#old#new#g
+            #s#old#new#g
             sed -i "s#dl-cdn.alpinelinux.org#mirrors.aliyun.com#g" /etc/apk/repositories
         fi
 
@@ -449,7 +468,7 @@ docker_version() {
 }
 
 docker_status() {
-    if sudo /usr/bin/systemctl is-active --quiet docker || \
+    if sudo "${systemctl_cmd}" is-active --quiet docker || \
         sudo docker info >/dev/null 2>&1 || \
         sudo /etc/init.d/docker status | grep -q 'started' || \
         sudo service docker status >/dev/null 2>&1 || \
@@ -463,37 +482,57 @@ docker_status() {
 }
 
 end_message() {
-    local current_time current_timezone
+    local current_time current_timezone message_time
 
     statistics_runtime
 
     current_time=$(date '+%Y-%m-%d %H:%M:%S')
     current_timezone=$(date +"%Z %z")
 
-    printf "${green}服务器当前时间: ${current_time} 时区: ${current_timezone} 脚本执行完成${white}\n"
+    # https://github.com/koalaman/shellcheck/issues/3093
+    message_time="服务器当前时间: ${current_time} 时区: ${current_timezone} 脚本执行完成"
+    printf "\033[1;32m%s\033[0m\n" "$message_time"
     _purple "感谢使用本脚本！如有疑问，请访问 https://www.honeok.com 获取更多信息"
     _yellow "脚本当天运行次数: ${today_runcount} 累计运行次数: ${total_runcount}"
 }
 
-clear
-if [ "$#" -eq 0 ]; then
+standalone_logic() {
+    clear_screen
+
+    # 操作系统和权限校验
+    if [[ "$os_name" != "debian" && "$os_name" != "ubuntu" && "$os_name" != "centos" && "$os_name" != "rhel" && "$os_name" != "rocky" && "$os_name" != "almalinux" && "$os_name" != "alpine" ]]; then
+        _err_msg "$(_red '当前操作系统不被支持！')"
+        end_message
+        exit 1
+    fi
+
     print_logo
     check_docker
     docker_version
     docker_status
     end_message
+}
+
+if [ "$#" -eq 0 ]; then
+    standalone_logic
     exit 0
 else
-    for arg in "$@"; do
-        case $arg in
-            -d|d|-D|D)
+    while [[ "$#" -ge 1 ]]; do
+        case "$1" in
+            -y | --install)
+                shift
+                standalone_logic
+                ;;
+            -d | --remove)
                 print_logo
                 uninstall_docker
                 end_message
                 exit 0
                 ;;
             *)
-                _err_msg "$(_red "无效选项, 当前参数${arg}不被支持！")"
+                _err_msg "$(_red "无效选项, 当前参数 '$1' 不被支持！")"
+                end_message
+                exit 1
                 ;;
         esac
     done
