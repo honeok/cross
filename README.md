@@ -98,11 +98,11 @@ bash <(curl -sL https://cdn.611611.best/https://github.com/honeok/cross/raw/mast
 
 国外服务器：
 ```shell
-bash <(curl -sL https://github.com/honeok/cross/raw/master/memoryCheck.sh)
+bash <(curl -sL https://github.com/honeok/cross/raw/master/memCheck.sh)
 ```
 国内服务器：
 ```shell
-bash <(curl -sL https://cdn.611611.best/https://github.com/honeok/cross/raw/master/memoryCheck.sh)
+bash <(curl -sL https://cdn.611611.best/https://github.com/honeok/cross/raw/master/memCheck.sh)
 ```
 
 ## TeamSpeak服务器一键脚本
