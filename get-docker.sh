@@ -1,23 +1,29 @@
 #!/usr/bin/env bash
 #
-# Description: Used for quickly installing the latest Docker CE on supported Linux distributions
-# System Required:  debian11+ ubuntu20+ centos7+ rhel8+ rocky8+ alma8+ alpine3.19+
+# Description: A script for quickly installing the latest Docker CE on supported Linux distributions.
+# Supported Systems: Debian 11+, Ubuntu 20+, CentOS 7+, RHEL 8+, Rocky Linux 8+, AlmaLinux 8+, Alpine 3.19+
 #
 # Copyright (C) 2023 - 2025 honeok <honeok@duck.com>
 #
-# https://www.honeok.com
-# https://github.com/honeok/cross/raw/master/get-docker.sh
+# Github: https://github.com/honeok/cross/raw/master/get-docker.sh
 #
-# Reference:
-# https://docs.docker.com/engine/install
+# References:
+# - https://docs.docker.com/engine/install
 #               __      __             __             
 #   ___ _ ___  / /_ ___/ / ___  ____  / /__ ___   ____
 #  / _ `// -_)/ __// _  / / _ \/ __/ /  '_// -_) / __/
 #  \_, / \__/ \__/ \_,_/  \___/\__/ /_/\_\ \__/ /_/   
 # /___/                                               
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 3 or later.
-# See <https://www.gnu.org/licenses/>
+# License Information:
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License, version 3 or later.
+#
+# This program is distributed WITHOUT ANY WARRANTY; without even the implied
+# warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program. If not, see <https://www.gnu.org/licenses/>.
 
 set \
     -o errexit \
