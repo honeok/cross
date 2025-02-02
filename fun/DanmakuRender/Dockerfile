@@ -25,7 +25,7 @@ COPY . .
 RUN set -ex \
     && apk update && apk add --no-cache curl git nodejs ffmpeg npm rust cargo \
     && chmod +x build.sh && ./build.sh \
-    && pip install -r requirements.txt \
+    && python3 -m pip install --no-cache-dir -r requirements.txt \
     && apk del curl git rust cargo \
     && rm -rfv /var/cache/apk/*
 
