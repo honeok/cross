@@ -1,20 +1,41 @@
-# Dockerfile for building a container for FranzKafkaYu x-ui
+# Description: Dockerfile for building a container for FranzKafkaYu x-ui
+#
 # Copyright (C) 2025 honeok <honeok@duck.com>
 #
-# Repository and reference:
+# References:
 # https://github.com/FranzKafkaYu/x-ui
+#
+# License Information:
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License, version 3 or later.
+#
+# This program is distributed WITHOUT ANY WARRANTY; without even the implied
+# warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program. If not, see <https://www.gnu.org/licenses/>.
+
+FROM golang:alpine AS builder
+
+WORKDIR /go/src
+
+RUN set -ex \
+    && apk update && apk add --no-cache git \
+    && git clone https://github.com/FranzKafkaYu/x-ui.git . \
+    && go build main.go
 
 FROM alpine:latest
 
-LABEL maintainer="honeok <honeok@duck.com>"
-
-WORKDIR /x-ui
-
 RUN set -ex \
-    && apk add --no-cache curl tar jq bash \
-    && curl -Lk -O https://github.com/FranzKafkaYu/x-ui/releases/download/0.3.4.4/x-ui-linux-amd64.tar.gz \
-    && tar --strip-components=1 -xvf x-ui-linux-amd64.tar.gz -C . \
-    && rm -f x-ui-linux-amd64.tar.gz \
-    && chmod +x x-ui bin/xray-linux-amd64 \
-    && curl -L -o /usr/bin/x-ui https://raw.githubusercontent.com/FranzKafkaYu/x-ui/main/x-ui.sh \
-    && chmod +x x-ui.sh /usr/bin/x-ui
+    && apk update && apk add --no-cache ca-certificates \
+    && rm -rfv /var/cache/apk/*
+
+WORKDIR /
+
+COPY --from=builder /go/src/main /usr/local/bin/x-ui
+COPY --from=builder /go/src/bin/ /usr/local/bin/
+
+VOLUME [ "/etc/x-ui" ]
+
+CMD [ "/usr/local/bin/x-ui" ]
