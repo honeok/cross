@@ -1,8 +1,20 @@
-# Dockerfile from DanmakuRender automated recording containerized
+# Description: Dockerfile for creating a containerized solution for automated DanmakuRender video recording.
+#
 # Copyright (C) 2025 honeok <honeok@duck.com>
 #
-# Reference:
+# References:
 # https://github.com/SmallPeaches/DanmakuRender
+#
+# License Information:
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License, version 3 or later.
+#
+# This program is distributed WITHOUT ANY WARRANTY; without even the implied
+# warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program. If not, see <https://www.gnu.org/licenses/>.
 
 FROM python:3.9.20-alpine3.20
 
@@ -11,12 +23,10 @@ WORKDIR /DanmakuRender
 COPY . .
 
 RUN set -ex \
-    && apk add --no-cache curl nodejs ffmpeg npm rust cargo \
-    && curl -O -L https://github.com/biliup/biliup-rs/releases/download/v0.2.1/biliupR-v0.2.1-x86_64-linux.tar.xz \
-    && tar -xf biliupR-v0.2.1-x86_64-linux.tar.xz \
-    && mv biliupR-v0.2.1-x86_64-linux/biliup tools/ \
+    && apk update && apk add --no-cache curl git nodejs ffmpeg npm rust cargo \
+    && chmod +x build.sh && ./build.sh \
     && pip install -r requirements.txt \
     && apk del curl rust cargo \
-    && rm -rf biliupR-* /var/cache/apk/*
+    && rm -rfv /var/cache/apk/*
 
 ENTRYPOINT ["python3", "-u", "main.py"]
