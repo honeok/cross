@@ -26,7 +26,7 @@ RUN set -ex \
     && apk update && apk add --no-cache curl git nodejs ffmpeg npm rust cargo \
     && chmod +x build.sh && ./build.sh \
     && pip install -r requirements.txt \
-    && apk del curl rust cargo \
+    && apk del curl git rust cargo \
     && rm -rfv /var/cache/apk/*
 
 ENTRYPOINT ["python3", "-u", "main.py"]
