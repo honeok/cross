@@ -41,7 +41,7 @@ esac
 [ -z "$biliupR_version" ] && echo "ERROR: Unable to obtain biliupR version!" && exit 1
 [ -z "$architecture" ] && echo "ERROR: Not supported OS Architecture!" && exit 1
 
-if ! git clone https://github.com/SmallPeaches/DanmakuRender.git .; then
+if ! git clone https://github.com/SmallPeaches/DanmakuRender.git . -b v5; then
     echo "ERROR: Unable to obtain DanmakuRender source code!"
     exit 1
 fi
