@@ -49,8 +49,8 @@ case "$(uname -m)" in
         ;;
 esac
 
-[ -z "$architecture" ] && echo "ERROR: Not supported OS Architecture!" && exit 1
 [ -z "$sb_version" ] && echo "ERROR: Unable to obtain Sing box version!" && exit 1
+[ -z "$architecture" ] && echo "ERROR: Not supported OS Architecture!" && exit 1
 
 if ! curl -fsL -O "https://github.com/SagerNet/sing-box/releases/download/v${sb_version}/sing-box-${sb_version}-linux-${architecture}.tar.gz" >/dev/null 2>&1; then
     echo "ERROR: Download single box failed, please check the network!"
@@ -59,7 +59,7 @@ fi
 
 tar zxf "sing-box-${sb_version}-linux-${architecture}.tar.gz" --strip-components=1
 rm -fv "sing-box-${sb_version}-linux-${architecture}.tar.gz" "LICENSE"
-mv -f "sing-box" "/usr/local/bin/sing-box"
+mv -fv "sing-box" "/usr/local/bin/sing-box"
 
 if [ ! -x "/usr/local/bin/sing-box" ]; then
     chmod +x "/usr/local/bin/sing-box"
