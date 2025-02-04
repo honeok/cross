@@ -4,12 +4,22 @@
 #
 # Copyright (C) 2024 - 2025 honeok <honeok@duck.com>
 #
-# https://www.honeok.com
 # https://github.com/honeok/cross/raw/master/bestTrace.sh
 #
 # This script utilizes NextTrace, a powerful network diagnostic tool.
 # NextTrace is copyrighted and developed by the NextTrace project team.
 # For more details about NextTrace, visit: https://github.com/nxtrace
+#
+# License Information:
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License, version 3 or later.
+#
+# This program is distributed WITHOUT ANY WARRANTY; without even the implied
+# warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program. If not, see <https://www.gnu.org/licenses/>.
 
 # shellcheck disable=SC2034,SC2207
 
@@ -22,6 +32,7 @@ white='\033[0m'
 _yellow() { echo -e "${yellow}$*${white}"; }
 _red() { echo -e "${red}$*${white}"; }
 _green() { echo -e "${green}$*${white}"; }
+
 _err_msg() { echo -e "\033[41m\033[1m警告${white} $*"; }
 
 short_separator() { printf "%-50s\n" "-" | sed 's/\s/-/g'; }

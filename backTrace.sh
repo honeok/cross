@@ -2,12 +2,23 @@
 #
 # Description: Test the routing of the three major network return lines on the server side.
 #
-# Forked and Modified By: honeok <honeok@duck.com>
+# Forked and Modified By: Copyright (C) 2024 - 2025 honeok <honeok@duck.com>
+#
 # Original Project: https://github.com/oneclickvirt/backtrace
 #
-# https://www.honeok.com
 # https://github.com/honeok/cross/raw/master/backTrace.sh
 #
+# License Information:
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License, version 3 or later.
+#
+# This program is distributed WITHOUT ANY WARRANTY; without even the implied
+# warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program. If not, see <https://www.gnu.org/licenses/>.
+
 # shellcheck disable=SC2164
 
 red='\033[31m'
@@ -19,10 +30,10 @@ _err_msg() { echo -e "\033[41m\033[1mwarn${white} $*"; }
 os_type=$(uname -s 2>/dev/null | sed 's/[A-Z]/\L&/g' || echo 'unknown')
 os_arch=$(uname -m 2>/dev/null | sed 's/[A-Z]/\L&/g' || echo 'unknown')
 
-[ "$(id -u)" -ne "0" ] && _err_msg "$(_red 'This script must be run as root！')" && exit 1
+[ "$(id -u)" -ne "0" ] && _err_msg "$(_red 'This script must be run as root!')" && exit 1
 
 if [ "$(cd -P -- "$(dirname -- "$0")" && pwd -P)" != "/root" ]; then
-    cd /root >/dev/null 2>&1
+    cd /root >/dev/null 2>&1 || _err_msg "$(_red 'Failed to change directory. Check permissions and try again!')" && exit 1
 fi
 
 uninstall() {
@@ -95,7 +106,7 @@ for arg in "$@"; do
             exit 0
             ;;
         *)
-            _err_msg "$(_red 'Invalid option, Please try again！')"
+            _err_msg "$(_red 'Invalid option, Please try again!')"
             exit 1
             ;;
     esac
