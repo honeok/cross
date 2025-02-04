@@ -16,26 +16,30 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
-FROM golang:alpine AS builder
+FROM golang:latest AS builder
 
 WORKDIR /go/src
 
 RUN set -ex \
-    && apk update && apk add --no-cache git \
-    && git clone https://github.com/FranzKafkaYu/x-ui.git . \
-    && go build main.go
+        && apt-get update \
+        && apt-get install -y git \
+        && git clone https://github.com/FranzKafkaYu/x-ui.git . \
+        && go build -o /go/bin/x-ui main.go
 
-FROM alpine:latest
+FROM debian:bookworm-slim
 
 RUN set -ex \
-    && apk update && apk add --no-cache ca-certificates \
-    && rm -rfv /var/cache/apk/*
+        && apt-get update \
+        && apt-get install -y ca-certificates \
+        && rm -rfv /var/lib/apt/lists/* /var/log/*
 
 WORKDIR /
 
-COPY --from=builder /go/src/main /usr/local/bin/x-ui
+COPY --from=builder /go/bin/x-ui /usr/local/bin/x-ui
 COPY --from=builder /go/src/bin/ /usr/local/bin/
 
 VOLUME [ "/etc/x-ui" ]
 
-CMD [ "/usr/local/bin/x-ui" ]
+EXPOSE 54321
+
+ENTRYPOINT [ "/usr/local/bin/x-ui" ]
