@@ -25,7 +25,7 @@ readonly biliupR_version
 
 case "$(uname -m)" in
     'x86_64')
-        architecture='amd64'
+        architecture='x86_64'
         ;;
     'aarch64' | 'arm64')
         architecture='aarch64'
@@ -41,7 +41,7 @@ esac
 [ -z "$biliupR_version" ] && echo "ERROR: Unable to obtain biliupR version!" && exit 1
 [ -z "$architecture" ] && echo "ERROR: Not supported OS Architecture!" && exit 1
 
-if ! git clone https://github.com/SmallPeaches/DanmakuRender.git . -b v5; then
+if ! git clone --branch v5 --single-branch https://github.com/SmallPeaches/DanmakuRender.git; then
     echo "ERROR: Unable to obtain DanmakuRender source code!"
     exit 1
 fi
@@ -51,6 +51,8 @@ if ! curl -fsL -O "https://github.com/biliup/biliup-rs/releases/download/v$biliu
     exit 1
 fi
 
+mv -fv DanmakuRender/* .
+rm -rfv DanmakuRender
 tar xfv "biliupR-v$biliupR_version-$architecture-linux.tar.xz" --strip-components=1
 rm -fv "biliupR-v$biliupR_version-$architecture-linux.tar.xz"
 mv -fv biliup tools/
