@@ -23,7 +23,7 @@ WORKDIR /go/src
 RUN set -ex \
         && apt-get update \
         && apt-get install -y git \
-        && git clone https://github.com/FranzKafkaYu/x-ui.git . \
+        && git clone --branch main --single-branch https://github.com/FranzKafkaYu/x-ui.git . \
         && go build -o /go/bin/x-ui main.go
 
 FROM debian:bookworm-slim
