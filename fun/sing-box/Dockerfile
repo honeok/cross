@@ -22,8 +22,10 @@ FROM alpine:latest
 COPY . .
 
 RUN set -ex \
-    && apk update && apk add --no-cache curl iproute2 tar \
-    && chmod +x build.sh && ./build.sh \
-    && rm -rfv /var/cache/apk/* /var/log/*
+        && apk update && apk upgrade \
+        && apk add --no-cache curl tar iproute2 tzdata ca-certificates \
+        && chmod +x build.sh && ./build.sh \
+        && apk del curl tar \
+        && rm -rfv /var/cache/apk/* /var/log/*
 
 ENTRYPOINT [ "/usr/local/bin/sing-box" ]
