@@ -8,12 +8,13 @@
 # Github: https://github.com/honeok/cross/raw/master/get-docker.sh
 #
 # References:
-# - https://docs.docker.com/engine/install
+# https://docs.docker.com/engine/install
 #               __      __             __             
 #   ___ _ ___  / /_ ___/ / ___  ____  / /__ ___   ____
 #  / _ `// -_)/ __// _  / / _ \/ __/ /  '_// -_) / __/
 #  \_, / \__/ \__/ \_,_/  \___/\__/ /_/\_\ \__/ /_/   
 # /___/                                               
+#
 # License Information:
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License, version 3 or later.
