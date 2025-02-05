@@ -16,9 +16,9 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
-FROM golang:latest AS builder
+FROM golang:1-bookworm AS builder
 
-WORKDIR /go/src
+WORKDIR /go/src/github.com/FranzKafkaYu/x-ui
 
 RUN set -ex \
         && apt-get update \
@@ -29,14 +29,14 @@ RUN set -ex \
 FROM debian:bookworm-slim
 
 RUN set -ex \
-        && apt-get update \
+        && apt-get update && apt-get -y full-upgrade \
         && apt-get install -y ca-certificates \
         && rm -rfv /var/lib/apt/lists/* /var/log/*
 
 WORKDIR /
 
 COPY --from=builder /go/bin/x-ui /usr/local/bin/x-ui
-COPY --from=builder /go/src/bin/ /usr/local/bin/
+COPY --from=builder /go/src/github.com/FranzKafkaYu/x-ui/bin/ /usr/local/bin/
 
 VOLUME [ "/etc/x-ui" ]
 
