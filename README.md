@@ -12,7 +12,7 @@ Life is vast and unpredictable, yet ultimately insignificant.
 
 ## bestTrace.sh
 
-- Description: This script is designed for measuring network speed and performing routing trace across three networks.
+Description: This script is designed for measuring network speed and performing routing trace across three networks.
 
 For international users:
 ```shell
@@ -25,8 +25,8 @@ bash <(curl -sL https://cdn.611611.best/https://github.com/honeok/cross/raw/mast
 
 ## backTrace.sh
 
-- Description: This script is used for testing the routing path across three networks.
-  It is based on the optimization of the one-click installation script from https://github.com/oneclickvirt/backtrace.
+Description: This script is used for testing the routing path across three networks.
+It is based on the optimization of the one-click installation script from https://github.com/oneclickvirt/backtrace.
 
 For international users:
 ```shell
@@ -43,7 +43,7 @@ bash <(curl -sL https://cdn.611611.best/https://github.com/honeok/cross/raw/mast
   <img src="https://hits.seeyoufarm.com/api/count/keep/badge.svg?url=https%3A%2F%2Fgithub.com%2Fhoneok%2Fcross%2Fraw%2Fmaster%2Fget-docker.sh" alt="Hits" />
 </p>
 
-- Description: This script allows you to install the latest version of Docker on your server with a single command.
+Description: This script allows you to install the latest version of Docker on your server with a single command.
 
 For international users:
 ```shell
