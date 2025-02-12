@@ -9,6 +9,7 @@
 #
 # References:
 # https://docs.docker.com/engine/install
+# https://docs.docker.com/reference/cli/dockerd/#daemon-configuration-file
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License, version 3 or later.
@@ -21,7 +22,8 @@
 
 set \
     -o errexit \
-    -o nounset
+    -o nounset \
+    -o noclobber
 
 # 版本号
 readonly version='v0.1.1 (2025.02.12)'
@@ -50,8 +52,7 @@ os_name=$(grep "^ID=" /etc/*release | awk -F'=' '{print $2}' | sed 's/"//g')
 readonly os_info os_name
 
 getdocker_pid='/tmp/getdocker.pid'
-systemctl_cmd=$(which systemctl 2>/dev/null)
-readonly getdocker_pid systemctl_cmd
+readonly getdocker_pid
 
 trap "cleanup_exit ; exit 0" SIGINT SIGQUIT SIGTERM EXIT
 
@@ -149,6 +150,16 @@ virt_check() {
     fi
 }
 
+_virt_permission() {
+    virt_check
+
+    if [[ "$virt_type" == "Docker" && "$virt_type" == "LXC" && "$virt_type" == "OpenVZ" ]]; then
+        _err_msg "$(_red '当前虚拟化架构不被支持！')"
+        _end_message
+        exit 1
+    fi
+}
+
 pkg_remove() {
     if [ "$#" -eq 0 ]; then
         _err_msg "$(_red '未提供软件包参数')"
@@ -242,6 +253,10 @@ systemctl() {
     local _cmd="$1"
     local service_name="$2"
 
+    local systemctl_cmd
+    systemctl_cmd=$(which systemctl 2>/dev/null)
+    readonly systemctl_cmd
+
     if command -v apk >/dev/null 2>&1; then
         sudo service "$service_name" "$_cmd"
     else
@@ -318,8 +333,8 @@ _install() {
             sudo yum install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
         fi
 
-        sudo systemctl enable docker
-        sudo systemctl start docker
+        systemctl enable docker
+        systemctl start docker
     elif [[ "$os_name" == "rhel" ]]; then
         pkg_remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine podman runc >/dev/null 2>&1
 
@@ -336,8 +351,8 @@ _install() {
         fi
 
         sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-        sudo systemctl enable docker
-        sudo systemctl start docker
+        systemctl enable docker
+        systemctl start docker
     elif [[ "$os_name" == "debian" || "$os_name" == "ubuntu" ]]; then
         # version_code="$(. /etc/*release && echo "$VERSION_CODENAME")"
         version_code="$(grep "^VERSION_CODENAME" /etc/*release | cut -d= -f2)"
@@ -366,8 +381,8 @@ _install() {
         echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] $repo_url $version_code stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
         sudo apt-get -qq update
         sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-        sudo systemctl enable docker
-        sudo systemctl start docker
+        systemctl enable docker
+        systemctl start docker
     elif [[ "$os_name" == "alpine" ]]; then
 
         #s#old#new#g
@@ -375,8 +390,8 @@ _install() {
 
         sudo apk update && sudo apk upgrade
         sudo apk add docker docker-compose
-        sudo systemctl enable docker
-        sudo systemctl start docker
+        systemctl enable docker
+        systemctl start docker
     else
         _err_msg "$(_red '当前操作系统不被支持！')"
         _end_message
@@ -509,6 +524,7 @@ docker_install() {
     _clear
     _logo
     _os_permission
+    _virt_permission
     _check_install
     _install
     _version
@@ -520,6 +536,7 @@ docker_uninstall() {
     _clear
     _logo
     _os_permission
+    _virt_permission
     _uninstall
     _end_message
 }
