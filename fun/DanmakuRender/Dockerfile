@@ -23,15 +23,24 @@ WORKDIR /DanmakuRender
 COPY . .
 
 RUN set -ex \
-        && apk update \
-        && apk add --no-cache curl git nodejs ffmpeg npm rust cargo \
+        && apk update && apk upgrade \
+        && apk add --no-cache --virtual .build-deps \
+            cargo \
+            curl \
+            git \
+            rust \
+        && apk add --no-cache \
+            ffmpeg \
+            nodejs \
+            npm \
         && chmod +x build.sh && ./build.sh \
         && python3 -m pip install --no-cache-dir -r requirements.txt \
         && install -m 755 docker-entrypoint.sh /docker-entrypoint.sh \
-        && rm -fv build.sh docker-entrypoint.sh \
-        && rm -rf configs_temp && mkdir -pv configs_temp \
-        && apk del curl git rust cargo \
-        && cp -frv configs/* configs_temp/ \
-        && rm -rfv /var/cache/apk/*
+        && rm -f Dockerfile build.sh docker-entrypoint.sh \
+        && rm -rf configs_temp \
+        && mkdir -p configs_temp \
+        && apk del .build-deps \
+        && cp -fr configs/* configs_temp/ \
+        && rm -rf /var/cache/apk/* /tmp/*
 
 ENTRYPOINT [ "/docker-entrypoint.sh" ]
