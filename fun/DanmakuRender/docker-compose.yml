@@ -1,9 +1,0 @@
-services:
-  danmakurender:
-    image: honeok/danmakurender
-    container_name: danmakurender
-    restart: unless-stopped
-    volumes:
-      - ./configs:/DanmakuRender/configs
-      - ./logs:/DanmakuRender/logs
-    network_mode: bridge
