@@ -5,8 +5,8 @@
 # References:
 # https://github.com/SagerNet/sing-box
 # https://github.com/fscarmen/Sing-box-image
+# https://github.com/RayWangQvQ/sing-box-installer/blob/main/DIY.md
 #
-# License Information:
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License, version 3 or later.
 #
@@ -14,8 +14,7 @@
 # warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 # General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License along with
-# this program. If not, see <https://www.gnu.org/licenses/>.
+# See the LICENSE file or <https://www.gnu.org/licenses/> for full license terms.
 
 FROM alpine:latest
 
@@ -23,9 +22,15 @@ COPY . .
 
 RUN set -ex \
         && apk update && apk upgrade \
-        && apk add --no-cache curl tar iproute2 tzdata ca-certificates \
+        && apk add --no-cache --virtual .build-deps \
+            curl \
+            tar \
+            tzdata \
+        && apk add --no-cache ca-certificates \
         && chmod +x build.sh && ./build.sh \
-        && apk del curl tar \
-        && rm -rfv /var/cache/apk/* /var/log/*
+        && cp -f /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
+        && echo "Asia/Shanghai" > /etc/timezone \
+        && apk del .build-deps \
+        && rm -rf /var/cache/apk/* /tmp/*
 
 ENTRYPOINT [ "/usr/local/bin/sing-box" ]
