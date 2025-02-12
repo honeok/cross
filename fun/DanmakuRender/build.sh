@@ -17,8 +17,7 @@
 
 set \
     -o errexit \
-    -o nounset \
-    -o xtrace
+    -o nounset
 
 biliupR_version=$(curl -fsL "https://api.github.com/repos/biliup/biliup-rs/releases/latest" | awk -F '["v]' '/tag_name/{print $5}')
 readonly biliupR_version
@@ -26,16 +25,16 @@ readonly biliupR_version
 case "$(uname -m)" in
     'x86_64')
         architecture='x86_64'
-        ;;
+    ;;
     'aarch64' | 'arm64')
         architecture='aarch64'
-        ;;
+    ;;
     'armv7' | 'armv6')
         architecture='arm'
-        ;;
+    ;;
     *)
         architecture=''
-        ;;
+    ;;
 esac
 
 [ -z "$biliupR_version" ] && echo "ERROR: Unable to obtain biliupR version!" && exit 1
@@ -51,8 +50,8 @@ if ! curl -fsL -O "https://github.com/biliup/biliup-rs/releases/download/v$biliu
     exit 1
 fi
 
-mv -fv DanmakuRender/* .
-rm -rfv DanmakuRender
-tar xfv "biliupR-v$biliupR_version-$architecture-linux.tar.xz" --strip-components=1
-rm -fv "biliupR-v$biliupR_version-$architecture-linux.tar.xz"
-mv -fv biliup tools/
+mv -f DanmakuRender/* .
+rm -rf DanmakuRender
+tar xf "biliupR-v$biliupR_version-$architecture-linux.tar.xz" --strip-components=1
+rm -f "biliupR-v$biliupR_version-$architecture-linux.tar.xz"
+mv -f biliup tools/
