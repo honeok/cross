@@ -1,4 +1,4 @@
-name: build and publish danmaku
+name: Build and publish danmaku
 
 on:
   workflow_dispatch:
@@ -6,7 +6,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    name: "build danmaku image"
+    name: "Build danmaku image"
     env:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
 
