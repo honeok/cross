@@ -40,7 +40,7 @@ RUN set -ex \
         && rm -rf configs_temp \
         && mkdir -p configs_temp \
         && apk del .build-deps \
-        && cp -fr configs/* configs_temp/ \
+        && cp -rf configs/* configs_temp/ \
         && rm -rf /var/cache/apk/* /tmp/*
 
 ENTRYPOINT [ "/docker-entrypoint.sh" ]
