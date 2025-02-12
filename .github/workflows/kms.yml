@@ -1,4 +1,4 @@
-name: build and publish kms
+name: Build and publish kms
 
 on:
   workflow_dispatch:
@@ -8,7 +8,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    name: "build kms image"
+    name: "Build kms image"
     env:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
 
@@ -30,11 +30,21 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      - name: Get build tag
+        run: |
+          BUILD_TIME=$(TZ='Asia/Shanghai' date '+%Y-%m-%d')
+          if [[ -z $BUILD_TIME ]]; then
+              echo "ERROR: Failed to obtain the construction time, unable to form a mirror label!" && exit 1
+          fi
+          echo "BUILD_TIME=${BUILD_TIME}" >> $GITHUB_ENV
+
       - name: Build and push kms image
         uses: docker/build-push-action@v6.11.0
         with:
           context: "{{defaultContext}}:fun/kms"
           file: Dockerfile
           push: true
-          tags: "${{ env.DOCKER_USERNAME }}/kms:latest"
+          tags: |
+            "${{ env.DOCKER_USERNAME }}/kms:${{ env.BUILD_TIME }}"
+            "${{ env.DOCKER_USERNAME }}/kms:latest"
           platforms: linux/386, linux/amd64, linux/arm/v6, linux/arm/v7, linux/arm64/v8, linux/ppc64le, linux/riscv64, linux/s390x
