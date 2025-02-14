@@ -66,3 +66,5 @@ rm -f "sing-box-${LATEST_VERSION}-linux-${ARCH}.tar.gz" "LICENSE"
 if [ ! -x "$SINGBOX_BINDIR/sing-box" ]; then
     chmod +x "$SINGBOX_BINDIR/sing-box"
 fi
+ln -s "$SINGBOX_BINDIR/sing-box" /usr/local/bin/sing-box
+ln -s "$SINGBOX_BINDIR/sing-box" /usr/local/bin/sb
