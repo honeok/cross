@@ -17,39 +17,54 @@ set \
     -o errexit \
     -o nounset
 
-Singbox_version=$(curl -fskL "https://api.github.com/repos/SagerNet/sing-box/releases/latest" | awk -F '["v]' '/tag_name/{print $5}')
-readonly Singbox_version
+# Run default path
+SINGBOX_WORKDIR="/etc/sing-box"
+SINGBOX_BINDIR="$SINGBOX_WORKDIR/bin"
+SINGBOX_CONFDIR="$SINGBOX_WORKDIR/conf"
+SINGBOX_LOGDIR="/var/log/sing-box"
+SINGBOX_LOGFILE="$SINGBOX_LOGDIR/access.log"
 
+LATEST_VERSION=$(curl -fskL "https://api.github.com/repos/SagerNet/sing-box/releases/latest" | awk -F '["v]' '/tag_name/{print $5}')
+readonly LATEST_VERSION
+[ -z "$LATEST_VERSION" ] && { echo "ERROR: Unable to obtain Sing-box version!"; exit 1; }
+
+# Determine system arch based
 case "$(uname -m)" in
     'x86' | 'i686' | 'i386')
-        Architecture='386'
+        ARCH='386'   # 32-bit x86
     ;;
     'x86_64')
-        Architecture='amd64'
+        ARCH='amd64' # 64-bit x86
     ;;
     'aarch64' | 'arm64')
-        Architecture='arm64'
+        ARCH='arm64' # 64-bit ARM
     ;;
     'armv7l')
-        Architecture='armv7'
+        ARCH='armv7' # 32-bit ARM
     ;;
     's390x')
-        Architecture='s390x'
+        ARCH='s390x' # IBM S390x
     ;;
     *)
-        Architecture=''
+        ARCH=''
     ;;
 esac
+[ -z "$ARCH" ] && { echo "ERROR: Not supported OS ARCH!"; exit 1; }
 
-[ -z "$Singbox_version" ] && { echo "ERROR: Unable to obtain Sing-box version!" && exit 1 ;}
-[ -z "$Architecture" ] && { echo "ERROR: Not supported OS Architecture!" && exit 1 ;}
+# Create necessary directories
+mkdir -p "$SINGBOX_WORKDIR" "$SINGBOX_BINDIR" "$SINGBOX_CONFDIR" "$SINGBOX_LOGDIR" 1>/dev/null
+touch "$SINGBOX_LOGFILE" 1>/dev/null
 
-if ! curl -fsL "https://github.com/SagerNet/sing-box/releases/download/v${Singbox_version}/sing-box-${Singbox_version}-linux-${Architecture}.tar.gz" -o "sing-box-${Singbox_version}-linux-${Architecture}.tar.gz" ; then
-    echo "ERROR: Download single box failed, please check the network!"
-    exit 1
+cd "$SINGBOX_BINDIR" ||  { echo "ERROR: Failed to enter the sing-box bin directory!" ; exit 1;}
+
+# Extract and install Sing-Box
+if ! curl -fskL -O "https://github.com/SagerNet/sing-box/releases/download/v${LATEST_VERSION}/sing-box-${LATEST_VERSION}-linux-${ARCH}.tar.gz" ; then
+    echo "ERROR: Download sing-Box failed, please check the network!" && exit 1
 fi
-
-tar zxf "sing-box-${Singbox_version}-linux-${Architecture}.tar.gz" --strip-components=1
-rm -f "sing-box-${Singbox_version}-linux-${Architecture}.tar.gz" "LICENSE"
-mv -f "sing-box" "/usr/local/bin/sing-box"
-[ ! -x "/usr/local/bin/sing-box" ] && chmod +x "/usr/local/bin/sing-box"
+tar zxf "sing-box-${LATEST_VERSION}-linux-${ARCH}.tar.gz" --strip-components=1 || { echo "ERROR: tar Sing-box package failed!"; exit 1; }
+rm -f "sing-box-${LATEST_VERSION}-linux-${ARCH}.tar.gz" "LICENSE"
+if [ ! -x "$SINGBOX_BINDIR/sing-box" ]; then
+    chmod +x "$SINGBOX_BINDIR/sing-box"
+fi
+ln -s "$SINGBOX_BINDIR/sing-box" /usr/local/bin/sing-box
+ln -s "$SINGBOX_BINDIR/sing-box" /usr/local/bin/sb
