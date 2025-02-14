@@ -46,6 +46,7 @@ jobs:
           fi
 
       - name: Build and push Sing-box image
+        if: env.BUILD_IMAGE == 'true'
         uses: docker/build-push-action@v6.11.0
         with:
           context: "{{defaultContext}}:fun/sing-box"
