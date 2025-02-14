@@ -28,11 +28,12 @@ SINGBOX_CONFDIR="$SINGBOX_WORKDIR/conf"
 SINGBOX_LOGDIR="/var/log/sing-box"
 SINGBOX_LOGFILE="$SINGBOX_LOGDIR/access.log"
 
-SERVERS="aws.amazon.com www.ebay.com icloud.cdn-apple.com addons.mozilla.org"
+TLS_SERVERS="aws.amazon.com music.apple.com icloud.cdn-apple.com addons.mozilla.org"
 GENERATE_UUID=$(cat /proc/sys/kernel/random/uuid)
-PRIVATE_KEY=$(head -c 32 /dev/urandom | base64 | tr '+/' '-_' | tr -d '=')
-PUBLIC_KEY=$(head -c 32 /dev/urandom | base64 | tr '+/' '-_' | tr -d '=')
-IPADDRESS=$(curl -fsL -m 3 https://ipinfo.io/ip)
+KEYPAIR=$("$SINGBOX_CMD" generate reality-keypair)
+PRIVATE_KEY=$(echo "$KEYPAIR" | awk '/PrivateKey:/ {print $2}')
+PUBLIC_KEY=$(echo "$KEYPAIR" | awk '/PublicKey:/ {print $2}')
+PUBLIC_IP=$(curl -fsL -m 3 https://ipinfo.io/ip)
 
 # Generate default config if not provided by the user
 if [ ! -f "$SINGBOX_WORKDIR/config.json" ]; then
@@ -63,7 +64,7 @@ EOF
 fi
 
 if [ -d "$SINGBOX_CONFDIR" ] && [ -z "$(ls -A "$SINGBOX_CONFDIR" 2>/dev/null)" ]; then
-    TLS_SERVER=$(echo "$SERVERS" | tr " " "\n" | shuf -n 1)
+    TLS_SERVER=$(echo "$TLS_SERVERS" | tr " " "\n" | shuf -n 1)
     cat > "$SINGBOX_CONFDIR/VLESS-REALITY-30000.json" <<EOF
 {
   "inbounds": [
@@ -110,7 +111,7 @@ EOF
     {
         echo "#################### URL ####################"
         echo ""
-        echo "vless://${GENERATE_UUID}@${IPADDRESS}:30000?encryption=none&security=reality&flow=xtls-rprx-vision&type=tcp&sni=music.apple.com&pbk=${PUBLIC_KEY}&fp=chrome#reality-${PUBLIC_KEY}"
+        echo "vless://${GENERATE_UUID}@${PUBLIC_IP}:30000?encryption=none&security=reality&flow=xtls-rprx-vision&type=tcp&sni=${TLS_SERVER}&pbk=${PUBLIC_KEY}&fp=chrome#REALITY-${PUBLIC_IP}"
         echo ""
         echo "#################### END ####################"
     } >> "$SINGBOX_LOGFILE"
