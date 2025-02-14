@@ -30,9 +30,9 @@ SINGBOX_LOGFILE="$SINGBOX_LOGDIR/access.log"
 
 TLS_SERVERS="aws.amazon.com music.apple.com icloud.cdn-apple.com addons.mozilla.org"
 GENERATE_UUID=$(cat /proc/sys/kernel/random/uuid)
-KEYPAIR=$("$SINGBOX_CMD" generate reality-keypair)
-PRIVATE_KEY=$(echo "$KEYPAIR" | awk '/PrivateKey:/ {print $2}')
-PUBLIC_KEY=$(echo "$KEYPAIR" | awk '/PublicKey:/ {print $2}')
+GENERATE_KEYS=$(sing-box generate reality-keypair)
+PRIVATE_KEY=$(printf "%s" "$GENERATE_KEYS" | sed -n 's/^PrivateKey: *\(.*\)$/\1/p')
+PUBLIC_KEY=$(printf "%s" "$GENERATE_KEYS" | sed -n 's/^PublicKey: *\(.*\)$/\1/p')
 PUBLIC_IP=$(curl -fsL -m 3 https://ipinfo.io/ip)
 
 # Generate default config if not provided by the user
@@ -109,11 +109,11 @@ if [ -d "$SINGBOX_CONFDIR" ] && [ -z "$(ls -A "$SINGBOX_CONFDIR" 2>/dev/null)" ]
 EOF
 
     {
-        echo "#################### URL ####################"
+        echo "-------------------- URL --------------------"
         echo ""
         echo "vless://${GENERATE_UUID}@${PUBLIC_IP}:30000?encryption=none&security=reality&flow=xtls-rprx-vision&type=tcp&sni=${TLS_SERVER}&pbk=${PUBLIC_KEY}&fp=chrome#REALITY-${PUBLIC_IP}"
         echo ""
-        echo "#################### END ####################"
+        echo "-------------------- END --------------------"
     } >> "$SINGBOX_LOGFILE"
 fi
 
