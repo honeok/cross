@@ -4,6 +4,7 @@
 # Copyright (C) 2013 Nyr.
 #
 # Licensed under the GNU General Public License, version 2 only.
+# This program is distributed WITHOUT ANY WARRANTY.
 # See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
 
 # shellcheck disable=all
