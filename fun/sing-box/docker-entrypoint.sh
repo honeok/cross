@@ -1,8 +1,9 @@
-#!/bin/sh
+#!/usr/bin/env sh
 #
 # Copyright (C) 2025 honeok <honeok@duck.com>
 #
 # References:
+# https://sing-box.sagernet.org/zh/configuration
 # https://github.com/233boy/sing-box
 # https://github.com/fscarmen/sing-box
 # https://github.com/RayWangQvQ/sing-box-installer/blob/main/DIY.md
@@ -46,12 +47,8 @@ if [ ! -f "$SINGBOX_WORKDIR/config.json" ]; then
   },
   "outbounds": [
     {
-      "tag": "direct",
-      "type": "direct"
-    },
-    {
-      "tag": "block",
-      "type": "block"
+      "type": "direct",
+      "tag": "direct"
     }
   ]
 }
