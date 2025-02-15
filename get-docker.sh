@@ -148,7 +148,7 @@ virt_check() {
 _virt_permission() {
     virt_check
 
-    if [[ "$virt_type" == "Docker" && "$virt_type" == "LXC" && "$virt_type" == "OpenVZ" ]]; then
+    if [[ "$virt_type" == "Docker" || "$virt_type" == "LXC" || "$virt_type" == "OpenVZ" ]]; then
         _err_msg "$(_red '当前虚拟化架构不被支持！')"
         _end_message
         exit 1
