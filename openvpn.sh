@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 #
 # Copyright (C) 2025 honeok <honeok@duck.com>
-# Copyright (C) 2013 Nyr.
+# Copyright (C) 2013 Nyr. Released under the MIT License.
+#
+# Based on: https://github.com/Nyr/openvpn-install
 #
 # Licensed under the GNU General Public License, version 2 only.
 # This program is distributed WITHOUT ANY WARRANTY.
