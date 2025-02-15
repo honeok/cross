@@ -11,14 +11,9 @@
 # https://docs.docker.com/engine/install
 # https://docs.docker.com/reference/cli/dockerd/#daemon-configuration-file
 #
-# This program is free software: you can redistribute it and/or modify it under
-# the terms of the GNU General Public License, version 3 or later.
-#
-# This program is distributed WITHOUT ANY WARRANTY; without even the implied
-# warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-# General Public License for more details.
-#
-# See the LICENSE file or <https://www.gnu.org/licenses/> for full license terms.
+# Licensed under the GNU General Public License, version 2 only.
+# This program is distributed WITHOUT ANY WARRANTY.
+# See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
 
 set \
     -o errexit \
@@ -26,7 +21,7 @@ set \
     -o noclobber
 
 # 版本号
-readonly version='v0.1.1 (2025.02.12)'
+readonly version='v0.1.1 (2025.02.15)'
 
 yellow='\033[1;33m'
 red='\033[1;38;5;160m'
