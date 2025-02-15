@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env sh
 #
 # Description: This script is used to build Sing-box binary files for multiple architectures.
 #
@@ -53,13 +53,14 @@ touch "$SINGBOX_LOGFILE" 1>/dev/null
 cd "$SINGBOX_BINDIR" ||  { echo "ERROR: Failed to enter the sing-box bin directory!" ; exit 1;}
 
 # Extract and install Sing-Box
-if ! curl -fskL -O "https://github.com/SagerNet/sing-box/releases/download/v${LATEST_VERSION}/sing-box-${LATEST_VERSION}-linux-${ARCH}.tar.gz" ; then
+if ! curl -fskL -O "https://github.com/SagerNet/sing-box/releases/download/v${LATEST_VERSION}/sing-box-${LATEST_VERSION}-linux-${ARCH}.tar.gz >/dev/null 2>&1" ; then
     echo "ERROR: Download sing-Box failed, please check the network!" && exit 1
 fi
-tar zxf "sing-box-${LATEST_VERSION}-linux-${ARCH}.tar.gz" --strip-components=1 || { echo "ERROR: tar Sing-box package failed!"; exit 1; }
-rm -f "sing-box-${LATEST_VERSION}-linux-${ARCH}.tar.gz" "LICENSE"
+tar -zxf "sing-box-${LATEST_VERSION}-linux-${ARCH}.tar.gz" --strip-components=1 || { echo "ERROR: tar Sing-box package failed!"; exit 1; }
+find . ! -name 'sing-box' -exec rm -rf {} +
 if [ ! -x "$SINGBOX_BINDIR/sing-box" ]; then
     chmod +x "$SINGBOX_BINDIR/sing-box"
 fi
+
 ln -s "$SINGBOX_BINDIR/sing-box" /usr/local/bin/sing-box
 ln -s "$SINGBOX_BINDIR/sing-box" /usr/local/bin/sb
