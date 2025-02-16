@@ -43,8 +43,8 @@ services:
     container_name: sing-box
     restart: unless-stopped
     volumes:
-      - ./config.json:/etc/sing-box/config.json
-      - ./conf:/etc/sing-box/conf
+      - /etc/sing-box/config.json:/etc/sing-box/config.json
+      - /etc/sing-box/conf:/etc/sing-box/conf
     network_mode: host
     cap_add:
       - NET_ADMIN
