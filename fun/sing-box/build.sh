@@ -1,17 +1,12 @@
-#!/bin/sh
+#!/usr/bin/env sh
 #
 # Description: This script is used to build Sing-box binary files for multiple architectures.
 #
 # Copyright (C) 2025 honeok <honeok@duck.com>
 #
-# This program is free software: you can redistribute it and/or modify it under
-# the terms of the GNU General Public License, version 3 or later.
-#
-# This program is distributed WITHOUT ANY WARRANTY; without even the implied
-# warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-# General Public License for more details.
-#
-# See the LICENSE file or <https://www.gnu.org/licenses/> for full license terms.
+# Licensed under the GNU General Public License, version 2 only.
+# This program is distributed WITHOUT ANY WARRANTY.
+# See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
 
 set \
     -o errexit \
@@ -61,10 +56,13 @@ cd "$SINGBOX_BINDIR" ||  { echo "ERROR: Failed to enter the sing-box bin directo
 if ! curl -fskL -O "https://github.com/SagerNet/sing-box/releases/download/v${LATEST_VERSION}/sing-box-${LATEST_VERSION}-linux-${ARCH}.tar.gz" ; then
     echo "ERROR: Download sing-Box failed, please check the network!" && exit 1
 fi
-tar zxf "sing-box-${LATEST_VERSION}-linux-${ARCH}.tar.gz" --strip-components=1 || { echo "ERROR: tar Sing-box package failed!"; exit 1; }
-rm -f "sing-box-${LATEST_VERSION}-linux-${ARCH}.tar.gz" "LICENSE"
+
+tar -zxf "sing-box-${LATEST_VERSION}-linux-${ARCH}.tar.gz" --strip-components=1 || { echo "ERROR: tar Sing-box package failed!"; exit 1; }
+
+find . -mindepth 1 -maxdepth 1 ! -name 'sing-box' -exec rm -rf {} +
+
 if [ ! -x "$SINGBOX_BINDIR/sing-box" ]; then
     chmod +x "$SINGBOX_BINDIR/sing-box"
 fi
+
 ln -s "$SINGBOX_BINDIR/sing-box" /usr/local/bin/sing-box
-ln -s "$SINGBOX_BINDIR/sing-box" /usr/local/bin/sb
