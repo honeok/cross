@@ -18,11 +18,11 @@ COPY . .
 RUN set -ex \
         && apk update && apk upgrade \
         && apk add --no-cache --virtual .build-deps \
+            curl \
             tar \
             tzdata \
         && apk add --no-cache \
             ca-certificates \
-            curl \
         && chmod +x docker-entrypoint.sh \
         && chmod +x build.sh && ./build.sh \
         && cp -f /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
