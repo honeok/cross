@@ -100,6 +100,11 @@ if [ -d "$SINGBOX_CONFDIR" ] && [ -z "$(ls -A "$SINGBOX_CONFDIR" 2>/dev/null)" ]
 }
 EOF
 
+    if [ -z "$PUBLIC_IP" ]; then
+        echo "ERROR: Failed to retrieve IP address, configuration generation aborted!"
+        exit 1
+    fi
+
     {
         echo "-------------------- URL --------------------"
         echo ""
