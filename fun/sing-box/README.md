@@ -46,6 +46,10 @@ services:
       - ./config.json:/etc/sing-box/config.json
       - ./conf:/etc/sing-box/conf
     network_mode: host
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun
 ```
 
 Finally, run the following command to start the container:
