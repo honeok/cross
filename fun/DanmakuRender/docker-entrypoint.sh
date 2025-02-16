@@ -1,4 +1,13 @@
-#!/bin/sh
+#!/usr/bin/env sh
+#
+# Copyright (C) 2025 honeok <honeok@duck.com>
+#
+# References:
+# https://github.com/SmallPeaches/DanmakuRender
+#
+# Licensed under the GNU General Public License, version 2 only.
+# This program is distributed WITHOUT ANY WARRANTY.
+# See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
 
 work_dir="/DanmakuRender"
 danmaku_config_dir="$work_dir/configs"
