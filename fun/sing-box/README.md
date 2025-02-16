@@ -20,7 +20,7 @@ It can be found at [Docker Hub][3].
 
 ## Start a container
 
-First, you `must create a configuration file` at  `/etc/sing-box/config.json` on the host:
+First, you must create a configuration file at  `/etc/sing-box/config.json` on the host:
 
 This file can be empty.
 
