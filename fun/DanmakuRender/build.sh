@@ -1,17 +1,12 @@
-#!/bin/sh
+#!/usr/bin/env sh
 #
 # Description: Script for installing the necessary dependencies to build the containerized version of DanmakuRender.
 #
 # Copyright (C) 2025 honeok <honeok@duck.com>
 #
-# This program is free software: you can redistribute it and/or modify it under
-# the terms of the GNU General Public License, version 3 or later.
-#
-# This program is distributed WITHOUT ANY WARRANTY; without even the implied
-# warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-# General Public License for more details.
-#
-# See the LICENSE file or <https://www.gnu.org/licenses/> for full license terms.
+# Licensed under the GNU General Public License, version 2 only.
+# This program is distributed WITHOUT ANY WARRANTY.
+# See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
 
 set \
     -o errexit \
