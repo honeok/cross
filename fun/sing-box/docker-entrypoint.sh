@@ -18,7 +18,6 @@ set \
     -o noclobber
 
 SINGBOX_WORKDIR="/etc/sing-box"
-SINGBOX_BINDIR="$SINGBOX_WORKDIR/bin"
 SINGBOX_CONFDIR="$SINGBOX_WORKDIR/conf"
 SINGBOX_LOGDIR="/var/log/sing-box"
 SINGBOX_LOGFILE="$SINGBOX_LOGDIR/access.log"
