@@ -34,7 +34,7 @@ PUBLIC_IP=$(wget -qO- -L --no-check-certificate --timeout=3 -4 https://one.one.o
             wget -qO- -L --no-check-certificate --timeout=3 -6 https://one.one.one.one/cdn-cgi/trace | grep ip= | cut -d= -f2)
 
 # Generate default config if not provided by the user
-if [ ! -f "$SINGBOX_WORKDIR/config.json" ]; then
+if [ ! -s "$SINGBOX_WORKDIR/config.json" ]; then
     cat > "$SINGBOX_WORKDIR/config.json" <<EOF
 {
   "log": {
