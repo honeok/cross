@@ -28,8 +28,8 @@ GENERATE_UUID=$(sing-box generate uuid)
 GENERATE_KEYS=$(sing-box generate reality-keypair)
 PRIVATE_KEY=$(printf "%s" "$GENERATE_KEYS" | sed -n 's/^PrivateKey: *\(.*\)$/\1/p')
 PUBLIC_KEY=$(printf "%s" "$GENERATE_KEYS" | sed -n 's/^PublicKey: *\(.*\)$/\1/p')
-PUBLIC_IP=$(wget -qO- -L --no-check-certificate --timeout=3 -4 https://one.one.one.one/cdn-cgi/trace | grep ip= | cut -d= -f2 || \
-            wget -qO- -L --no-check-certificate --timeout=3 -6 https://one.one.one.one/cdn-cgi/trace | grep ip= | cut -d= -f2)
+PUBLIC_IP=$(curl -fsL4 -m 2 https://ipinfo.io/ip || \
+            curl -fsL6 -m 2 https://v6.ipinfo.io/ip)
 
 # Generate default config if not provided by the user
 if [ ! -s "$SINGBOX_WORKDIR/config.json" ]; then
