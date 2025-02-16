@@ -14,8 +14,7 @@
 
 set \
     -o errexit \
-    -o nounset \
-    -o noclobber
+    -o nounset
 
 SINGBOX_WORKDIR="/etc/sing-box"
 SINGBOX_CONFDIR="$SINGBOX_WORKDIR/conf"
