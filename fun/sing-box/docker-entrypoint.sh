@@ -22,7 +22,7 @@ SINGBOX_LOGDIR="/var/log/sing-box"
 SINGBOX_LOGFILE="$SINGBOX_LOGDIR/access.log"
 
 # https://github.com/XTLS/Xray-core/issues/2005
-TLS_SERVERS="www.tesla.com music.apple.com icloud.cdn-apple.com addons.mozilla.org"
+TLS_SERVERS="www.icloud.com apps.apple.com music.apple.com icloud.cdn-apple.com updates.cdn-apple.com"
 GENERATE_UUID=$(sing-box generate uuid)
 GENERATE_KEYS=$(sing-box generate reality-keypair)
 PRIVATE_KEY=$(printf "%s" "$GENERATE_KEYS" | sed -n 's/^PrivateKey: *\(.*\)$/\1/p')
