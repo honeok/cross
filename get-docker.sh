@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Description: A script for quickly installing the latest Docker CE on supported Linux distributions.
-# Supported Systems: Debian 11+, Ubuntu 20+, CentOS 7+, RHEL 8+, Rocky Linux 8+, AlmaLinux 8+, Alpine 3.19+
+# Supported Systems: Debian 11+, Ubuntu 22+, CentOS 9+, RHEL 9+, Rocky Linux 9+, AlmaLinux 9+, Alpine 3.20+
 #
 # Copyright (C) 2023 - 2025 honeok <honeok@duck.com>
 #
@@ -15,13 +15,8 @@
 # This program is distributed WITHOUT ANY WARRANTY.
 # See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
 
-set \
-    -o errexit \
-    -o nounset \
-    -o noclobber
-
-# 版本号
-readonly version='v0.1.1 (2025.02.15)'
+# 当前脚本版本号
+readonly version='v0.1.2 (2025.02.19)'
 
 yellow='\033[1;33m'
 red='\033[1;38;5;160m'
@@ -42,14 +37,14 @@ _info_msg() { echo -e "\033[43m\033[1;37m提示${white} $*"; }
 export DEBIAN_FRONTEND=noninteractive
 
 # https://github.com/koalaman/shellcheck/wiki/SC2155
-os_info=$(grep "^PRETTY_NAME=" /etc/*release | cut -d '"' -f 2 | sed 's/ (.*)//')
-os_name=$(grep "^ID=" /etc/*release | awk -F'=' '{print $2}' | sed 's/"//g')
+os_info=$(grep "^PRETTY_NAME=" /etc/*-release | cut -d '"' -f 2 | sed 's/ (.*)//')
+os_name=$(grep "^ID=" /etc/*-release | awk -F'=' '{print $2}' | sed 's/"//g')
 readonly os_info os_name
 
 getdocker_pid='/tmp/getdocker.pid'
 readonly getdocker_pid
 
-trap "cleanup_exit ; exit 0" SIGINT SIGQUIT SIGTERM EXIT
+trap "cleanup_exit; exit 0" SIGINT SIGQUIT SIGTERM EXIT
 
 cleanup_exit() {
     [ -f "$getdocker_pid" ] && sudo rm -f "$getdocker_pid"
@@ -61,28 +56,60 @@ fi
 
 echo $$ > "$getdocker_pid"
 
-_clear() { [ -t 1 ] && tput clear 2>/dev/null || echo -e "\033[2J\033[H" || clear ;}
+_clear() {
+    [ -t 1 ] && tput clear 2>/dev/null || echo -e "\033[2J\033[H" || clear
+}
 
-# Logo generation from: https://www.lddgo.net/string/text-to-ascii-art
-# Small Slant
+# Logo generation from: https://www.lddgo.net/string/text-to-ascii-art (Small Slant)
 _logo() {
+    local os_text
+    os_text="操作系统: $os_info"
+
     echo -e "${yellow}  _____    __     __        __ 
  / ______ / /____/ ___ ____/ /_____ ____
 / (_ / -_/ __/ _  / _ / __/  '_/ -_/ __/
 \___/\__/\__/\_,_/\___\__/_/\_\\__/_/
 "
-    local os_text="操作系统: ${os_info}"
-    _green "${os_text}"
-    _cyan "当前脚本版本: ${version} 🐳 \n"
+
+    _green "$os_text"
+    _cyan "当前脚本版本: $version 🐳"
 }
 
 _os_permission() {
-    # 操作系统和权限校验
-    if [[ "$os_name" != "debian" && "$os_name" != "ubuntu" && "$os_name" != "centos" && "$os_name" != "rhel" && "$os_name" != "rocky" && "$os_name" != "almalinux" && "$os_name" != "alpine" ]]; then
-        _err_msg "$(_red '当前操作系统不被支持！')"
-        _end_message
-        exit 1
-    fi
+    case "$os_name" in
+        'debian')
+            # 检查是否为Debian Testing或Unstable版本
+            if grep -q '/sid' /etc/debian_version; then
+                _err_msg "$(_red '不支持Debian Testing和Debian Unstable版本')" && _end_message && exit 1
+            fi
+            # 检查Debian版本是否小于11
+            if [[ "$(grep -oE '[0-9]+' /etc/debian_version | head -1)" -lt "11" ]]; then
+                _err_msg "$(_red '此版本的Debian太旧，已不再受支持！')" && _end_message && exit 1
+            fi
+        ;;
+        'ubuntu')
+            # 检查Ubuntu版本是否小于22.04
+            if [[ "$(grep "^VERSION_ID" /etc/*-release | cut -d '"' -f 2 | tr -d '.')" -lt "2204" ]]; then
+                _err_msg "$(_red '此Ubuntu版本已过时且不受支持')" && _end_message && exit 1
+            fi
+        ;;
+        'rhel' | 'centos' | 'rocky' | 'almalinux')
+            # 检查RHEL/CentOS/Rocky/AlmaLinux版本是否小于9
+            if [[ "$(grep -shoE '[0-9]+' /etc/redhat-release /etc/centos-release /etc/rocky-release /etc/almalinux-release | head -1)" -lt "9" ]]; then
+                _err_msg "$(_red "$os_name 9 或更高版本才能使用此安装程序")" && _end_message && exit 1
+            fi
+        ;;
+        'alpine')
+            # 检查Alpine版本是否小于3.20
+            if [[ "$(echo -e "$(awk -F'.' '{print $1 "." $2}' /etc/alpine-release)\n3.20" | sort -V | head -n 1)" != "3.20" ]]; then
+                _err_msg "$(_red "3.20或更高版本才能使用此安装程序")" && _end_message && exit 1
+            fi
+        ;;
+        *)
+            # 不支持的操作系统
+            _err_msg "$(_red '当前操作系统不被支持！')" && _end_message && exit 1
+        ;;
+    esac
 }
 
 virt_check() {
@@ -156,7 +183,7 @@ _virt_permission() {
 }
 
 pkg_remove() {
-    if [ "$#" -eq 0 ]; then
+    if [ "$#" -eq "0" ]; then
         _err_msg "$(_red '未提供软件包参数')"
         return 1
     fi
@@ -195,38 +222,26 @@ pkg_remove() {
                 sudo apk del "$package"*
             fi
         else
-            _err_msg "$(_red "${package}没有安装，跳过卸载！")"
+            _err_msg "$(_red "$package 没有安装，跳过卸载！")"
         fi
     done
-    return 0
 }
 
 geo_check() {
-    local cloudflare_api ipinfo_api ipsb_api
-
-    cloudflare_api=$(curl -fskL -m 10 -A "Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/81.0" "https://dash.cloudflare.com/cdn-cgi/trace" | sed -n 's/.*loc=\([^ ]*\).*/\1/p')
-    ipinfo_api=$(curl -fskL --connect-timeout 5 https://ipinfo.io/country)
-    ipsb_api=$(curl -fskL --connect-timeout 5 -A Mozilla https://api.ip.sb/geoip | sed -n 's/.*"country_code":"\([^"]*\)".*/\1/p')
-
-    for api in "$cloudflare_api" "$ipinfo_api" "$ipsb_api"; do
-        if [ -n "$api" ]; then
-            country="$api"
-            break
-        fi
-    done
-
-    readonly country
+    local country
+    country=$(curl -fskL --connect-timeout 5 http://dash.cloudflare.com/cdn-cgi/trace | grep '^loc=' | cut -d= -f2)
 
     if [ -z "$country" ]; then
         _err_msg "$(_red '无法获取服务器所在地区，请检查网络后重试！')"
         _end_message
         exit 1
     fi
+    readonly country
 }
 
 _runtime() {
     local runcount
-    runcount=$(curl -fskL -m 2 --retry 2 -o - "https://hit.forvps.gq/https://github.com/honeok/cross/raw/master/get-docker.sh" | grep -m1 -oE "[0-9]+[ ]+/[ ]+[0-9]+") &&
+    runcount=$(curl -fskL -m 2 --retry 2 -o - "https://hit.forvps.gq/https://github.com/honeok/cross/raw/master/get-docker.sh" | grep -m1 -oE "[0-9]+[ ]+/[ ]+[0-9]+")
     today_runcount=$(awk -F ' ' '{print $1}' <<< "$runcount") && total_runcount=$(awk -F ' ' '{print $3}' <<< "$runcount")
 }
 
@@ -268,10 +283,10 @@ _fix_dpkg() {
 }
 
 clean_repo_files() {
-    [ -f "/etc/yum.repos.d/docker-ce.repo" ] && sudo rm -f /etc/yum.repos.d/docker-ce.repo >/dev/null 2>&1
-    [ -f "/etc/yum.repos.d/docker-ce-staging.repo" ] && sudo rm -f /etc/yum.repos.d/docker-ce-staging.repo >/dev/null 2>&1
-    [ -f "/etc/apt/keyrings/docker.asc" ] && sudo rm -f /etc/apt/keyrings/docker.asc >/dev/null 2>&1
-    [ -f "/etc/apt/sources.list.d/docker.list" ] && sudo rm -f /etc/apt/sources.list.d/docker.list >/dev/null 2>&1
+    [ -f "/etc/yum.repos.d/docker-ce.repo" ] && sudo rm -f /etc/yum.repos.d/docker-ce.repo 2>/dev/null
+    [ -f "/etc/yum.repos.d/docker-ce-staging.repo" ] && sudo rm -f /etc/yum.repos.d/docker-ce-staging.repo 2>/dev/null
+    [ -f "/etc/apt/keyrings/docker.asc" ] && sudo rm -f /etc/apt/keyrings/docker.asc 2>/dev/null
+    [ -f "/etc/apt/sources.list.d/docker.list" ] && sudo rm -f /etc/apt/sources.list.d/docker.list 2>/dev/null
 }
 
 _check_install() {
@@ -290,7 +305,6 @@ _install() {
 
     geo_check
 
-    echo ""
     _info_msg "$(_yellow '正在安装docker环境！')"
     if [[ "$os_name" == "rocky" || "$os_name" == "almalinux" || "$os_name" == "centos" ]]; then
         pkg_remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine >/dev/null 2>&1
@@ -392,7 +406,6 @@ _install() {
         _end_message
         exit 1
     fi
-    echo ""
 }
 
 _uninstall() {
