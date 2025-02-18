@@ -1,9 +1,9 @@
-name: CI
+name: Shellcheck
 
 on:
   push:
     branches:
-      - dev
+      - develop
     paths:
       - '*.sh'
       - '**/*.sh'
@@ -24,5 +24,3 @@ jobs:
 
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@2.0.0
-        with:
-          files: '**/*.sh'
