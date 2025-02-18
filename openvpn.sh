@@ -1,89 +1,123 @@
 #!/usr/bin/env bash
 #
+# Description: An automated OpenVPN installation script for quick and easy setup on supported systems.
+# Supported Systems: debian 11+ ubuntu 22+ centOS 9+ rhel 9+ rocky 9+ alma 9+
+#
 # Copyright (C) 2025 honeok <honeok@duck.com>
-# Copyright (C) 2013 Nyr. Released under the MIT License.
+# Copyright (C) 2022-2024 Lin Song <linsongui@gmail.com>
+# Copyright (C) 2013 Nyr
 #
-# Based on: https://github.com/Nyr/openvpn-install
+# Based on the work of Nyr and contributors (2013) at:
+# https://github.com/Nyr/openvpn-install
 #
-# Licensed under the GNU General Public License, version 2 only.
-# This program is distributed WITHOUT ANY WARRANTY.
-# See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
+# Licensed under the MIT License.
+# This software is provided "as is", without any warranty.
 
 # shellcheck disable=all
 
-# Detect Debian users running the script with "sh" instead of bash
-if readlink /proc/$$/exe | grep -q "dash"; then
-    echo 'This installer needs to be run with "bash", not "sh".'
-    exit 1
+yellow='\033[93m'
+red='\033[31m'
+green='\033[92m'
+white='\033[0m'
+_yellow() { echo -e "${yellow}$*${white}"; }
+_red() { echo -e "${red}$*${white}"; }
+_green() { echo -e "${green}$*${white}"; }
+
+_err_msg() { echo -e "\033[41m\033[1mWARN${white} $*"; }
+_suc_msg() { echo -e "\033[42m\033[1mSUC${white} $*"; }
+_info_msg() { echo -e "\033[43m\033[1;37mTIP${white} $*"; }
+
+export DEBIAN_FRONTEND=noninteractive
+
+pkg_install() {
+    if [ "$#" -eq "0" ]; then
+        _err_msg "$(_red 'No package parameters were provided.')"
+        return 1
+    fi
+
+    for package in "$@"; do
+        if ! command -v "$package" >/dev/null 2>&1; then
+            _yellow "installing $package"
+            if command -v dnf >/dev/null 2>&1; then
+                dnf -y update
+                dnf install -y epel-release
+                dnf install -y "$package"
+            elif command -v yum >/dev/null 2>&1; then
+                yum -y update
+                yum install -y epel-release
+                yum install -y "$package"
+            elif command -v apt >/dev/null 2>&1; then
+                apt update
+                apt install -y "$package"
+            elif command -v apt-get >/dev/null 2>&1; then
+                apt-get update
+                apt-get install -y "$package"
+            else
+                _err_msg "$(_red 'Unknown package manager.')"
+                return 1
+            fi
+        else
+            _info_msg "$(_yellow "$package already installed.")"
+        fi
+    done
+}
+
+# https://github.com/koalaman/shellcheck/wiki/SC2155
+os_name=$(grep "^ID=" /etc/*-release | awk -F'=' '{print $2}' | sed 's/"//g')
+readonly os_name
+
+if [ "$(id -ru)" -ne "0" ]; then
+    _err_msg "$(_red 'This installer needs to be run with superuser privileges.')" && exit 1
 fi
 
-# Discard stdin. Needed when running from an one-liner which includes a newline
+if readlink /proc/$$/exe | grep -q "dash"; then
+    _info_msg "$(_yellow 'This installer needs to be run with "bash", not "sh".')" && exit 1
+fi
+
 read -N 999999 -t 0.001
 
 # Detect OS
-# $os_version variables aren't always in use, but are kept here for convenience
-if grep -qs "ubuntu" /etc/os-release; then
-    os="ubuntu"
-    os_version=$(grep 'VERSION_ID' /etc/os-release | cut -d '"' -f 2 | tr -d '.')
-    group_name="nogroup"
-elif [[ -e /etc/debian_version ]]; then
-    os="debian"
-    os_version=$(grep -oE '[0-9]+' /etc/debian_version | head -1)
-    group_name="nogroup"
-elif [[ -e /etc/almalinux-release || -e /etc/rocky-release || -e /etc/centos-release ]]; then
-    os="centos"
-    os_version=$(grep -shoE '[0-9]+' /etc/almalinux-release /etc/rocky-release /etc/centos-release | head -1)
-    group_name="nobody"
-elif [[ -e /etc/fedora-release ]]; then
-    os="fedora"
-    os_version=$(grep -oE '[0-9]+' /etc/fedora-release | head -1)
-    group_name="nobody"
-else
-    echo "This installer seems to be running on an unsupported distribution.
-Supported distros are Ubuntu, Debian, AlmaLinux, Rocky Linux, CentOS and Fedora."
-    exit
-fi
-
-if [[ "$os" == "ubuntu" && "$os_version" -lt 2204 ]]; then
-    echo "Ubuntu 22.04 or higher is required to use this installer.
-This version of Ubuntu is too old and unsupported."
-    exit
-fi
-
-if [[ "$os" == "debian" ]]; then
-    if grep -q '/sid' /etc/debian_version; then
-        echo "Debian Testing and Debian Unstable are unsupported by this installer."
-        exit
-    fi
-    if [[ "$os_version" -lt 11 ]]; then
-        echo "Debian 11 or higher is required to use this installer.
-This version of Debian is too old and unsupported."
-        exit
-    fi
-fi
-
-if [[ "$os" == "centos" && "$os_version" -lt 9 ]]; then
-    os_name=$(sed 's/ release.*//' /etc/almalinux-release /etc/rocky-release /etc/centos-release 2>/dev/null | head -1)
-    echo "$os_name 9 or higher is required to use this installer.
-This version of $os_name is too old and unsupported."
-    exit
-fi
-
-# Detect environments where $PATH does not include the sbin directories
-if ! grep -q sbin <<< "$PATH"; then
-    echo '$PATH does not include sbin. Try using "su -" instead of "su".'
-    exit
-fi
-
-if [[ "$EUID" -ne 0 ]]; then
-    echo "This installer needs to be run with superuser privileges."
-    exit
-fi
+# The `$os_version` variable may not always be used, but it is kept for future convenience.
+case "$os_name" in
+    'debian')
+        os="debian"
+        os_version=$(grep -oE '[0-9]+' /etc/debian_version | head -1)
+        group_name="nogroup"
+        if grep -q '/sid' /etc/debian_version; then
+            _err_msg "$(_red 'Debian Testing and Debian Unstable are not supported by this installer.')" && exit 1
+        fi
+        if [[ "$os_version" -lt 11 ]]; then
+            _err_msg "$(_red 'This version of Debian is too old and unsupported.')" && exit 1
+        fi
+    ;;
+    'ubuntu')
+        os="ubuntu"
+        os_version=$(grep "^VERSION_ID" /etc/*-release | cut -d '"' -f 2 | tr -d '.')
+        group_name="nogroup"
+        if [ "$os_version" -lt "2204" ]; then
+            _err_msg "$(_red 'This Ubuntu version is outdated and unsupported.')" && exit 1
+        fi
+    ;;
+    'rhel' | 'centos' | 'rocky' | 'almalinux')
+        os="centos"
+        os_version=$(grep -shoE '[0-9]+' /etc/redhat-release /etc/centos-release /etc/rocky-release /etc/almalinux-release | head -1)
+        group_name="nobody"
+        if [ "$os_version" -lt "9" ]; then
+            _err_msg "$(_red "$os_name 9 or higher is required to use this installer.")" && exit 1
+        fi
+    ;;
+    'fedora')
+        os="fedora"
+        os_version=$(grep -oE '[0-9]+' /etc/fedora-release | head -1)
+        group_name="nobody"
+    ;;
+    *)
+        _err_msg "$(_red 'The current OS is not supported.')" && exit 1
+    ;;
+esac
 
 if [[ ! -e /dev/net/tun ]] || ! ( exec 7<>/dev/net/tun ) 2>/dev/null; then
-    echo "The system does not have the TUN device available.
-TUN needs to be enabled before running this installer."
-    exit
+    _err_msg "$(_red 'TUN needs to be enabled before running this installer.')" && exit 1
 fi
 
 new_client () {
@@ -102,7 +136,7 @@ new_client () {
         echo "<tls-crypt>"
         sed -ne '/BEGIN OpenVPN Static key/,$ p' /etc/openvpn/server/tc.key
         echo "</tls-crypt>"
-    } > ~/"$client".ovpn
+    } > "$HOME"/"$client".ovpn
 }
 
 if [[ ! -e /etc/openvpn/server/server.conf ]]; then
