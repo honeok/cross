@@ -10,8 +10,9 @@
 # Based on the work of Nyr and contributors (2013) at:
 # https://github.com/Nyr/openvpn-install
 #
-# Licensed under the MIT License.
-# This software is provided "as is", without any warranty.
+# Licensed under the GNU General Public License, version 2 only.
+# This program is distributed WITHOUT ANY WARRANTY.
+# See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
 
 # shellcheck disable=all
 
