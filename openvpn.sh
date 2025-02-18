@@ -30,6 +30,20 @@ _info_msg() { echo -e "\033[43m\033[1;37mTIP${white} $*"; }
 
 export DEBIAN_FRONTEND=noninteractive
 
+# https://github.com/koalaman/shellcheck/wiki/SC2155
+os_name=$(grep "^ID=" /etc/*-release | awk -F'=' '{print $2}' | sed 's/"//g')
+readonly os_name
+
+if [ "$(id -ru)" -ne "0" ]; then
+    _err_msg "$(_red 'This installer needs to be run with superuser privileges.')" && exit 1
+fi
+
+if readlink /proc/$$/exe | grep -q "dash"; then
+    _info_msg "$(_yellow 'This installer needs to be run with "bash", not "sh".')" && exit 1
+fi
+
+read -N 999999 -t 0.001
+
 pkg_install() {
     if [ "$#" -eq "0" ]; then
         _err_msg "$(_red 'No package parameters were provided.')"
@@ -62,20 +76,6 @@ pkg_install() {
         fi
     done
 }
-
-# https://github.com/koalaman/shellcheck/wiki/SC2155
-os_name=$(grep "^ID=" /etc/*-release | awk -F'=' '{print $2}' | sed 's/"//g')
-readonly os_name
-
-if [ "$(id -ru)" -ne "0" ]; then
-    _err_msg "$(_red 'This installer needs to be run with superuser privileges.')" && exit 1
-fi
-
-if readlink /proc/$$/exe | grep -q "dash"; then
-    _info_msg "$(_yellow 'This installer needs to be run with "bash", not "sh".')" && exit 1
-fi
-
-read -N 999999 -t 0.001
 
 # Detect OS
 # The `$os_version` variable may not always be used, but it is kept for future convenience.
