@@ -228,7 +228,6 @@ pkg_remove() {
 }
 
 geo_check() {
-    local country
     country=$(curl -fskL --connect-timeout 5 http://dash.cloudflare.com/cdn-cgi/trace | grep '^loc=' | cut -d= -f2)
 
     if [ -z "$country" ]; then
