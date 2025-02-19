@@ -32,13 +32,16 @@ jobs:
 
       - name: Contrast Sing-box version
         run: |
-          LATEST_VERSION=$(curl -fskL "https://api.github.com/repos/SagerNet/sing-box/releases/latest" | awk -F '["v]' '/tag_name/{print $5}')
-          CURRENT_VERSION=$(curl -s "https://hub.docker.com/v2/repositories/honeok/sing-box/tags" | jq -r '.results[].name' | grep -v '^latest$' | sort -V -r | head -n 1)
-          if [ -z $LATEST_VERSION ] || [ -z $CURRENT_VERSION ]; then
+          LATEST_VERSION=$(curl -Lsk "https://api.github.com/repos/SagerNet/sing-box/releases/latest" | jq -r '.tag_name' | sed 's/^v//')
+          CURRENT_VERSION=$(curl -Lsk "https://hub.docker.com/v2/repositories/honeok/sing-box/tags" | jq -r '.results[].name' | grep -v '^latest$' | sort -V -r | head -n 1)
+
+          if [ -z "$LATEST_VERSION" ] && [ -z "$CURRENT_VERSION" ]; then
               echo "ERROR: Failed to obtain the latest version or current version number, please check the URL!" && exit 1
           fi
+
           echo "LATEST_VERSION=${LATEST_VERSION}" >> $GITHUB_ENV
           echo "CURRENT_VERSION=${CURRENT_VERSION}" >> $GITHUB_ENV
+
           if [[ "$(echo -e "${{ env.LATEST_VERSION }}\n${{ env.CURRENT_VERSION }}" | sort -V | head -n1)" != "${{ env.LATEST_VERSION }}" ]]; then
               echo "BUILD_IMAGE=true" >> "$GITHUB_ENV"
           else
@@ -57,15 +60,15 @@ jobs:
             "${{ env.DOCKER_USERNAME }}/sing-box:latest"
           platforms: linux/386, linux/amd64, linux/arm/v6, linux/arm/v7, linux/arm64/v8, linux/s390x
 
-  sendmessage:
-    runs-on: ubuntu-latest
-    name: "Send message"
-    needs: build
+  # sendmessage:
+  #   runs-on: ubuntu-latest
+  #   name: "Send message"
+  #   needs: build
 
-    steps:
-      - name: Send success message to Telegram
-        if: success()
-        uses: appleboy/telegram-action@v1.0.1
-        with:
-          to: ${{ secrets.TELEGRAM_TO }}
-          token: ${{ secrets.TELEGRAM_TOKEN }}
+  #   steps:
+  #     - name: Send success message to Telegram
+  #       if: success()
+  #       uses: appleboy/telegram-action@v1.0.1
+  #       with:
+  #         to: ${{ secrets.TELEGRAM_TO }}
+  #         token: ${{ secrets.TELEGRAM_TOKEN }}
