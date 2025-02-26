@@ -3,7 +3,6 @@
   <img src="https://img.shields.io/github/license/honeok/cross.svg?style=flat" alt="License" />
   <img src="https://img.shields.io/github/last-commit/honeok/cross" alt="Commit" />
   <img src="https://img.shields.io/github/commit-activity/m/honeok/cross.svg" alt="Commit Activity" />
-  <img src="https://img.shields.io/github/stars/honeok/cross?style=flat" alt="GitHub Stars" />
 </p>
 
 # cross
@@ -53,7 +52,3 @@ For users in Mainland China:
 ```shell
 bash <(curl -sL https://cdn.611611.best/https://github.com/honeok/cross/raw/master/get-docker.sh)
 ```
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=honeok/cross&type=Date)](https://star-history.com/#honeok/cross&Date)
