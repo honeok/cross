@@ -5,11 +5,9 @@ on:
     branches:
       - dev
     paths:
-      - '*.sh'
       - '**/*.sh'
   pull_request:
     paths:
-      - '*.sh'
       - '**/*.sh'
   workflow_dispatch:
 
