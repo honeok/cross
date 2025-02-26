@@ -628,7 +628,7 @@ UnlockNetflixTest() {
     elif [[ "$result" == "200" ]]; then
         region=$(curl -fs -A "$userAgent" -m 10 -w "%{redirect_url}" -o /dev/null "https://www.netflix.com/title/80018499" | cut -d '/' -f4 | awk -F'-' '{print toupper($1)}')
         region="${region:-US}"
-		echo "Netflix               : $(_green "Yes (Region: $region)")" | tee -a "$log"
+        echo "Netflix               : $(_green "Yes (Region: $region)")" | tee -a "$log"
     elif  [[ "$result" == "000" ]]; then
         echo "Netflix               : $(_red 'Network connection failed')" | tee -a "$log"
     fi
