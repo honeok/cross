@@ -110,12 +110,12 @@ prerun_check() {
         _err_msg "$(_red 'This script must be run as root!')" && exit 1
     fi
 
-    if _exists "dmidecode" >/dev/null 2>&1; then
+    if ! _exists "dmidecode" >/dev/null 2>&1; then
         pkg_install dmidecode
     fi
 
     for pkg in "${depend_pkg[@]}"; do
-        if _exists "$pkg" >/dev/null 2>&1; then
+        if ! _exists "$pkg" >/dev/null 2>&1; then
             pkg_install "$pkg"
         fi
     done
@@ -287,18 +287,27 @@ virt_check() {
 
 check_ip_status() {
     local ipv4_check ipv6_check
-    ping -4 -c 1 -W 4 1.1.1.1 >/dev/null 2>&1 || ipv4_check=$(curl -sL -m 4 -4 ipinfo.io/ip 2>/dev/null)
-    ping -6 -c 1 -W 4 2606:4700:4700::1111 >/dev/null 2>&1 || ipv6_check=$(curl -sL -m 4 -6 v6.ipinfo.io/ip 2>/dev/null)
+
+    if ping -4 -c 1 -W 4 1.1.1.1 >/dev/null 2>&1; then
+        ipv4_check="true"
+    else
+        ipv4_check=$(curl -sL -m 4 -4 ipinfo.io/ip 2>/dev/null)
+    fi
+    if ping -6 -c 1 -W 4 2606:4700:4700::1111 >/dev/null 2>&1; then
+        ipv6_check="true"
+    else
+        ipv6_check=$(curl -sL -m 4 -6 v6.ipinfo.io/ip 2>/dev/null)
+    fi
 
     if [[ -z "$ipv4_check" && -z "$ipv6_check" ]]; then
         _yellow "Warning: Both IPv4 and IPv6 connectivity were not detected."
     fi
-    if ping -4 -c 1 -W 4 1.1.1.1 >/dev/null 2>&1 || [ -n "$ipv4_check" ]; then
+    if [ -n "$ipv4_check" ]; then
         online=$(_green "\xe2\x9c\x93 Online")
     else
         online=$(_red "\xe2\x9c\x97 Offline")
     fi
-    if ping -6 -c 1 -W 4 2606:4700:4700::1111 >/dev/null 2>&1 || [ -n "$ipv6_check" ]; then
+    if [ -n "$ipv6_check" ]; then
         online+=" / $(_green "\xe2\x9c\x93 Online")"
     else
         online+=" / $(_red "\xe2\x9c\x97 Offline")"
