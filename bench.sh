@@ -49,7 +49,7 @@ mkdir -p "$temp_Dir"
 print_title() {
     echo "--------------------- A Bench.sh Script By honeok --------------------"
     echo " Version            : $(_green "$version")"
-    echo " Usage              : $(_blue 'bash <(curl -sL https://github.com/honeok/cross/raw/master/bench.sh)')"
+    echo " $(_blue 'bash <(curl -sL https://github.com/honeok/cross/raw/master/bench.sh)')"
 }
 
 pkg_install() {
