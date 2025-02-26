@@ -891,61 +891,95 @@ fast_bench(){
 	sharetest ubuntu;
 }
 
-case $1 in
-	'info'|'-i'|'--i'|'-info'|'--info' )
-		GeekbenchTest='N';
-		about;sleep 3;next;get_system_info;print_system_info;next;;
+case "$1" in
+    'info'|'-i'|'--i'|'-info'|'--info' )
+        GeekbenchTest='N'
+        about
+        sleep 3
+        next
+        get_system_info
+        print_system_info
+        next
+    ;;
     'version'|'-v'|'--v'|'-version'|'--version')
-		GeekbenchTest='N';
-		next;about;next;;
-   	'io'|'-io'|'--io'|'-drivespeed'|'--drivespeed' )
-		next;print_io;next;;
-	'speed'|'-speed'|'--speed'|'-speedtest'|'--speedtest'|'-speedcheck'|'--speedcheck' )
-		GeekbenchTest='N';
-		about;benchInit;clear;next;print_china_speedtest;next;cleanup;;
-	'ip'|'-ip'|'--ip'|'geoip'|'-geoip'|'--geoip' )
-		about;benchInit;next;ip_info4;next;cleanup;;
-	'bench'|'-a'|'--a'|'-all'|'--all'|'-bench'|'--bench' )
-		bench_all;;
-	'besttrace'|'-b'|'--b'|'--besttrace' )
-		GeekbenchTest='N';
-		print_besttrace_test;;
-	'about'|'-about'|'--about' )
-		GeekbenchTest='N';
-		about;;
-	'fast'|'-f'|'--f'|'-fast'|'--fast' )
-		fast_bench;;
-	'geekbench'|'-g'|'--geekbench' )
-		geekbench;;
-	'--no-geekbench' )
-		GeekbenchTest='N';
-		bench_all;;
-	'media'|'-m'|'--media' )
-		GeekbenchTest='N';
-		StreamingMediaUnlockTest;;
-	'share'|'-s'|'--s'|'-share'|'--share' )
-		bench_all;
-		is_share="share"
-		if [[ $2 == "" ]]; then
-			sharetest ubuntu;
-		else
-			sharetest $2;
-		fi
-		;;
-	'debug'|'-d'|'--d'|'-debug'|'--debug' )
-		get_ip_whois_org_name;;
-*)
-    bench_all;;
+        GeekbenchTest='N'
+        next
+        about
+        next
+    ;;
+    'io'|'-io'|'--io'|'-drivespeed'|'--drivespeed' )
+        next
+        print_io
+        next
+    ;;
+    'speed'|'-speed'|'--speed'|'-speedtest'|'--speedtest'|'-speedcheck'|'--speedcheck' )
+        GeekbenchTest='N'
+        about
+        benchInit
+        clear
+        next
+        print_china_speedtest
+        next
+        cleanup
+    ;;
+    'ip'|'-ip'|'--ip'|'geoip'|'-geoip'|'--geoip' )
+        about
+        benchInit
+        next
+        ip_info4
+        next
+        cleanup
+    ;;
+    'bench'|'-a'|'--a'|'-all'|'--all'|'-bench'|'--bench' )
+        bench_all
+    ;;
+    'besttrace'|'-b'|'--b'|'--besttrace' )
+        GeekbenchTest='N'
+        print_besttrace_test
+    ;;
+    'about'|'-about'|'--about' )
+        GeekbenchTest='N'
+        about
+    ;;
+    'fast'|'-f'|'--f'|'-fast'|'--fast' )
+        fast_bench
+    ;;
+    'geekbench'|'-g'|'--geekbench' )
+        geekbench
+    ;;
+    '--no-geekbench' )
+        GeekbenchTest='N'
+        bench_all
+    ;;
+    'media'|'-m'|'--media' )
+        GeekbenchTest='N'
+        StreamingMediaUnlockTest
+    ;;
+    'share'|'-s'|'--s'|'-share'|'--share' )
+        bench_all
+        is_share="share"
+        if [[ $2 == "" ]]; then
+            sharetest ubuntu
+        else
+            sharetest $2
+        fi
+    ;;
+    'debug'|'-d'|'--d'|'-debug'|'--debug' )
+        get_ip_whois_org_name
+    ;;
+    *)
+        bench_all
+    ;;
 esac
 
-if [[  ! $is_share == "share" ]]; then
-	case $2 in
-		'share'|'-s'|'--s'|'-share'|'--share' )
-			if [[ $3 == '' ]]; then
-				sharetest ubuntu;
-			else
-				sharetest $3;
-			fi
-			;;
-	esac
+if [[ ! $is_share == "share" ]]; then
+    case $2 in
+        'share'|'-s'|'--s'|'-share'|'--share' )
+            if [[ $3 == '' ]]; then
+                sharetest ubuntu
+            else
+                sharetest "$3"
+            fi
+    ;;
+    esac
 fi
