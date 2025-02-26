@@ -4,10 +4,11 @@
 #
 # Copyright (C) 2025 honeok <honeok@duck.com>
 #
-# Acknowledgments:
-# Teddysun <i@teddysun.com>
-# kejilion <lion12776@outlook.com>
-# spiritLHLS <https://t.me/spiritlhl>
+# References and Acknowledgements:
+# Teddysun (https://teddysun.com) https://github.com/teddysun/across/blob/master/bench.sh
+# kejilion (https://kejilion.pro) https://github.com/kejilion/sh/blob/main/kejilion.sh
+# spiritLHLS (https://ko-fi.com/spiritlhl) https://github.com/spiritLHLS/ecs/blob/main/ecs.sh
+# oooldking (https://www.oldking.net) https://github.com/oooldking/script/blob/master/superbench_git.sh
 #
 # Licensed under the GNU General Public License, version 2 only.
 # This program is distributed WITHOUT ANY WARRANTY.
