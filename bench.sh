@@ -17,7 +17,7 @@
 
 # shellcheck disable=all
 
-readonly version='v1.4.1 (2025-02-26)'
+readonly version='v1.4.1 (2025.02.26)'
 
 _red() {
     printf '\033[0;31;31m%b\033[0m' "$1"
@@ -35,7 +35,7 @@ _blue() {
     printf '\033[0;31;36m%b\033[0m' "$1"
 }
 
-BrowserUA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.74 Safari/537.36"
+userAgent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.74 Safari/537.36"
 GeekbenchTest='Y'
 
 about() {
@@ -616,27 +616,27 @@ geekbench() {
 	rm -rf geekbench
 }
 
-function UnlockNetflixTest() {
-    local result1=$(curl --user-agent "${BrowserUA}" -fsL --write-out %{http_code} --output /dev/null --max-time 10 "https://www.netflix.com/title/81280792" 2>&1)
-	
-    if [[ "$result1" == "404" ]];then
-        echo -e " Netflix              : ${YELLOW}Originals Only${PLAIN}" | tee -a $log
-	elif  [[ "$result1" == "403" ]];then
-        echo -e " Netflix              : ${RED}No${PLAIN}" | tee -a $log
-	elif [[ "$result1" == "200" ]];then
-		local region=`tr [:lower:] [:upper:] <<< $(curl --user-agent "${BrowserUA}" -fs --max-time 10 --write-out %{redirect_url} --output /dev/null "https://www.netflix.com/title/80018499" | cut -d '/' -f4 | cut -d '-' -f1)` ;
-		if [[ ! -n "$region" ]];then
-			region="US";
-		fi
-		echo -e " Netflix              : ${GREEN}Yes (Region: ${region})${PLAIN}" | tee -a $log
-	elif  [[ "$result1" == "000" ]];then
-		echo -e " Netflix              : ${RED}Network connection failed${PLAIN}" | tee -a $log
-    fi   
+UnlockNetflixTest() {
+    local result region
+
+    result=$(curl -fsL -A "$userAgent" -m 10 -w "%{http_code}" -o /dev/null "https://www.netflix.com/title/81280792" 2>&1)
+
+    if [[ "$result" == "404" ]]; then
+        echo "Netflix               : $(_yellow 'Originals Only')" | tee -a "$log"
+    elif  [[ "$result" == "403" ]]; then
+        echo "Netflix               : $(_red 'No')" | tee -a "$log"
+    elif [[ "$result" == "200" ]]; then
+        region=$(curl -fs -A "$userAgent" -m 10 -w "%{redirect_url}" -o /dev/null "https://www.netflix.com/title/80018499" | cut -d '/' -f4 | awk -F'-' '{print toupper($1)}')
+        region="${region:-US}"
+		echo "Netflix               : $(_green "Yes (Region: $region)")" | tee -a "$log"
+    elif  [[ "$result" == "000" ]]; then
+        echo "Netflix               : $(_red 'Network connection failed')" | tee -a "$log"
+    fi
 }
 
 function UnlockYouTubePremiumTest() {
     local tmpresult=$(curl -sS -H "Accept-Language: en" "https://www.youtube.com/premium" 2>&1 )
-    local region=$(curl --user-agent "${BrowserUA}" -sL --max-time 10 "https://www.youtube.com/premium" | grep "countryCode" | sed 's/.*"countryCode"//' | cut -f2 -d'"')
+    local region=$(curl --user-agent "${userAgent}" -sL --max-time 10 "https://www.youtube.com/premium" | grep "countryCode" | sed 's/.*"countryCode"//' | cut -f2 -d'"')
 	if [ -n "$region" ]; then
         sleep 0
 	else
@@ -699,7 +699,7 @@ function YouTubeCDNTest() {
 function UnlockBilibiliTest() {
 	#Test Mainland
     local randsession="$(cat /dev/urandom | head -n 32 | md5sum | head -c 32)";
-    local result=$(curl --user-agent "${BrowserUA}" -fsSL --max-time 10 "https://api.bilibili.com/pgc/player/web/playurl?avid=82846771&qn=0&type=&otype=json&ep_id=307247&fourk=1&fnver=0&fnval=16&session=${randsession}&module=bangumi" 2>&1);
+    local result=$(curl --user-agent "${userAgent}" -fsSL --max-time 10 "https://api.bilibili.com/pgc/player/web/playurl?avid=82846771&qn=0&type=&otype=json&ep_id=307247&fourk=1&fnver=0&fnval=16&session=${randsession}&module=bangumi" 2>&1);
 	if [[ "$result" != "curl"* ]]; then
         result="$(echo "${result}" | grep '"code"' | awk -F 'code":' '{print $2}' | awk -F ',' '{print $1}')";
         if [ "${result}" = "0" ]; then
@@ -713,7 +713,7 @@ function UnlockBilibiliTest() {
 	
 	#Test Hongkong/Macau/Taiwan
 	randsession="$(cat /dev/urandom | head -n 32 | md5sum | head -c 32)";
-	result=$(curl --user-agent "${BrowserUA}" -fsSL --max-time 10 "https://api.bilibili.com/pgc/player/web/playurl?avid=18281381&cid=29892777&qn=0&type=&otype=json&ep_id=183799&fourk=1&fnver=0&fnval=16&session=${randsession}&module=bangumi" 2>&1);
+	result=$(curl --user-agent "${userAgent}" -fsSL --max-time 10 "https://api.bilibili.com/pgc/player/web/playurl?avid=18281381&cid=29892777&qn=0&type=&otype=json&ep_id=183799&fourk=1&fnver=0&fnval=16&session=${randsession}&module=bangumi" 2>&1);
     if [[ "$result" != "curl"* ]]; then
         result="$(echo "${result}" | grep '"code"' | awk -F 'code":' '{print $2}' | awk -F ',' '{print $1}')";
         if [ "${result}" = "0" ]; then
@@ -727,7 +727,7 @@ function UnlockBilibiliTest() {
 	
 	#Test Taiwan
 	randsession="$(cat /dev/urandom | head -n 32 | md5sum | head -c 32)";
-	result=$(curl --user-agent "${BrowserUA}" -fsSL --max-time 10 "https://api.bilibili.com/pgc/player/web/playurl?avid=50762638&cid=100279344&qn=0&type=&otype=json&ep_id=268176&fourk=1&fnver=0&fnval=16&session=${randsession}&module=bangumi" 2>&1);
+	result=$(curl --user-agent "${userAgent}" -fsSL --max-time 10 "https://api.bilibili.com/pgc/player/web/playurl?avid=50762638&cid=100279344&qn=0&type=&otype=json&ep_id=268176&fourk=1&fnver=0&fnval=16&session=${randsession}&module=bangumi" 2>&1);
 	if [[ "$result" != "curl"* ]]; then
 		result="$(echo "${result}" | grep '"code"' | awk -F 'code":' '{print $2}' | awk -F ',' '{print $1}')";
 		if [ "${result}" = "0" ]; then
@@ -769,7 +769,7 @@ function UnlockTiktokTest() {
 }
 
 function UnlockiQiyiIntlTest() {
-	curl --user-agent "${BrowserUA}" -s -I --max-time 10 "https://www.iq.com/" >/tmp/iqiyi
+	curl --user-agent "${userAgent}" -s -I --max-time 10 "https://www.iq.com/" >/tmp/iqiyi
     if [ $? -eq 1 ]; then
         echo -e " iQIYI International  : ${RED}Network connection failed${PLAIN}" | tee -a $log
         return
