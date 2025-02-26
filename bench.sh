@@ -1,27 +1,47 @@
 #!/usr/bin/env bash
 #
-# Description: Auto system info & I/O test & network to China script
+# Description: Collect system info, perform I/O tests, and check network performance to China.
 #
+# Copyright (C) 2025 honeok <honeok@duck.com>
+# Copyright (C) 2021 - 2022 VPS小白 https://vpsxb.net/448
+#
+# Acknowledgments:
+# Teddysun <i@teddysun.com>
+#
+# References:
+# https://github.com/teddysun/across/blob/master/bench.sh
+#
+# Licensed under the GNU General Public License, version 2 only.
+# This program is distributed WITHOUT ANY WARRANTY.
+# See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
 
 # shellcheck disable=all
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-SKYBLUE='\033[0;36m'
-PLAIN='\033[0m'
+readonly version='v1.4.1 (2025-02-26)'
+
+_red() {
+    printf '\033[0;31;31m%b\033[0m' "$1"
+}
+
+_green() {
+    printf '\033[0;31;32m%b\033[0m' "$1"
+}
+
+_yellow() {
+    printf '\033[0;31;33m%b\033[0m' "$1"
+}
+
+_blue() {
+    printf '\033[0;31;36m%b\033[0m' "$1"
+}
+
 BrowserUA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.74 Safari/537.36"
 GeekbenchTest='Y'
 
 about() {
-	echo ""
-	echo " ========================================================= "
-	echo " \                 Superbench.sh  Script                 / "
-	echo " \       Basic system info, I/O test and speedtest       / "
-	echo " \                   v1.3.7 (2022-08-22)                 / "
-	echo " ========================================================= "
-	echo ""
-	echo ""
+    echo "-------------------- A Bench.sh Script By honeok -------------------"
+    echo " Version            : $(_green "$version")"
+    echo " Usage              : $(_red 'bash <(curl -sL https://github.com/honeok/cross/raw/master/bench.sh)')"
 }
 
 cancel() {
