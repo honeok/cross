@@ -1,40 +1,23 @@
 #!/usr/bin/env bash
 #
 # Description: A script for quickly installing the latest Docker CE on supported Linux distributions.
-# Supported Systems: Debian 11+, Ubuntu 20+, CentOS 7+, RHEL 8+, Rocky Linux 8+, AlmaLinux 8+, Alpine 3.19+
+# Supported Systems: debian10+ ubuntu20+ centos7+ rhel7+ rocky8+ alma8+ alpine3.20+
 #
 # Copyright (C) 2023 - 2025 honeok <honeok@duck.com>
 #
-# Github: https://github.com/honeok/cross/raw/master/get-docker.sh
-#
 # References:
 # https://docs.docker.com/engine/install
-#               __      __             __             
-#   ___ _ ___  / /_ ___/ / ___  ____  / /__ ___   ____
-#  / _ `// -_)/ __// _  / / _ \/ __/ /  '_// -_) / __/
-#  \_, / \__/ \__/ \_,_/  \___/\__/ /_/\_\ \__/ /_/   
-# /___/                                               
+# https://docs.docker.com/reference/cli/dockerd/#daemon-configuration-file
 #
-# License Information:
-# This program is free software: you can redistribute it and/or modify it under
-# the terms of the GNU General Public License, version 3 or later.
-#
-# This program is distributed WITHOUT ANY WARRANTY; without even the implied
-# warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-# General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along with
-# this program. If not, see <https://www.gnu.org/licenses/>.
-
-set \
-    -o errexit \
-    -o nounset
+# Licensed under the GNU General Public License, version 2 only.
+# This program is distributed WITHOUT ANY WARRANTY.
+# See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
 
 # 当前脚本版本号
-readonly version='v0.0.5 (2025.01.23)'
+readonly version='v0.1.2 (2025.02.19)'
 
 yellow='\033[1;33m'
-red='\033[1;31m'
+red='\033[1;38;5;160m'
 green='\033[1;32m'
 cyan='\033[1;36m'
 purple='\033[1;35m'
@@ -52,15 +35,14 @@ _info_msg() { echo -e "\033[43m\033[1;37m提示${white} $*"; }
 export DEBIAN_FRONTEND=noninteractive
 
 # https://github.com/koalaman/shellcheck/wiki/SC2155
-os_info=$(grep "^PRETTY_NAME=" /etc/*release | cut -d '"' -f 2 | sed 's/ (.*)//')
-os_name=$(grep "^ID=" /etc/*release | awk -F'=' '{print $2}' | sed 's/"//g')
+os_info=$(grep "^PRETTY_NAME=" /etc/*-release | cut -d '"' -f 2 | sed 's/ (.*)//')
+os_name=$(grep "^ID=" /etc/*-release | awk -F'=' '{print $2}' | sed 's/"//g')
 readonly os_info os_name
 
 getdocker_pid='/tmp/getdocker.pid'
-systemctl_cmd=$(which systemctl 2>/dev/null)
-readonly getdocker_pid systemctl_cmd
+readonly getdocker_pid
 
-trap "cleanup_exit ; exit 0" SIGINT SIGQUIT SIGTERM EXIT
+trap "cleanup_exit; exit 0" SIGINT SIGQUIT SIGTERM EXIT
 
 cleanup_exit() {
     [ -f "$getdocker_pid" ] && sudo rm -f "$getdocker_pid"
@@ -72,37 +54,160 @@ fi
 
 echo $$ > "$getdocker_pid"
 
-# https://www.lddgo.net/string/text-to-ascii-art
-print_logo() {
-    echo -e "${yellow}            __     __        __
-  ___ ____ / /____/ ___ ____/ /_____ ____ 
- / _ \`/ -_/ __/ _  / _ / __/  '_/ -_/ __/ 
- \_, /\__/\__/\_,_/\___\__/_/\_\\__/_/
-/___/
-"
-    local os_text="操作系统: ${os_info}"
-    _green "${os_text}"
-    _cyan "当前脚本版本: ${version} 💀 \n"
+_clear() {
+    [ -t 1 ] && tput clear 2>/dev/null || echo -e "\033[2J\033[H" || clear
 }
 
-# 安全清屏
-clear_screen() {
-    if [ -t 1 ]; then
-        tput clear 2>/dev/null || echo -e "\033[2J\033[H" || clear
+# Logo generation from: https://www.lddgo.net/string/text-to-ascii-art (Small Slant)
+_show_logo() {
+    local os_text
+    os_text="操作系统: $os_info"
+
+    echo -e "${yellow}  _____    __     __        __ 
+ / ______ / /____/ ___ ____/ /_____ ____
+/ (_ / -_/ __/ _  / _ / __/  '_/ -_/ __/
+\___/\__/\__/\_,_/\___\__/_/\_\\__/_/
+"
+
+    _green "$os_text"
+    _cyan "当前脚本版本: $version 🐳"
+}
+
+_show_usage() {
+    cat <<EOF
+Usage: $0
+
+       Options:        [--install]
+                       [--uninstall]
+
+Manual: https://github.com/honeok/cross/blob/master/get-docker.sh
+
+EOF
+    exit 1
+}
+
+_os_permission() {
+    case "$os_name" in
+        'debian')
+            # 检查是否为Debian Testing或Unstable版本
+            if grep -q '/sid' /etc/debian_version; then
+                _err_msg "$(_red '不支持Debian Testing和Debian Unstable版本')" && _end_message && exit 1
+            fi
+            # 检查Debian版本是否小于11
+            if [[ "$(grep -oE '[0-9]+' /etc/debian_version | head -1)" -lt "11" ]]; then
+                _err_msg "$(_red '此版本的Debian太旧，已不再受支持！')" && _end_message && exit 1
+            fi
+        ;;
+        'ubuntu')
+            # 检查Ubuntu版本是否小于20.04
+            if [[ "$(grep "^VERSION_ID" /etc/*-release | cut -d '"' -f 2 | tr -d '.')" -lt "2004" ]]; then
+                _err_msg "$(_red '此Ubuntu版本已过时且不受支持')" && _end_message && exit 1
+            fi
+        ;;
+        'rhel' | 'centos' | 'rocky' | 'almalinux')
+            # 检查RHEL/CentOS/Rocky/AlmaLinux版本是否小于7
+            if [[ "$(grep -shoE '[0-9]+' /etc/redhat-release /etc/centos-release /etc/rocky-release /etc/almalinux-release | head -1)" -lt "7" ]]; then
+                _err_msg "$(_red "$os_name 9 或更高版本才能使用此安装程序")" && _end_message && exit 1
+            fi
+        ;;
+        'alpine')
+            # 检查Alpine版本是否小于3.20
+            if [[ "$(echo -e "$(awk -F'.' '{print $1 "." $2}' /etc/alpine-release)\n3.20" | sort -V | head -n 1)" != "3.20" ]]; then
+                _err_msg "$(_red "3.20或更高版本才能使用此安装程序")" && _end_message && exit 1
+            fi
+        ;;
+        *)
+            # 不支持的操作系统
+            _err_msg "$(_red '当前操作系统不被支持！')" && _end_message && exit 1
+        ;;
+    esac
+}
+
+virt_check() {
+    local processor_type kernel_logs system_manufacturer system_product_name system_version
+
+    processor_type=$(awk -F: '/model name/ {name=$2} END {print name}' /proc/cpuinfo | sed 's/^[ \t]*//;s/[ \t]*$//')
+    kernel_logs=""
+    system_manufacturer=""
+    system_product_name=""
+    system_version=""
+
+    if command -v dmesg >/dev/null 2>&1; then
+        kernel_logs=$(dmesg 2>/dev/null)
+    fi
+
+    if command -v dmidecode >/dev/null 2>&1; then
+        system_manufacturer=$(dmidecode -s system-manufacturer 2>/dev/null)
+        system_product_name=$(dmidecode -s system-product-name 2>/dev/null)
+        system_version=$(dmidecode -s system-version 2>/dev/null)
+    fi
+
+    if grep -qa docker /proc/1/cgroup; then
+        virt_type="Docker"
+    elif grep -qa lxc /proc/1/cgroup; then
+        virt_type="LXC"
+    elif grep -qa container=lxc /proc/1/environ; then
+        virt_type="LXC"
+    elif [[ -f /proc/user_beancounters ]]; then
+        virt_type="OpenVZ"
+    elif [[ "$kernel_logs" == *kvm-clock* ]]; then
+        virt_type="KVM"
+    elif [[ "$processor_type" == *KVM* ]]; then
+        virt_type="KVM"
+    elif [[ "$processor_type" == *QEMU* ]]; then
+        virt_type="KVM"
+    elif [[ "$kernel_logs" == *"VMware Virtual Platform"* ]]; then
+        virt_type="VMware"
+    elif [[ "$kernel_logs" == *"Parallels Software International"* ]]; then
+        virt_type="Parallels"
+    elif [[ "$kernel_logs" == *VirtualBox* ]]; then
+        virt_type="VirtualBox"
+    elif [[ -e /proc/xen ]]; then
+        if grep -q "control_d" "/proc/xen/capabilities" 2>/dev/null; then
+            virt_type="Xen-Dom0"
+        else
+            virt_type="Xen-DomU"
+        fi
+    elif [ -f "/sys/hypervisor/type" ] && grep -q "xen" "/sys/hypervisor/type"; then
+        virt_type="Xen"
+    elif [[ "$system_manufacturer" == *"Microsoft Corporation"* ]]; then
+        if [[ "$system_product_name" == *"Virtual Machine"* ]]; then
+            if [[ "$system_version" == *"7.0"* || "$system_version" == *"Hyper-V" ]]; then
+                virt_type="Hyper-V"
+            else
+                virt_type="Microsoft Virtual Machine"
+            fi
+        fi
+    else
+        virt_type="Dedicated"
     fi
 }
 
-remove() {
-    if [ $# -eq 0 ]; then
+_virt_permission() {
+    virt_check
+
+    if [[ "$virt_type" == "Docker" || "$virt_type" == "LXC" || "$virt_type" == "OpenVZ" ]]; then
+        _err_msg "$(_red '当前虚拟化架构不被支持！')"
+        _end_message
+        exit 1
+    fi
+}
+
+pkg_remove() {
+    if [ "$#" -eq "0" ]; then
         _err_msg "$(_red '未提供软件包参数')"
         return 1
     fi
 
     check_installed() {
         local package="$1"
-        if command -v dnf >/dev/null 2>&1 || command -v yum >/dev/null 2>&1; then
+        if command -v dnf >/dev/null 2>&1; then
+            sudo rpm -q "$package" >/dev/null 2>&1
+        elif command -v yum >/dev/null 2>&1; then
             sudo rpm -q "$package" >/dev/null 2>&1
         elif command -v apt >/dev/null 2>&1; then
+            sudo dpkg -l | grep -qw "$package"
+        elif command -v apt-get >/dev/null 2>&1; then
             sudo dpkg -l | grep -qw "$package"
         elif command -v apk >/dev/null 2>&1; then
             sudo apk info | grep -qw "$package"
@@ -116,46 +221,37 @@ remove() {
     for package in "$@"; do
         _yellow "正在卸载 $package"
         if check_installed "$package"; then
-            if command -v dnf >/dev/null 2>&1 || command -v yum >/dev/null 2>&1; then
-                sudo dnf remove -y "$package"* || sudo yum remove -y "$package"*
+            if command -v dnf >/dev/null 2>&1; then
+                sudo dnf remove -y "$package"*
+            elif command -v yum >/dev/null 2>&1; then
+                sudo yum remove -y "$package"*
             elif command -v apt >/dev/null 2>&1; then
                 sudo apt purge -y "$package"*
+            elif command -v apt-get >/dev/null 2>&1; then
+                sudo apt-get purge -y "$package"*
             elif command -v apk >/dev/null 2>&1; then
-                sudo apk del -y "$package"*
+                sudo apk del "$package"*
             fi
         else
-            _err_msg "$(_red "${package}没有安装，跳过卸载！")"
+            _err_msg "$(_red "$package 没有安装，跳过卸载！")"
         fi
     done
-    return 0
 }
 
 geo_check() {
-    local cloudflare_api ipinfo_api ipsb_api
-
-    cloudflare_api=$(curl -sL -m 10 -A "Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/81.0" "https://dash.cloudflare.com/cdn-cgi/trace" | sed -n 's/.*loc=\([^ ]*\).*/\1/p')
-    ipinfo_api=$(curl -sL --connect-timeout 5 https://ipinfo.io/country)
-    ipsb_api=$(curl -sL --connect-timeout 5 -A Mozilla https://api.ip.sb/geoip | sed -n 's/.*"country_code":"\([^"]*\)".*/\1/p')
-
-    for api in "$cloudflare_api" "$ipinfo_api" "$ipsb_api"; do
-        if [ -n "$api" ]; then
-            country="$api"
-            break
-        fi
-    done
-
-    readonly country
+    country=$(curl -fskL --connect-timeout 5 http://dash.cloudflare.com/cdn-cgi/trace | grep '^loc=' | cut -d= -f2)
 
     if [ -z "$country" ]; then
         _err_msg "$(_red '无法获取服务器所在地区，请检查网络后重试！')"
-        end_message
+        _end_message
         exit 1
     fi
+    readonly country
 }
 
-statistics_runtime() {
+_runtime() {
     local runcount
-    runcount=$(curl -fskL -m 2 --retry 2 -o - "https://hit.forvps.gq/https://github.com/honeok/cross/raw/master/get-docker.sh" | grep -m1 -oE "[0-9]+[ ]+/[ ]+[0-9]+") &&
+    runcount=$(curl -fskL -m 2 --retry 2 -o - "https://hit.forvps.gq/https://github.com/honeok/cross/raw/master/get-docker.sh" | grep -m1 -oE "[0-9]+[ ]+/[ ]+[0-9]+")
     today_runcount=$(awk -F ' ' '{print $1}' <<< "$runcount") && total_runcount=$(awk -F ' ' '{print $3}' <<< "$runcount")
 }
 
@@ -165,7 +261,7 @@ sudo() {
             sudo "$@"
         else
             _err_msg "$(_red '您的系统未安装sudo，因此无法进行该项操作')"
-            end_message
+            _end_message
             exit 1
         fi
     else
@@ -173,68 +269,12 @@ sudo() {
     fi
 }
 
-enable() {
-    local _cmd
-    local service_name="$1"
-    if command -v apk >/dev/null 2>&1; then
-        _cmd="sudo rc-update add $service_name default"
-    else
-        _cmd="sudo ${systemctl_cmd} enable $service_name"
-    fi
-
-    if $_cmd; then
-        _suc_msg "$(_green "${service_name}已设置为开机自启")"
-    else
-        _err_msg "$(_red "${service_name}设置开机自启失败")"
-    fi
-}
-
-disable() {
-    local service_name="$1"
-    if command -v apk >/dev/null 2>&1; then
-        sudo rc-update del "$service_name"
-    else
-        sudo "${systemctl_cmd}" disable "$service_name"
-    fi
-}
-
-start() {
-    local _cmd
-    local service_name="$1"
-    
-    if command -v apk >/dev/null 2>&1; then
-        _cmd="sudo service $service_name start"
-    else
-        _cmd="sudo ${systemctl_cmd} start $service_name"
-    fi
-
-    if $_cmd; then
-        _suc_msg "$(_green "${service_name}已启动")"
-    else
-        _err_msg "$(_red "${service_name}启动失败")"
-    fi
-}
-
-stop() {
-    local _cmd
-    local service_name="$1"
-    
-    if command -v apk >/dev/null 2>&1; then
-        _cmd="sudo service $service_name stop"
-    else
-        _cmd="sudo ${systemctl_cmd} stop $service_name"
-    fi
-
-    if $_cmd; then
-        _suc_msg "$(_green "${service_name}已停止")"
-    else
-        _err_msg "$(_red "${service_name}停止失败")"
-    fi
-}
-
 systemctl() {
     local _cmd="$1"
     local service_name="$2"
+
+    # local systemctl_cmd
+    systemctl_cmd=$(which systemctl 2>/dev/null)
 
     if command -v apk >/dev/null 2>&1; then
         sudo service "$service_name" "$_cmd"
@@ -243,7 +283,7 @@ systemctl() {
     fi
 }
 
-fix_dpkg() {
+_fix_dpkg() {
     pkill -f -15 'apt|dpkg' || pkill -f -9 'apt|dpkg'
     for lockfile in "/var/lib/dpkg/lock" "/var/lib/dpkg/lock-frontend"; do
         [ -f "$lockfile" ] && sudo rm -f "$lockfile" >/dev/null 2>&1
@@ -252,52 +292,32 @@ fix_dpkg() {
 }
 
 clean_repo_files() {
-    [ -f "/etc/yum.repos.d/docker-ce.repo" ] && sudo rm -f /etc/yum.repos.d/docker-ce.repo >/dev/null 2>&1
-    [ -f "/etc/yum.repos.d/docker-ce-staging.repo" ] && sudo rm -f /etc/yum.repos.d/docker-ce-staging.repo >/dev/null 2>&1
-    [ -f "/etc/apt/keyrings/docker.asc" ] && sudo rm -f /etc/apt/keyrings/docker.asc >/dev/null 2>&1
-    [ -f "/etc/apt/sources.list.d/docker.list" ] && sudo rm -f /etc/apt/sources.list.d/docker.list >/dev/null 2>&1
+    [ -f "/etc/yum.repos.d/docker-ce.repo" ] && sudo rm -f /etc/yum.repos.d/docker-ce.repo 2>/dev/null
+    [ -f "/etc/yum.repos.d/docker-ce-staging.repo" ] && sudo rm -f /etc/yum.repos.d/docker-ce-staging.repo 2>/dev/null
+    [ -f "/etc/apt/keyrings/docker.asc" ] && sudo rm -f /etc/apt/keyrings/docker.asc 2>/dev/null
+    [ -f "/etc/apt/sources.list.d/docker.list" ] && sudo rm -f /etc/apt/sources.list.d/docker.list 2>/dev/null
 }
 
-check_docker() {
+_check_install() {
     if command -v docker >/dev/null 2>&1 || \
         sudo docker --version >/dev/null 2>&1 || \
         sudo docker compose version >/dev/null 2>&1 || \
         command -v docker-compose >/dev/null 2>&1; then
-        _err_msg "$(_red 'Docker已安装，正在退出安装程序！')"
-        end_message
-        exit 0
-    else
-        install_docker
+            _err_msg "$(_red 'Docker 已安装，正在退出安装程序！')"
+            _end_message
+            exit 1
     fi
 }
 
-install_docker() {
-    local pkg_cmd version_code repo_url gpgkey_url
+_install() {
+    local version_code repo_url gpgkey_url
 
     geo_check
+    clean_repo_files
 
-    echo
     _info_msg "$(_yellow '正在安装docker环境！')"
     if [[ "$os_name" == "rocky" || "$os_name" == "almalinux" || "$os_name" == "centos" ]]; then
-        remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine >/dev/null 2>&1
-
-        if command -v dnf >/dev/null 2>&1; then
-            if ! sudo dnf config-manager --help >/dev/null 2>&1; then
-                sudo dnf install -y dnf-plugins-core
-            fi
-            pkg_cmd='dnf'
-        elif command -v yum >/dev/null 2>&1; then
-            if ! sudo rpm -q yum-utils >/dev/null 2>&1; then
-                sudo yum install -y yum-utils
-            fi
-            pkg_cmd='yum'
-        else
-            _err_msg "$(_red '未知的包管理器！')"
-            end_message
-            exit 1
-        fi
-
-        clean_repo_files
+        pkg_remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine >/dev/null 2>&1
 
         if [[ "$country" == "CN" ]]; then
             repo_url="https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo"
@@ -305,25 +325,33 @@ install_docker() {
             repo_url="https://download.docker.com/linux/centos/docker-ce.repo"
         fi
 
-        if [[ "$pkg_cmd" == "dnf" ]]; then
+        if command -v dnf >/dev/null 2>&1; then
+            if ! sudo dnf config-manager --help >/dev/null 2>&1; then
+                sudo dnf install -y dnf-plugins-core
+            fi
             sudo dnf config-manager --add-repo "$repo_url" >/dev/null 2>&1
             sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-        elif [[ "$pkg_cmd" == "yum" ]]; then
+        elif command -v yum >/dev/null 2>&1; then
+            if ! sudo rpm -q yum-utils >/dev/null 2>&1; then
+                sudo yum install -y yum-utils
+            fi
             sudo yum-config-manager --add-repo "$repo_url" >/dev/null 2>&1
             sudo yum makecache fast
             sudo yum install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+        else
+            _err_msg "$(_red '未知的包管理器！')"
+            _end_message
+            exit 1
         fi
 
-        enable docker
-        start docker
+        systemctl enable docker
+        systemctl start docker
     elif [[ "$os_name" == "rhel" ]]; then
-        remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine podman runc >/dev/null 2>&1
+        pkg_remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine podman runc >/dev/null 2>&1
 
         if ! dnf config-manager --help >/dev/null 2>&1; then
             dnf install -y dnf-plugins-core
         fi
-
-        clean_repo_files
 
         if [[ "$country" == "CN" ]]; then
             sudo dnf config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/rhel/docker-ce.repo
@@ -332,15 +360,13 @@ install_docker() {
         fi
 
         sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-        enable docker
-        start docker
+        systemctl enable docker
+        systemctl start docker
     elif [[ "$os_name" == "debian" || "$os_name" == "ubuntu" ]]; then
-        # version_code="$(. /etc/*release && echo "$VERSION_CODENAME")"
-        version_code="$(grep "^VERSION_CODENAME" /etc/*release | cut -d= -f2)"
+        # version_code="$(. /etc/*-release && echo "$VERSION_CODENAME")"
+        version_code="$(grep "^VERSION_CODENAME" /etc/*-release | cut -d= -f2)"
 
-        remove docker.io docker-doc docker-compose podman-docker containerd runc >/dev/null 2>&1
-
-        clean_repo_files
+        pkg_remove docker.io docker-doc docker-compose podman-docker containerd runc >/dev/null 2>&1
 
         if [[ "$country" == "CN" ]]; then
             repo_url="https://mirrors.aliyun.com/docker-ce/linux/${os_name}"
@@ -350,7 +376,7 @@ install_docker() {
             gpgkey_url="https://download.docker.com/linux/${os_name}/gpg"
         fi
 
-        fix_dpkg
+        _fix_dpkg
         sudo apt-get -qq update
         # sudo apt-get install -y -qq ca-certificates curl apt-transport-https lsb-release gnupg
         sudo apt-get install -y -qq ca-certificates curl
@@ -359,56 +385,61 @@ install_docker() {
         sudo chmod a+r /etc/apt/keyrings/docker.asc
 
         # add the repository to apt sources
-        echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] $repo_url $version_code stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
+        echo "deb [arch=$(sudo dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] $repo_url $version_code stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
         sudo apt-get -qq update
         sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-        enable docker
-        start docker
+        systemctl enable docker
+        systemctl start docker
     elif [[ "$os_name" == "alpine" ]]; then
 
-        if [[ "$country" == "CN" ]]; then
-            #s#old#new#g
-            sed -i "s#dl-cdn.alpinelinux.org#mirrors.aliyun.com#g" /etc/apk/repositories
-        fi
+        #s#old#new#g
+        # [[ "$country" == "CN" ]] && sed -i "s#dl-cdn.alpinelinux.org#mirrors.aliyun.com#g" /etc/apk/repositories
+        [[ "$country" == "CN" ]] && sed -i -E 's|^https?://dl-cdn.alpinelinux.org|https://mirrors.aliyun.com|g' /etc/apk/repositories
 
-        sudo apk update
+        sudo apk update && sudo apk upgrade
         sudo apk add docker docker-compose
-        enable docker
-        start docker
+        systemctl enable docker
+        systemctl start docker
     else
         _err_msg "$(_red '当前操作系统不被支持！')"
-        end_message
-        exit 0
+        _end_message
+        exit 1
     fi
-    echo
 }
 
-uninstall_docker() {
-    local docker_datadir=("/var/lib/docker" "/var/lib/containerd" "/etc/docker" "/opt/containerd")
-    local docker_depend_files=("/etc/yum.repos.d/docker*" "/etc/apt/sources.list.d/docker.*" "/etc/apt/keyrings/docker.*" "/var/log/docker.*")
-    local bin_files=("/usr/bin/docker" "/usr/bin/docker-compose")
+_uninstall() {
+    local depend_datadir depend_files bin_files
+    depend_datadir=("/var/lib/docker" "/var/lib/containerd" "/etc/docker" "/opt/containerd")
+    depend_files=("/etc/yum.repos.d/docker*" "/etc/apt/sources.list.d/docker.*" "/etc/apt/keyrings/docker.*" "/var/log/docker.*")
+    bin_files=("/usr/bin/docker" "/usr/bin/docker-compose")
 
-    echo
     # 停止并删除Docker服务和容器
     stop_and_remove_docker() {
         local running_containers
-        running_containers=$(sudo docker ps -a -q)
-        [ -n "$running_containers" ] && sudo docker rm -f "$running_containers" >/dev/null 2>&1
-        stop docker.socket >/dev/null 2>&1
-        stop docker
-        disable docker
+        running_containers=$(sudo docker ps -a -q 2>/dev/null)
+
+        if [ -n "$running_containers" ]; then
+            sudo docker rm -f "$running_containers" 2>/dev/null || true
+        fi
+        systemctl stop docker.socket 2>/dev/null
+        systemctl stop docker
+        systemctl disable docker
     }
 
     # 移除Docker文件和仓库文件
     cleanup_files() {
-        for pattern in "${docker_depend_files[@]}"; do
+        for pattern in "${depend_files[@]}"; do
             for file in $pattern; do
-                [ -e "$file" ] && sudo rm -f "$file" >/dev/null 2>&1
+                if [ -e "$file" ]; then
+                    sudo rm -f "$file" >/dev/null 2>&1
+                fi
             done
         done
 
-        for file in "${docker_datadir[@]}" "${bin_files[@]}"; do
-            [ -e "$file" ] && sudo rm -rf "$file" >/dev/null 2>&1
+        for file in "${depend_datadir[@]}" "${bin_files[@]}"; do
+            if [ -e "$file" ]; then
+                sudo rm -rf "$file" >/dev/null 2>&1
+            fi
         done
     }
 
@@ -419,22 +450,21 @@ uninstall_docker() {
     fi
 
     stop_and_remove_docker
-    remove docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    pkg_remove docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
     cleanup_files
 
     hash -r
     sleep 2
 
     if command -v docker >/dev/null 2>&1 || [ -e "/usr/bin/docker" ]; then
-        _err_msg "$(_red 'Docker卸载失败，请手动检查')"
+        _err_msg "$(_red 'Docker卸载失败，请手动检查！')"
         return 1
     else
         _suc_msg "$(_green 'Docker和Docker Compose已卸载，并清理文件夹和相关依赖')"
     fi
-    echo
 }
 
-docker_version() {
+_version() {
     local docker_v=""
     local docker_compose_v=""
 
@@ -452,12 +482,13 @@ docker_version() {
         docker_compose_v=$(sudo docker-compose version --short)
     fi
 
+    echo
     echo "Docker版本: v${docker_v}"
     echo "Docker Compose版本: v${docker_compose_v}"
     echo
-    _yellow "正在获取Docker信息"
-    sleep 2s
-    sudo docker version
+    _yellow "获取Docker信息"
+    sleep 2
+    sudo docker version 2>/dev/null
 
     # intentionally mixed spaces and tabs here -- tabs are stripped by "<<-EOF", spaces are kept in the output
     echo
@@ -474,24 +505,24 @@ docker_version() {
     echo
 }
 
-docker_status() {
+_status() {
     if sudo "${systemctl_cmd}" is-active --quiet docker || \
         sudo docker info >/dev/null 2>&1 || \
         sudo /etc/init.d/docker status | grep -q 'started' || \
         sudo service docker status >/dev/null 2>&1 || \
         curl -s --unix-socket /var/run/docker.sock http://localhost/version >/dev/null 2>&1; then
-        _suc_msg "$(_green 'Docker已完成自检，启动并设置开机自启！')"
+            _suc_msg "$(_green 'Docker已完成自检，启动并设置开机自启！')"
     else
         _err_msg "$(_red 'Docker状态检查失败或服务无法启动，请检查安装日志或手动启动Docker服务')"
-        end_message
+        _end_message
         exit 1
     fi
 }
 
-end_message() {
+_end_message() {
     local current_time current_timezone message_time
 
-    statistics_runtime
+    _runtime
 
     current_time=$(date '+%Y-%m-%d %H:%M:%S')
     current_timezone=$(date +"%Z %z")
@@ -503,44 +534,45 @@ end_message() {
     _yellow "脚本当天运行次数: ${today_runcount} 累计运行次数: ${total_runcount}"
 }
 
-standalone_logic() {
-    clear_screen
+docker_install() {
+    _clear
+    _show_logo
+    _os_permission
+    _virt_permission
+    _check_install
+    _install
+    _version
+    _status
+    _end_message
+}
 
-    # 操作系统和权限校验
-    if [[ "$os_name" != "debian" && "$os_name" != "ubuntu" && "$os_name" != "centos" && "$os_name" != "rhel" && "$os_name" != "rocky" && "$os_name" != "almalinux" && "$os_name" != "alpine" ]]; then
-        _err_msg "$(_red '当前操作系统不被支持！')"
-        end_message
-        exit 1
-    fi
-
-    print_logo
-    check_docker
-    docker_version
-    docker_status
-    end_message
+docker_uninstall() {
+    _clear
+    _show_logo
+    _os_permission
+    _virt_permission
+    _uninstall
+    _end_message
 }
 
 if [ "$#" -eq 0 ]; then
-    standalone_logic
-    exit 0
+    docker_install
 else
     while [[ "$#" -ge 1 ]]; do
         case "$1" in
-            -y | --install)
-                shift
-                standalone_logic
-                ;;
-            -d | --remove)
-                print_logo
-                uninstall_docker
-                end_message
-                exit 0
-                ;;
+            --install)
+                docker_install
+                shift 1
+            ;;
+            --uninstall)
+                docker_uninstall
+                shift 1
+            ;;
             *)
-                _err_msg "$(_red "无效选项, 当前参数 '$1' 不被支持！")"
-                end_message
-                exit 1
-                ;;
+                _err_msg "$(_red "无效选项, 当前参数${1}不被支持！")" 
+                _end_message
+                _show_usage
+            ;;
         esac
     done
 fi
