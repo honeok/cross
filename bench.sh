@@ -3,10 +3,7 @@
 # Description: Collect system info, perform I/O tests, and check network performance to China.
 #
 # Copyright (C) 2025 honeok <honeok@duck.com>
-# Copyright (C) 2021 - 2022 VPS小白 https://vpsxb.net/448
-#
-# Acknowledgments:
-# Teddysun <i@teddysun.com>
+# Copyright (C) 2021 - 2022 VPS小白 https://vpsxb.net
 #
 # References:
 # https://github.com/teddysun/across/blob/master/bench.sh
@@ -17,206 +14,179 @@
 
 # shellcheck disable=all
 
+# 当前脚本版本号
 readonly version='v1.4.1 (2025.02.26)'
 
-_red() {
-    printf '\033[0;31;31m%b\033[0m' "$1"
-}
+yellow='\033[93m'
+red='\033[31m'
+green='\033[92m'
+blue='\033[94m'
+white='\033[0m'
+_yellow() { printf "%b%s%b\n" "$yellow" "$*" "$white"; }
+_red() { printf "%b%s%b\n" "$red" "$*" "$white"; }
+_green() { printf "%b%s%b\n" "$green" "$*" "$white"; }
+_blue() { printf "%b%s%b\n" "$blue" "$*" "$white"; }
 
-_green() {
-    printf '\033[0;31;32m%b\033[0m' "$1"
-}
+_err_msg() { printf "%bwarn%b %s\n" "\033[41m\033[1m" "$white" "$*"; }
+_suc_msg() { printf "%bsuccess%b %s\n" "\033[42m\033[1m" "$white" "$*"; }
 
-_yellow() {
-    printf '\033[0;31;33m%b\033[0m' "$1"
-}
-
-_blue() {
-    printf '\033[0;31;36m%b\033[0m' "$1"
-}
-
-userAgent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.74 Safari/537.36"
+# 预定义常量
+github_Proxy='https://gh-proxy.com/'
+temp_Dir='/tmp/bench'
+log="$temp_Dir/bench.log"
+speedLog="$temp_Dir/speedtest.log"
 GeekbenchTest='Y'
+GeekbenchVer=5
+userAgent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.74 Safari/537.36"
+
+: > "$log"
+: > "$speedLog"
+
+mkdir -p "$temp_Dir" 1>/dev/null
 
 about() {
     echo "-------------------- A Bench.sh Script By honeok -------------------"
     echo " Version            : $(_green "$version")"
-    echo " Usage              : $(_red 'bash <(curl -sL https://github.com/honeok/cross/raw/master/bench.sh)')"
-}
-
-cancel() {
-	echo ""
-	next;
-	echo " Abort ..."
-	echo " Cleanup ..."
-	cleanup;
-	echo " Done"
-	exit
-}
-
-trap cancel SIGINT
-
-benchinit() {
-	if [ -f /etc/redhat-release ]; then
-	    release="centos"
-	elif cat /etc/issue | grep -Eqi "debian"; then
-	    release="debian"
-	elif cat /etc/issue | grep -Eqi "ubuntu"; then
-	    release="ubuntu"
-	elif cat /etc/issue | grep -Eqi "centos|red hat|redhat"; then
-	    release="centos"
-	elif cat /proc/version | grep -Eqi "debian"; then
-	    release="debian"
-	elif cat /proc/version | grep -Eqi "ubuntu"; then
-	    release="ubuntu"
-	elif cat /proc/version | grep -Eqi "centos|red hat|redhat"; then
-	    release="centos"
-	fi
-
-	[[ $EUID -ne 0 ]] && echo -e "${RED}Error:${PLAIN} This script must be run as root!" && exit 1
-	
-	# determine architecture of host
-	ARCH=$(uname -m)
-	if [[ $ARCH = *x86_64* ]]; then
-		# host is running a 64-bit kernel
-		ARCH="x64"
-	elif [[ $ARCH = *i?86* ]]; then
-		# host is running a 32-bit kernel
-		ARCH="x86"
-	elif [[ $ARCH = *aarch* || $ARCH = *arm* ]]; then
-		KERNEL_BIT=`getconf LONG_BIT`
-		if [[ $KERNEL_BIT = *64* ]]; then
-			# host is running an ARM 64-bit kernel
-			ARCH="aarch64"
-		else
-			# host is running an ARM 32-bit kernel
-			ARCH="arm"
-		fi
-		echo -e "\nARM compatibility is considered *experimental*"
-	else
-		# host is running a non-supported kernel
-		echo -e "Architecture not supported by Superbench."
-		exit 1
-	fi
-
-	if  [[ "$(command -v dmidecode)" == "" ]]; then
-		echo " Installing Dmidecode ..."
-		if [[ ! -z "$(type -p yum)" ]]; then
-			yum -y install dmidecode > /dev/null 2>&1
-		else
-			apt-get update > /dev/null 2>&1
-			apt-get -y install dmidecode > /dev/null 2>&1
-		fi
-	fi
-	
-	if  [[ "$(command -v curl)" == "" ]]; then
-		echo " Installing Curl ..."
-		if [[ ! -z "$(type -p yum)" ]]; then
-			yum -y install curl > /dev/null 2>&1
-		else
-			apt-get update > /dev/null 2>&1
-			apt-get -y install curl > /dev/null 2>&1
-		fi
-	fi
-
-	if  [[ "$(command -v tar)" == "" ]]; then
-		echo " Installing Tar ..."
-		if [[ ! -z "$(type -p yum)" ]]; then
-			yum -y install tar > /dev/null 2>&1
-		else
-			apt-get update > /dev/null 2>&1
-			apt-get -y install tar > /dev/null 2>&1
-		fi
-	fi
-	
-	if  [[ "$(command -v wget)" == "" ]]; then
-		echo " Installing Wget ..."
-		if [[ ! -z "$(type -p yum)" ]]; then
-			yum -y install wget > /dev/null 2>&1
-		else
-			apt-get update > /dev/null 2>&1
-			apt-get -y install wget > /dev/null 2>&1
-		fi
-	fi
-
-	if [[ "$(command -v unzip)" == "" ]]; then
-		echo " Installing UnZip ..."
-		if [[ ! -z "$(type -p yum)" ]]; then
-			yum -y install unzip > /dev/null 2>&1
-		else
-			apt-get update > /dev/null 2>&1
-			apt-get -y install unzip > /dev/null 2>&1
-		fi
-	fi
-
-	if  [ ! -e './speedtest-cli/speedtest' ]; then
-		echo " Installing Speedtest-cli ..."
-		wget --no-check-certificate -qO speedtest.tgz https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-$(uname -m).tgz > /dev/null 2>&1
-		if [[ $? -ne '0' ]]; then
-			wget --no-check-certificate -qO speedtest.tgz https://down.vpsxb.top/superbench/ookla-speedtest-1.2.0-linux-$(uname -m).tgz > /dev/null 2>&1
-		fi
-	fi
-	mkdir -p speedtest-cli && tar zxvf speedtest.tgz -C ./speedtest-cli/ > /dev/null 2>&1 && chmod a+rx ./speedtest-cli/speedtest
-	
-	if [ ! -f /usr/local/bin/nexttrace ]; then
-		echo " Installing nexttrace..."
-		#wget --no-check-certificate -T 10 -qO besttrace4linux.zip https://cdn.ipip.net/17mon/besttrace4linux.zip > /dev/null 2>&1
-		#if [[ $? -ne '0' ]]; then
-		#	wget --no-check-certificate -O besttrace4linux.zip https://down.vpsxb.top/superbench/besttrace4linux.zip > /dev/null 2>&1
-		#fi
-		#unzip besttrace4linux.zip -d besttrace4 > /dev/null 2>&1
-		bash <(curl -Ls https://raw.githubusercontent.com/sjlleo/nexttrace/main/nt_install.sh)
-	fi
-	#chmod +x ./besttrace4/besttrace
-	
-	
-	if [[ "$GeekbenchTest" == "Y" ]]; then
-		if [[ ! -e './geekbench' ]]; then
-			mkdir geekbench
-		fi
-		GeekbenchVer=5
-		if [[ $ARCH = *x86* ]]; then
-			download_geekbench4;
-			$GeekbenchVer=4
-		elif [[ $ARCH != *aarch64* && $ARCH != *arm* ]]; then
-			if [ ! -e './geekbench/geekbench5' ]; then
-				echo " Installing Geekbench 5..."
-				wget --no-check-certificate -qO- https://down.vpsxb.top/superbench/Geekbench-5.4.4-Linux.tar.gz  | tar xz --strip-components=1 -C ./geekbench &>/dev/null
-			fi
-			chmod +x ./geekbench/geekbench5
-		else
-			if [ ! -e './geekbench/geekbench5' ]; then
-				echo " Installing Geekbench 5..."
-				wget --no-check-certificate -qO- https://down.vpsxb.top/superbench/Geekbench-5.4.4-LinuxARMPreview.tar.gz  | tar xz --strip-components=1 -C ./geekbench &>/dev/null
-			fi
-			chmod +x ./geekbench/geekbench5
-		fi
-	fi
-
-	sleep 5
-
-	start=$(date +%s) 
-}
-
-download_geekbench4(){
-	if [[ ! -d ./geekbench ]]; then
-		mkdir geekbench
-	fi
-	if [[ ! -d ./geekbench/geekbench4 ]]; then
-		echo -n -e " Installing Geekbench 4..."
-		wget --no-check-certificate -qO- https://down.vpsxb.top/superbench/Geekbench-4.4.4-Linux.tar.gz | tar xz --strip-components=1 -C ./geekbench &>/dev/null
-	fi
-	chmod +x ./geekbench/geekbench4
-}
-
-get_opsy() {
-    [ -f /etc/redhat-release ] && awk '{print ($1,$3~/^[0-9]/?$3:$4)}' /etc/redhat-release && return
-    [ -f /etc/os-release ] && awk -F'[= "]' '/PRETTY_NAME/{print $3,$4,$5}' /etc/os-release && return
-    [ -f /etc/lsb-release ] && awk -F'[="]+' '/DESCRIPTION/{print $2}' /etc/lsb-release && return
+    echo " Usage              : $(_blue 'bash <(curl -sL https://github.com/honeok/cross/raw/master/bench.sh)')"
 }
 
 next() {
-    printf "%-82s\n" "-" | sed 's/\s/-/g' | tee -a $log
+    printf "%-82s\n" "-" | sed 's/\s/-/g' | tee -a "$log"
+}
+
+_exit() {
+    echo ""
+    next;
+    echo " Abort ..."
+    echo " Cleanup ..."
+    cleanup;
+    echo " Done"
+    exit 0
+}
+
+trap "_exit" SIGINT SIGQUIT SIGTERM EXIT
+
+pkg_install() {
+    for pkg in "$@"; do
+        if ! command -v "$pkg" >/dev/null 2>&1; then
+            _yellow "Installing $pkg"
+            if command -v dnf >/dev/null 2>&1; then
+                dnf -y update
+                dnf -y install epel-release
+                dnf -y install "$pkg"
+            elif command -v yum >/dev/null 2>&1; then
+                yum -y update
+                yum -y install epel-release
+                yum -y install "$pkg"
+            elif command -v apt >/dev/null 2>&1; then
+                apt -q update
+                DEBIAN_FRONTEND=noninteractive apt -y -q install "$pkg"
+            elif command -v apt-get >/dev/null 2>&1; then
+                apt-get -q update
+                DEBIAN_FRONTEND=noninteractive apt-get -y -q install "$pkg"
+            elif command -v apk >/dev/null 2>&1; then
+                apk add --no-cache "$pkg"
+            elif command -v pacman >/dev/null 2>&1; then
+                pacman -Syu --noconfirm
+                pacman -S --noconfirm --needed "$pkg"
+            elif command -v zypper >/dev/null 2>&1; then
+                zypper refresh
+                zypper -y install "$pkg"
+            elif command -v opkg >/dev/null 2>&1; then
+                opkg update
+                opkg install "$pkg"
+            elif command -v pkg >/dev/null 2>&1; then
+                pkg update
+                pkg -y install "$pkg"
+            fi
+        else
+            _green "$pkg is already installed"
+        fi
+    done
+}
+
+download_geekbench4() {
+    if [ ! -d ./geekbench ]; then
+        mkdir geekbench
+    fi
+    if [ ! -d ./geekbench/geekbench4 ]; then
+        echo -n -e " Installing Geekbench 4"
+        wget --no-check-certificate -qO- https://down.vpsxb.top/superbench/Geekbench-4.4.4-Linux.tar.gz | tar xz --strip-components=1 -C ./geekbench >/dev/null 2>&1
+    fi
+    chmod +x ./geekbench/geekbench4
+}
+
+benchInit() {
+    local depend_pkg
+	depend_pkg=( "wget" "curl" "tar" "unzip" )
+
+    if [ "$(id -ru)" -ne "0" ]; then
+        _err_msg "$(_red 'This script must be run as root!')" && exit 1
+    fi
+
+    # determine architecture of host
+    case "$(uname -m)" in
+        x86_64)
+            # host is running a 64-bit kernel
+            Geekbench_downUrl='https://down.vpsxb.top/superbench/Geekbench-5.4.4-Linux.tar.gz'
+            GeekbenchVer=5
+        ;;
+        *i?86*)
+            # host is running a 32-bit kernel
+            Geekbench_downUrl='https://down.vpsxb.top/superbench/Geekbench-4.4.4-Linux.tar.gz'
+            GeekbenchVer=4
+        ;;
+        *aarch* | *arm*)
+            if [[ $(getconf LONG_BIT 2>/dev/null) == "64" ]]; then
+                ARCH='aarch64'
+            else
+                ARCH='arm'
+            fi
+            Geekbench_downUrl='https://down.vpsxb.top/superbench/Geekbench-5.4.4-LinuxARMPreview.tar.gz'
+            GeekbenchVer=5
+            printf "\nARM compatibility is considered *experimental*\n"
+        ;;
+        *)
+            # host is running a non-supported kernel
+            _err_msg "$(_red 'Architecture not supported by Superbench.')"
+            exit 1
+        ;;
+    esac
+
+    if ! command -v dmidecode >/dev/null 2>&1; then
+        pkg_install dmidecode
+    fi
+
+    for pkg in "${depend_pkg[@]}"; do
+        if ! command -v "$pkg" >/dev/null 2>&1; then
+            pkg_install "$pkg"
+        fi
+    done
+
+    if  [ ! -e "$temp_Dir/speedtest-cli/speedtest" ]; then
+        _yellow 'Installing Speedtest-cli'
+        curl -fskL -o "$temp_Dir/speedtest.tgz" "https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-$(uname -m).tgz"
+    fi
+    mkdir -p "$temp_Dir/speedtest-cli" && tar -zxf "$temp_Dir/speedtest.tgz" -C "$temp_Dir/speedtest-cli" >/dev/null 2>&1 && chmod +x "$temp_Dir/speedtest-cli/speedtest"
+
+    if [ ! -f /usr/local/bin/nexttrace ] && [ ! -f /usr/bin/nexttrace ]; then
+        bash <(curl -fskL "https://github.com/nxtrace/NTrace-core/raw/main/nt_install.sh")
+    fi
+
+    if [[ "$GeekbenchTest" == "Y" ]]; then
+        mkdir -p "$temp_Dir/geekbench" 2>/dev/null
+        _yellow "Installing Geekbench $GeekbenchVer"
+        curl -fskL -o "$temp_Dir/geekbench" "$Geekbench_downUrl" | tar xz --strip-components=1 -C "$temp_Dir/geekbench" >/dev/null 2>&1
+        chmod +x "$temp_Dir/geekbench/geekbench$GeekbenchVer"
+    fi
+
+    sleep 5
+
+    start=$(date +%s) 
+}
+
+get_opsy() {
+    grep "^PRETTY_NAME=" /etc/*-release | cut -d '"' -f 2 | sed 's/ (.*)//'
 }
 
 speed_test(){
@@ -618,7 +588,6 @@ geekbench() {
 
 UnlockNetflixTest() {
     local result region
-
     result=$(curl -fsL -A "$userAgent" -m 10 -w "%{http_code}" -o /dev/null "https://www.netflix.com/title/81280792" 2>&1)
 
     if [[ "$result" == "404" ]]; then
@@ -878,7 +847,7 @@ cleanup() {
 bench_all(){
 	mode_name="Standard"
 	about;
-	benchinit;
+	benchInit;
 	clear
 	next;
 	print_intro;
@@ -910,7 +879,7 @@ bench_all(){
 fast_bench(){
 	mode_name="Fast"
 	about;
-	benchinit;
+	benchInit;
 	clear
 	next;
 	print_intro;
@@ -933,11 +902,6 @@ fast_bench(){
 	sharetest ubuntu;
 }
 
-log="./superbench.log"
-true > $log
-speedLog="./speedtest.log"
-true > $speedLog
-
 case $1 in
 	'info'|'-i'|'--i'|'-info'|'--info' )
 		GeekbenchTest='N';
@@ -949,9 +913,9 @@ case $1 in
 		next;print_io;next;;
 	'speed'|'-speed'|'--speed'|'-speedtest'|'--speedtest'|'-speedcheck'|'--speedcheck' )
 		GeekbenchTest='N';
-		about;benchinit;clear;next;print_china_speedtest;next;cleanup;;
+		about;benchInit;clear;next;print_china_speedtest;next;cleanup;;
 	'ip'|'-ip'|'--ip'|'geoip'|'-geoip'|'--geoip' )
-		about;benchinit;next;ip_info4;next;cleanup;;
+		about;benchInit;next;ip_info4;next;cleanup;;
 	'bench'|'-a'|'--a'|'-all'|'--all'|'-bench'|'--bench' )
 		bench_all;;
 	'besttrace'|'-b'|'--b'|'--besttrace' )
