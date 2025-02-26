@@ -105,17 +105,6 @@ pkg_install() {
     done
 }
 
-download_geekbench4() {
-    if [ ! -d ./geekbench ]; then
-        mkdir geekbench
-    fi
-    if [ ! -d ./geekbench/geekbench4 ]; then
-        echo -n -e " Installing Geekbench 4"
-        wget --no-check-certificate -qO- https://down.vpsxb.top/superbench/Geekbench-4.4.4-Linux.tar.gz | tar xz --strip-components=1 -C ./geekbench >/dev/null 2>&1
-    fi
-    chmod +x ./geekbench/geekbench4
-}
-
 benchInit() {
     local depend_pkg
 	depend_pkg=( "wget" "curl" "tar" "unzip" )
