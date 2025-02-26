@@ -107,7 +107,7 @@ pkg_install() {
 
 benchInit() {
     local depend_pkg
-	depend_pkg=( "wget" "curl" "tar" "unzip" )
+    depend_pkg=( "wget" "curl" "tar" "unzip" )
 
     if [ "$(id -ru)" -ne "0" ]; then
         _err_msg "$(_red 'This script must be run as root!')" && exit 1
