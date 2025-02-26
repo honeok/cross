@@ -10,6 +10,10 @@
 # This program is distributed WITHOUT ANY WARRANTY.
 # See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
 
+set \
+    -o errexit \
+    -o nounset
+
 red='\033[31m'
 white='\033[0m'
 _red() { echo -e "${red}$*${white}"; }
@@ -33,11 +37,10 @@ uninstall() {
 }
 
 cdn_check() {
-    country=$(curl -fskL -m 5 --connect-timeout 5 https://ipinfo.io/country)
+    country=$(curl -fskL --connect-timeout 5 -m 10 https://ipinfo.io/country)
 
     if [ -z "$country" ]; then
         _err_msg "$(_red 'Failed to obtain the server location. Please check your network connection!')"
-        _end_message
         exit 1
     fi
     readonly country
