@@ -778,117 +778,115 @@ function UnlockChatGPTTest() {
     fi
 }
 
-
-function StreamingMediaUnlockTest(){
-	echo -e " Stream Media Unlock  :" | tee -a $log
-	UnlockNetflixTest
-	UnlockYouTubePremiumTest
-	YouTubeCDNTest
-	UnlockBilibiliTest
-	UnlockTiktokTest
-	UnlockiQiyiIntlTest
-	UnlockChatGPTTest
+StreamingMediaUnlockTest() {
+    echo -e " Stream Media Unlock  :" | tee -a $log
+    UnlockNetflixTest
+    UnlockYouTubePremiumTest
+    YouTubeCDNTest
+    UnlockBilibiliTest
+    UnlockTiktokTest
+    UnlockiQiyiIntlTest
+    UnlockChatGPTTest
 }
 
 print_intro() {
-	printf ' Superbench.sh -- https://vpsxb.net/448\n' | tee -a $log
-	printf " Mode  : ${GREEN}%s${PLAIN}    Version : ${GREEN}%s${PLAIN}\n" $mode_name 1.3.0 | tee -a $log
-	printf ' Usage : wget -qO- https://down.vpsxb.net/superbench/superbench.sh | bash\n' | tee -a $log
+    printf ' Superbench.sh -- https://vpsxb.net/448\n' | tee -a $log
+    printf " Mode  : ${GREEN}%s${PLAIN}    Version : ${GREEN}%s${PLAIN}\n" $mode_name 1.3.0 | tee -a $log
+    printf ' Usage : wget -qO- https://down.vpsxb.net/superbench/superbench.sh | bash\n' | tee -a $log
 }
 
 sharetest() {
-	echo " Share result:" | tee -a $log
-	echo " · $GEEKBENCH_URL" | tee -a $log
-	echo " · $result_speed" | tee -a $log
-	log_preupload
-	case $1 in
-	'ubuntu')
-		share_link="https://paste.ubuntu.com"$( curl -v --data-urlencode "content@$log_up" -d "poster=superbench.sh" -d "syntax=text" "https://paste.ubuntu.com" 2>&1 | \
-			grep "Location" | awk '{print $3}' );;
-	'haste' )
-		share_link=$( curl -X POST -s -d "$(cat $log)" https://hastebin.com/documents | awk -F '"' '{print "https://hastebin.com/"$4}' );;
-	'clbin' )
-		share_link=$( curl -sF 'clbin=<-' https://clbin.com < $log );;
-	'ptpb' )
-		share_link=$( curl -sF c=@- https://ptpb.pw/?u=1 < $log );;
-	esac
+    echo " Share result:" | tee -a $log
+    echo " · $GEEKBENCH_URL" | tee -a $log
+    echo " · $result_speed" | tee -a $log
+    log_preupload
+    case $1 in
+        'ubuntu')
+            share_link="https://paste.ubuntu.com"$( curl -v --data-urlencode "content@$log_up" -d "poster=superbench.sh" -d "syntax=text" "https://paste.ubuntu.com" 2>&1 | \
+                grep "Location" | awk '{print $3}' );;
+        'haste' )
+            share_link=$( curl -X POST -s -d "$(cat $log)" https://hastebin.com/documents | awk -F '"' '{print "https://hastebin.com/"$4}' );;
+        'clbin' )
+            share_link=$( curl -sF 'clbin=<-' https://clbin.com < $log );;
+        'ptpb' )
+            share_link=$( curl -sF c=@- https://ptpb.pw/?u=1 < $log );;
+    esac
 
-	echo " · $share_link" | tee -a $log
-	next
-	echo ""
-	rm -f $log_up
-
+    echo " · $share_link" | tee -a $log
+    next
+    echo ""
+    rm -f $log_up
 }
 
 log_preupload() {
-	log_up="$HOME/superbench_upload.log"
-	true > $log_up
-	$(cat superbench.log 2>&1 | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" > $log_up)
+    log_up="$HOME/superbench_upload.log"
+    : > $log_up
+    $(cat superbench.log 2>&1 | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" > $log_up)
 }
 
 cleanup() {
-	rm -f test_file_*
-	rm -rf speedtest*
-	rm -rf besttrace4*
-	rm -rf geekbench*
+    rm -f test_file_*
+    rm -rf speedtest*
+    rm -rf besttrace4*
+    rm -rf geekbench*
 }
 
 bench_all(){
-	mode_name="Standard"
-	about;
-	benchInit;
-	clear
-	next;
-	print_intro;
-	next;
-	get_system_info;
-	print_system_info;
-	ip_info4;
-	next;
-	StreamingMediaUnlockTest;
-	next;
-	print_io;
-	if [[ "$GeekbenchTest" == "Y" ]]; then
-		next;
-		geekbench;
-	fi
-	next;
-	print_china_speedtest;
-	next;
-	print_global_speedtest;
-	next;
-	print_besttrace_test;
-	next;
-	print_end_time;
-	next;
-	cleanup;
-	sharetest ubuntu;
+    mode_name="Standard"
+    about
+    benchInit
+    clear
+    next
+    print_intro
+    next
+    get_system_info
+    print_system_info
+    ip_info4
+    next
+    StreamingMediaUnlockTest
+    next
+    print_io
+    if [[ "$GeekbenchTest" == "Y" ]]; then
+        next
+        geekbench
+    fi
+    next
+    print_china_speedtest
+    next
+    print_global_speedtest
+    next
+    print_besttrace_test
+    next
+    print_end_time
+    next
+    cleanup
+    sharetest ubuntu
 }
 
-fast_bench(){
-	mode_name="Fast"
-	about;
-	benchInit;
-	clear
-	next;
-	print_intro;
-	next;
-	get_system_info;
-	print_system_info;
-	ip_info4;
-	next;
-	StreamingMediaUnlockTest;
-	next;
-	print_io fast;
-	next;
-	print_speedtest_fast;
-	next;
-	print_besttrace_test;
-	next;
-	print_end_time;
-	next;
-	cleanup;
-	sharetest ubuntu;
+fast_bench() {
+    mode_name="Fast"
+    about
+    benchInit
+    clear
+    next
+    print_intro
+    next
+    get_system_info
+    print_system_info
+    ip_info4
+    next
+    StreamingMediaUnlockTest
+    next
+    print_io fast
+    next
+    print_speedtest_fast
+    next
+    print_besttrace_test
+    next
+    print_end_time
+    next
+    cleanup
+    sharetest ubuntu
 }
 
 case "$1" in
