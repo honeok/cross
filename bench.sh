@@ -50,45 +50,6 @@ print_title() {
     echo " $(_blue 'bash <(curl -sL https://github.com/honeok/cross/raw/master/bench.sh)')"
 }
 
-pkg_install() {
-    for package in "$@"; do
-        if ! command -v "$package" >/dev/null 2>&1; then
-            _yellow "Installing $package"
-            if command -v dnf >/dev/null 2>&1; then
-                dnf -y update
-                dnf -y install epel-release
-                dnf -y install "$package"
-            elif command -v yum >/dev/null 2>&1; then
-                yum -y update
-                yum -y install epel-release
-                yum -y install "$package"
-            elif command -v apt >/dev/null 2>&1; then
-                apt -q update
-                DEBIAN_FRONTEND=noninteractive apt -y -q install "$package"
-            elif command -v apt-get >/dev/null 2>&1; then
-                apt-get -q update
-                DEBIAN_FRONTEND=noninteractive apt-get -y -q install "$package"
-            elif command -v apk >/dev/null 2>&1; then
-                apk add --no-cache "$package"
-            elif command -v pacman >/dev/null 2>&1; then
-                pacman -Syu --noconfirm
-                pacman -S --noconfirm --needed "$package"
-            elif command -v zypper >/dev/null 2>&1; then
-                zypper refresh
-                zypper -y install "$package"
-            elif command -v opkg >/dev/null 2>&1; then
-                opkg update
-                opkg install "$package"
-            elif command -v pkg >/dev/null 2>&1; then
-                pkg update
-                pkg -y install "$package"
-            fi
-        else
-            _green "$package is already installed"
-        fi
-    done
-}
-
 _exists() {
     local cmd="$1"
     if type "$cmd" >/dev/null 2>&1; then
@@ -98,6 +59,45 @@ _exists() {
     else
         return 1
     fi
+}
+
+pkg_install() {
+    for package in "$@"; do
+        if ! _exists "$package" >/dev/null 2>&1; then
+            _yellow "Installing $package"
+            if _exists dnf >/dev/null 2>&1; then
+                dnf -y update
+                dnf -y install epel-release
+                dnf -y install "$package"
+            elif _exists yum >/dev/null 2>&1; then
+                yum -y update
+                yum -y install epel-release
+                yum -y install "$package"
+            elif _exists apt >/dev/null 2>&1; then
+                apt -q update
+                DEBIAN_FRONTEND=noninteractive apt -y -q install "$package"
+            elif _exists apt-get >/dev/null 2>&1; then
+                apt-get -q update
+                DEBIAN_FRONTEND=noninteractive apt-get -y -q install "$package"
+            elif _exists apk >/dev/null 2>&1; then
+                apk add --no-cache "$package"
+            elif _exists pacman >/dev/null 2>&1; then
+                pacman -Syu --noconfirm
+                pacman -S --noconfirm --needed "$package"
+            elif _exists zypper >/dev/null 2>&1; then
+                zypper refresh
+                zypper -y install "$package"
+            elif _exists opkg >/dev/null 2>&1; then
+                opkg update
+                opkg install "$package"
+            elif _exists pkg >/dev/null 2>&1; then
+                pkg update
+                pkg -y install "$package"
+            fi
+        else
+            _green "$package is already installed"
+        fi
+    done
 }
 
 prerun_check() {
@@ -377,6 +377,46 @@ ip_info() {
     fi
 }
 
+io_test() {
+    local speed
+    local block_count="$1"
+
+    speed=$(LANG=C dd if=/dev/zero of="$temp_Dir/io_$$" bs=512k count="$block_count" conv=fdatasync 2>&1 | grep -o "[0-9.]\+ [MG]B/s")
+    echo "$speed"
+}
+
+print_io_test() {
+    local free_space write_mb io1 io2 io3 speed1 speed2 speed3 ioavg
+
+    free_space=$(df -m . | awk 'NR==2 {print $4}') # 检查可用空间 (MB)
+    write_mb=2048  # 每次写入2GB
+
+    # 检查空间是否足够
+    if [ "$free_space" -gt 1024 ]; then
+        # 运行三次I/O测试
+        io1=$(io_test $write_mb)
+        echo " I/O Speed(1st run) : $(_yellow "$io1")"
+        io2=$(io_test $write_mb)
+        echo " I/O Speed(2nd run) : $(_yellow "$io2")"
+        io3=$(io_test $write_mb)
+        echo " I/O Speed(3rd run) : $(_yellow "$io3")"
+
+        # 提取数值并转换为MB/s
+        speed1=$(echo "$io1" | awk '{print $1}')           # 取数字
+        [ "$(echo "$io1" | awk '{print $2}')" = "GB/s" ] && speed1=$(echo "$speed1 * 1024" | bc)
+        speed2=$(echo "$io2" | awk '{print $1}')
+        [ "$(echo "$io2" | awk '{print $2}')" = "GB/s" ] && speed2=$(echo "$speed2 * 1024" | bc)
+        speed3=$(echo "$io3" | awk '{print $1}')
+        [ "$(echo "$io3" | awk '{print $2}')" = "GB/s" ] && speed3=$(echo "$speed3 * 1024" | bc)
+
+        # 计算平均值
+        ioavg=$(echo "$speed1 $speed2 $speed3" | awk '{print ($1 + $2 + $3) / 3}')
+        echo " I/O Speed(average) : $(_yellow "$ioavg MB/s")"
+    else
+        echo " $(_red "Not enough space for I/O Speed test!")"
+    fi
+}
+
 print_end_time() {
     end_time=$(date +%s)
     time=$((end_time - start_time))
@@ -402,6 +442,8 @@ bench_all() {
     separator
     print_system_info # 打印系统信息
     ip_info # 打印IP归属
+    separator
+    print_io_test # 磁盘IO测试
     separator
     print_end_time # 打印执行时间
 }
