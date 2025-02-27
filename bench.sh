@@ -4,11 +4,8 @@
 #
 # Copyright (C) 2025 honeok <honeok@duck.com>
 #
-# References and Acknowledgements:
-# Teddysun (https://teddysun.com) https://github.com/teddysun/across/blob/master/bench.sh
-# kejilion (https://kejilion.pro) https://github.com/kejilion/sh/blob/main/kejilion.sh
-# spiritLHLS (https://ko-fi.com/spiritlhl) https://github.com/spiritLHLS/ecs/blob/main/ecs.sh
-# oooldking (https://www.oldking.net) https://github.com/oooldking/script/blob/master/superbench_git.sh
+# Acknowledgements:
+# Teddysun <i@teddysun.com>
 #
 # Licensed under the GNU General Public License, version 2 only.
 # This program is distributed WITHOUT ANY WARRANTY.
@@ -235,11 +232,11 @@ virt_check() {
 
     processor_type=$(awk -F: '/model name/ {name=$2} END {print name}' /proc/cpuinfo | sed 's/^[ \t]*//;s/[ \t]*$//')
 
-    if command -v dmesg >/dev/null 2>&1; then
+    if _exists "dmesg" >/dev/null 2>&1; then
         kernel_logs=$(dmesg 2>/dev/null)
     fi
 
-    if command -v dmidecode >/dev/null 2>&1; then
+    if _exists "dmidecode" >/dev/null 2>&1; then
         system_manufacturer=$(dmidecode -s system-manufacturer 2>/dev/null)
         system_product_name=$(dmidecode -s system-product-name 2>/dev/null)
         system_version=$(dmidecode -s system-version 2>/dev/null)
@@ -251,7 +248,7 @@ virt_check() {
         virt_type="LXC"
     elif grep -qa container=lxc /proc/1/environ; then
         virt_type="LXC"
-    elif [[ -f /proc/user_beancounters ]]; then
+    elif [ -f /proc/user_beancounters ]; then
         virt_type="OpenVZ"
     elif [[ "$kernel_logs" == *kvm-clock* ]]; then
         virt_type="KVM"
@@ -265,7 +262,7 @@ virt_check() {
         virt_type="Parallels"
     elif [[ "$kernel_logs" == *VirtualBox* ]]; then
         virt_type="VirtualBox"
-    elif [[ -e /proc/xen ]]; then
+    elif [ -e /proc/xen ]; then
         if grep -q "control_d" "/proc/xen/capabilities" 2>/dev/null; then
             virt_type="Xen-Dom0"
         else
