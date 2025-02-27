@@ -102,7 +102,7 @@ pkg_install() {
 
 prerun_check() {
     local depend_pkg
-    depend_pkg=( "curl" "tar" )
+    depend_pkg=( "curl" "tar" "bc" )
 
     if [ "$(id -ru)" -ne "0" ]; then
         _err_msg "$(_red 'This script must be run as root!')" && exit 1
