@@ -26,7 +26,7 @@ RUN set -ex \
         && chmod +x build.sh && ./build.sh \
         && python3 -m pip install --no-cache-dir -r requirements.txt \
         && install -m 755 docker-entrypoint.sh /docker-entrypoint.sh \
-        && rm -f Dockerfile build.sh docker-entrypoint.sh docker-compose.yml \
+        && rm -f Dockerfile build.sh docker-entrypoint.sh \
         && rm -rf configs_temp \
         && mkdir -p configs_temp \
         && apt-get -y remove --purge \
