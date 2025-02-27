@@ -120,7 +120,11 @@ prerun_check() {
         fi
     done
 
-    if curl -sLI -o /dev/null -w "%{http_code}" https://www.deepseek.com/cdn-cgi/trace | grep -q '^200$'; then
+    # if curl -sLI -o /dev/null -w "%{http_code}" https://www.deepseek.com/cdn-cgi/trace | grep -q '^200$'; then
+    #     github_Proxy=''
+    # fi
+
+    if [ "$(curl -fskL "https://www.qualcomm.cn/cdn-cgi/trace" | grep -i '^loc=' | cut -d'=' -f2 | xargs)" != "CN" ]; then
         github_Proxy=''
     fi
 
