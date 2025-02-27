@@ -256,6 +256,10 @@ virt_check() {
         virt_type="KVM"
     elif [[ "$processor_type" == *QEMU* ]]; then
         virt_type="KVM"
+    elif grep -qi "kvm" "/sys/devices/virtual/dmi/id/product_name" 2>/dev/null; then
+        virt_type="KVM"
+    elif grep -qi "qemu" "/proc/scsi/scsi" 2>/dev/null; then
+        virt_type="KVM"
     elif [[ "$kernel_logs" == *"VMware Virtual Platform"* ]]; then
         virt_type="VMware"
     elif [[ "$kernel_logs" == *"Parallels Software International"* ]]; then
