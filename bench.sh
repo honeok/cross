@@ -11,6 +11,8 @@
 # This program is distributed WITHOUT ANY WARRANTY.
 # See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
 
+# shellcheck disable=SC2034
+
 # 当前脚本版本号
 readonly version='v0.0.1 (2025.02.26)'
 
@@ -28,7 +30,7 @@ _err_msg() { echo -e "\033[41m\033[1mwarn${white} $*"; }
 _suc_msg() { echo -e "\033[42m\033[1msuccess${white} $*"; }
 
 # 预定义常量
-# github_Proxy='https://gh-proxy.com/'
+github_Proxy='https://gh-proxy.com/'
 temp_Dir='/tmp/bench'
 # userAgent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.74 Safari/537.36'
 
@@ -117,6 +119,10 @@ prerun_check() {
             pkg_install "$pkg"
         fi
     done
+
+    if curl -sLI -o /dev/null -w "%{http_code}" https://www.deepseek.com/cdn-cgi/trace | grep -q '^200$'; then
+        github_Proxy=''
+    fi
 
     start_time=$(date +%s)
 }
