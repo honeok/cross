@@ -447,7 +447,7 @@ install_speedtest() {
 }
 
 # https://github.com/showwin/speedtest-go
-speed_test() {
+speedtest() {
     local upload_speed download_speed latency
     local nodeName="$2"
 
@@ -467,16 +467,16 @@ speed_test() {
 }
 
 run_speedtest() {
-    speed_test '' 'Speedtest.net'
-    speed_test '65463' 'Hong Kong, HK'
-    speed_test '50406' 'Singapore, SG'
-    speed_test '62217' 'Tokyo, JP'
-    speed_test '67564' 'Seoul, KR'
-    speed_test '13516' 'Los Angeles, US'
-    speed_test '31120' 'Frankfurt, DE'
-    speed_test '57725' 'Warsaw, PL'
-    speed_test '54312' 'ZheJiang, CN'
-    speed_test '5396' 'JiangSu, CN'
+    speedtest '' 'Speedtest.net'
+    speedtest '65463' 'Hong Kong, HK'
+    speedtest '50406' 'Singapore, SG'
+    speedtest '62217' 'Tokyo, JP'
+    speedtest '67564' 'Seoul, KR'
+    speedtest '13516' 'Los Angeles, US'
+    speedtest '31120' 'Frankfurt, DE'
+    speedtest '57725' 'Warsaw, PL'
+    speedtest '54312' 'ZheJiang, CN'
+    speedtest '5396' 'JiangSu, CN'
 }
 
 print_end_time() {
