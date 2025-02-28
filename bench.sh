@@ -12,7 +12,7 @@
 # See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
 
 # 当前脚本版本号
-readonly version='v0.1.1 (2025.02.28)'
+readonly version='v0.1.2 (2025.02.28)'
 
 yellow='\033[93m'
 red='\033[31m'
