@@ -36,7 +36,6 @@ temp_Dir='/tmp/bench'
 speedtest_Dir="$temp_Dir/speedtest"
 
 _exit() {
-    separator
     rm -rf "$temp_Dir"
     exit 0
 }
@@ -136,7 +135,7 @@ to_kibyte() {
 calc_sum() {
     local sum=0
     for num in "$@"; do
-        sum=$((sum + num))
+        sum=$(( sum + num ))
     done
     echo "$sum"
 }
@@ -232,7 +231,11 @@ obtain_system_info() {
     disk_used_size=$(format_size $((swap_used_size + in_kernel_no_swap_used_size + zfs_used_size)))
 
     # 获取网络拥塞控制算法
-    congestion_algorithm=$(sysctl -n net.ipv4.tcp_congestion_control 2>/dev/null)
+    # 获取队列算法
+    if _exists "sysctl"; then
+        congestion_algorithm=$(sysctl -n net.ipv4.tcp_congestion_control 2>/dev/null)
+        queue_algorithm=$(sysctl -n net.core.default_qdisc 2>/dev/null)
+    fi
 }
 
 virt_check() {
@@ -309,7 +312,7 @@ check_ip_status() {
         ipv6_check=$(curl -sL -m 4 -6 v6.ipinfo.io/ip 2>/dev/null)
     fi
 
-    if [[ -z "$ipv4_check" && -z "$ipv6_check" ]]; then
+    if [ -z "$ipv4_check" ] && [ -z "$ipv6_check" ]; then
         _yellow "Warning: Both IPv4 and IPv6 connectivity were not detected."
     fi
     if [ -n "$ipv4_check" ]; then
@@ -359,7 +362,7 @@ print_system_info() {
     echo " OS                 : $(_blue "$os_release")"
     echo " Arch               : $(_blue "$cpu_architecture ($sys_bits Bit)")"
     echo " Kernel             : $(_blue "$kernel_version")"
-    echo " TCP CC             : $(_yellow "$congestion_algorithm")"
+    echo " TCP CC             : $(_yellow "$congestion_algorithm $queue_algorithm")"
     echo " Virtualization     : $(_blue "$virt_type")"
     echo " IPv4/IPv6          : $online"
 }
@@ -374,7 +377,7 @@ ip_info() {
     if [ -n "$org" ]; then
         echo " Organization       : $(_blue "$org")"
     fi
-    if [[ -n "$city" && -n "$country" ]]; then
+    if [ -n "$city" ] && [ -n "$country" ]; then
         echo " Location           : $(_blue "$city / $country")"
     fi
     if [ -n "$region" ]; then
@@ -490,22 +493,25 @@ run_speed() {
     speed_test '13516' 'Los Angeles, US'
     speed_test '31120' 'Frankfurt, DE'
     speed_test '57725' 'Warsaw, PL'
-    speed_test '54312' 'Zhejiang, CN'
+    speed_test '54312' 'ZheJiang, CN'
     speed_test '5396' 'JiangSu, CN'
 }
 
 print_end_time() {
+    local end_time time_count min sec
+
     end_time=$(date +%s)
-    time=$((end_time - start_time))
-    if [ $time -gt 60 ]; then
-        min=$((time / 60))
-        sec=$((time % 60))
+    time_count=$(( end_time - start_time ))
+
+    if [ "$time_count" -gt 60 ]; then
+        min=$(( time_count / 60 ))
+        sec=$(( time_count % 60 ))
         echo " Finished in        : $min min $sec sec"
     else
-        echo " Finished in        : $time sec"
+        echo " Finished in        : $time_count sec"
     fi
-    date_time=$(date '+%Y-%m-%d %H:%M:%S %Z')
-    echo " Timestamp          : $date_time"
+
+    echo " Timestamp          : $(date '+%Y-%m-%d %H:%M:%S %Z')"
 }
 
 bench_all() {
@@ -525,6 +531,7 @@ bench_all() {
     run_speed
     separator
     print_end_time # 打印执行时间
+    separator
 }
 
 bench_all
