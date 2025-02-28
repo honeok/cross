@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-# shellcheck disable=all
-
 yellow='\033[93m'
 red='\033[0;31m'
 green='\033[92m'
