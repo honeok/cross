@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Description: Collect system info, perform I/O tests, and check network performance to China.
+# Description: Gather system information, test disk I/O, and assess network performance to China.
 #
 # Copyright (C) 2025 honeok <honeok@duck.com>
 #
@@ -12,7 +12,7 @@
 # See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
 
 # 当前脚本版本号
-readonly version='v0.1.2 (2025.02.28)'
+readonly version='v0.1.3 (2025.02.28)'
 
 yellow='\033[93m'
 red='\033[31m'
@@ -25,7 +25,7 @@ _green() { echo -e "${green}$*${white}"; }
 _blue() { echo -e "${blue}$*${white}"; }
 
 _err_msg() { echo -e "\033[41m\033[1mwarn${white} $*"; }
-_suc_msg() { echo -e "\033[42m\033[1msuccess${white} $*"; }
+# _suc_msg() { echo -e "\033[42m\033[1msuccess${white} $*"; }
 
 # 分割符
 separator() { printf "%-70s\n" "-" | sed 's/\s/-/g'; }
@@ -63,44 +63,30 @@ _exists() {
 
 pkg_install() {
     for package in "$@"; do
-        if ! _exists "$package" >/dev/null 2>&1; then
-            _yellow "Installing $package"
-            if _exists dnf >/dev/null 2>&1; then
-                dnf -y update
-                dnf -y install epel-release
-                dnf -y install "$package"
-            elif _exists yum >/dev/null 2>&1; then
-                yum -y update
-                yum -y install epel-release
-                yum -y install "$package"
-            elif _exists apt >/dev/null 2>&1; then
-                apt -q update
-                DEBIAN_FRONTEND=noninteractive apt -y -q install "$package"
-            elif _exists apt-get >/dev/null 2>&1; then
-                apt-get -q update
-                DEBIAN_FRONTEND=noninteractive apt-get -y -q install "$package"
-            elif _exists apk >/dev/null 2>&1; then
-                apk add --no-cache "$package"
-            elif _exists pacman >/dev/null 2>&1; then
-                pacman -Syu --noconfirm
-                pacman -S --noconfirm --needed "$package"
-            elif _exists zypper >/dev/null 2>&1; then
-                zypper refresh
-                zypper -y install "$package"
-            elif _exists opkg >/dev/null 2>&1; then
-                opkg update
-                opkg install "$package"
-            elif _exists pkg >/dev/null 2>&1; then
-                pkg update
-                pkg -y install "$package"
-            fi
-        else
-            _green "$package is already installed"
+        _yellow "Installing $package"
+        if _exists dnf; then
+            dnf install -y "$package"
+        elif _exists yum; then
+            yum install -y "$package"
+        elif _exists apt; then
+            DEBIAN_FRONTEND=noninteractive apt install -y -q "$package"
+        elif _exists apt-get; then
+            DEBIAN_FRONTEND=noninteractive apt-get install -y -q "$package"
+        elif _exists apk; then
+            apk add --no-cache "$package"
+        elif _exists pacman; then
+            pacman -S --noconfirm --needed "$package"
+        elif _exists zypper; then
+            zypper install -y "$package"
+        elif _exists opkg; then
+            opkg install "$package"
+        elif _exists pkg; then
+            pkg install -y "$package"
         fi
     done
 }
 
-preRun_check() {
+pre_check() {
     local depend_pkg
     depend_pkg=( "curl" "tar" "bc" )
 
@@ -108,7 +94,7 @@ preRun_check() {
         _err_msg "$(_red 'This script must be run as root!')" && exit 1
     fi
 
-    if readlink /proc/$$/exe | grep -q "dash"; then
+    if [ "$(ps -p $$ -o comm=)" != "bash" ]; then
         _err_msg "$(_red 'This script needs to be run with bash, not sh!')" && exit 1
     fi
 
@@ -512,22 +498,22 @@ print_end_time() {
 }
 
 bench_all() {
-    preRun_check # 运行前校验
-    obtain_system_info # 获取系统信息
-    virt_check # 虚拟化校验
-    check_ip_status # IP双栈检查
+    pre_check            # 运行前校验
+    obtain_system_info   # 获取系统信息
+    virt_check           # 虚拟化校验
+    check_ip_status      # IP双栈检查
     clear
-    print_title # 打印title
+    print_title          # 打印title
     separator
-    print_system_info # 打印系统信息
-    ip_info # 打印IP归属
+    print_system_info    # 打印系统信息
+    ip_info              # 打印IP归属
     separator
-    print_io_test # 磁盘IO测试
+    print_io_test        # 磁盘IO测试
     separator
-    install_speedtest # speedtest
+    install_speedtest    # speedtest
     run_speed
     separator
-    print_end_time # 打印执行时间
+    print_end_time       # 打印执行时间
     separator
 }
 
