@@ -11,7 +11,7 @@
 # See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
 
 # 当前脚本版本号
-readonly version='v0.1.3 (2025.02.28)'
+readonly version='v0.1.3 (2025.03.01)'
 
 yellow='\033[93m'
 red='\033[31m'
@@ -90,19 +90,16 @@ pre_check() {
     depend_pkg=( "curl" "tar" "bc" )
 
     if [ "$(id -ru)" -ne "0" ]; then
-        _err_msg "$(_red 'This script must be run as root!')" && exit 1
+        _err_msg "$(_red 'Error: This script must be run as root!')" && exit 1
     fi
-
     if [ "$(ps -p $$ -o comm=)" != "bash" ]; then
-        _err_msg "$(_red 'This script needs to be run with bash, not sh!')" && exit 1
+        _err_msg "$(_red 'Error: This script needs to be run with bash, not sh!')" && exit 1
     fi
-
     for pkg in "${depend_pkg[@]}"; do
         if ! _exists "$pkg" >/dev/null 2>&1; then
             pkg_install "$pkg"
         fi
     done
-
     if [ "$(curl -fskL "https://www.qualcomm.cn/cdn-cgi/trace" | grep -i '^loc=' | cut -d'=' -f2 | xargs)" != "CN" ]; then
         github_Proxy=''
     fi
@@ -417,19 +414,19 @@ install_speedtest() {
     mkdir -p "$speedtest_Dir"
 
     case "$(uname -m)" in
-        'i386' | 'i686' )
+        'i386' | 'i686')
             sys_arch="i386"
         ;;
-        'x86_64' )
+        'x86_64')
             sys_arch="x86_64"
         ;;
         'armv6')
             sys_arch="armv6"
         ;;
-        'armv7' | 'armv7l' )
+        'armv7' | 'armv7l')
             sys_arch="armv7"
         ;;
-        'armv8' | 'armv8l' | 'aarch64' | 'arm64' )
+        'armv8' | 'armv8l' | 'aarch64' | 'arm64')
             sys_arch="arm64"
         ;;
         *)
