@@ -462,11 +462,11 @@ speed_test() {
     latency=$(awk '/Latency:/ {sub(/ms$/, "", $2); printf "%.2fms", $2; exit}' "$speedtest_Dir/speedtest.log")
 
     if [ -n "$download_speed" ] && [ -n "$upload_speed" ] && [ -n "$latency" ]; then
-        printf "${yellow}%-18s${green}%-18s${red}%-20s${blue}%-12s${white}\n" " $nodeName" "$upload_speed" "$download_speed" "$latency"
+        printf "${yellow}%-18s${green}%-18s${red}%-20s${cyan}%-12s${white}\n" " $nodeName" "$upload_speed" "$download_speed" "$latency"
     fi
 }
 
-run_speed() {
+run_speedtest() {
     speed_test '' 'Speedtest.net'
     speed_test '65463' 'Hong Kong, HK'
     speed_test '50406' 'Singapore, SG'
@@ -510,7 +510,7 @@ bench_all() {
     print_io_test        # 磁盘IO测试
     separator
     install_speedtest    # speedtest
-    run_speed
+    run_speedtest
     separator
     print_end_time       # 打印执行时间
     separator
