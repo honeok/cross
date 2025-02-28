@@ -476,7 +476,7 @@ run_speedtest() {
     speedtest '5396' 'JiangSu, CN'
 }
 
-print_end_time() {
+print_end_msg() {
     local end_time time_count min sec
 
     end_time=$(date +%s)
@@ -509,7 +509,7 @@ bench_all() {
     install_speedtest    # speedtest
     run_speedtest
     separator
-    print_end_time       # 打印执行时间
+    print_end_msg
     separator
 }
 
