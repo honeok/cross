@@ -108,19 +108,12 @@ prerun_check() {
         _err_msg "$(_red 'This script must be run as root!')" && exit 1
     fi
 
-    if ! _exists "dmidecode" >/dev/null 2>&1; then
-        pkg_install dmidecode
-    fi
-
     for pkg in "${depend_pkg[@]}"; do
         if ! _exists "$pkg" >/dev/null 2>&1; then
             pkg_install "$pkg"
         fi
     done
 
-    # if curl -sLI -o /dev/null -w "%{http_code}" https://www.deepseek.com/cdn-cgi/trace | grep -q '^200$'; then
-    #     github_Proxy=''
-    # fi
     if [ "$(curl -fskL "https://www.qualcomm.cn/cdn-cgi/trace" | grep -i '^loc=' | cut -d'=' -f2 | xargs)" != "CN" ]; then
         github_Proxy=''
     fi
