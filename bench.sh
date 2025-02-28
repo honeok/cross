@@ -4,8 +4,7 @@
 #
 # Copyright (C) 2025 honeok <honeok@duck.com>
 #
-# Acknowledgements:
-# Teddysun <i@teddysun.com>
+# Thanks: Teddysun <i@teddysun.com>
 #
 # Licensed under the GNU General Public License, version 2 only.
 # This program is distributed WITHOUT ANY WARRANTY.
@@ -17,12 +16,12 @@ readonly version='v0.1.3 (2025.02.28)'
 yellow='\033[93m'
 red='\033[31m'
 green='\033[92m'
-blue='\033[36m'
+cyan='\033[96m'
 white='\033[0m'
 _yellow() { echo -e "${yellow}$*${white}"; }
 _red() { echo -e "${red}$*${white}"; }
 _green() { echo -e "${green}$*${white}"; }
-_blue() { echo -e "${blue}$*${white}"; }
+_cyan() { echo -e "${cyan}$*${white}"; }
 
 _err_msg() { echo -e "\033[41m\033[1mwarn${white} $*"; }
 # _suc_msg() { echo -e "\033[42m\033[1msuccess${white} $*"; }
@@ -47,7 +46,7 @@ mkdir -p "$temp_Dir"
 print_title() {
     echo "--------------------- A Bench.sh Script By honeok --------------------"
     echo " Version            : $(_green "$version")"
-    echo " $(_blue 'bash <(curl -sL https://github.com/honeok/cross/raw/master/bench.sh)')"
+    echo " Usage              : $(_red 'bash <(curl -sL https://tinyurl.com/honeokbench)')"
 }
 
 _exists() {
@@ -313,17 +312,17 @@ check_ip_status() {
 # Print System info
 print_system_info() {
     if [ -n "$cpu_model" ]; then
-        echo " CPU Model          : $(_blue "$cpu_model")"
+        echo " CPU Model          : $(_cyan "$cpu_model")"
     else
-        echo " CPU Model          : $(_blue "CPU model not detected")"
+        echo " CPU Model          : $(_cyan "CPU model not detected")"
     fi
     if [ -n "$cpu_frequency" ]; then
-        echo " CPU Cores          : $(_blue "$cpu_cores @ $cpu_frequency MHz")"
+        echo " CPU Cores          : $(_cyan "$cpu_cores @ $cpu_frequency MHz")"
     else
-        echo " CPU Cores          : $(_blue "$cpu_cores")"
+        echo " CPU Cores          : $(_cyan "$cpu_cores")"
     fi
     if [ -n "$cpu_cache" ]; then
-        echo " CPU Cache          : $(_blue "$cpu_cache")"
+        echo " CPU Cache          : $(_cyan "$cpu_cache")"
     fi
     if [ -n "$cpu_aes" ]; then
         echo " AES-NI             : $(_green "\xe2\x9c\x93 Enabled")"
@@ -335,18 +334,18 @@ print_system_info() {
     else
         echo " VM-x/AMD-V         : $(_red "\xe2\x9c\x97 Disabled")"
     fi
-    echo " Total Disk         : $(_yellow "$disk_total_size") $(_blue "($disk_used_size Used)")"
-    echo " Total Mem          : $(_yellow "$tram") $(_blue "($uram Used)")"
+    echo " Total Disk         : $(_yellow "$disk_total_size") $(_cyan "($disk_used_size Used)")"
+    echo " Total Mem          : $(_yellow "$tram") $(_cyan "($uram Used)")"
     if [ "$swap" != "0" ]; then
-        echo " Total Swap         : $(_blue "$swap ($uswap Used)")"
+        echo " Total Swap         : $(_cyan "$swap ($uswap Used)")"
     fi
-    echo " System uptime      : $(_blue "$uptime_str")"
-    echo " Load average       : $(_blue "$load_average")"
-    echo " OS                 : $(_blue "$os_release")"
-    echo " Arch               : $(_blue "$cpu_architecture ($sys_bits Bit)")"
-    echo " Kernel             : $(_blue "$kernel_version")"
+    echo " System uptime      : $(_cyan "$uptime_str")"
+    echo " Load average       : $(_cyan "$load_average")"
+    echo " OS                 : $(_cyan "$os_release")"
+    echo " Arch               : $(_cyan "$cpu_architecture ($sys_bits Bit)")"
+    echo " Kernel             : $(_cyan "$kernel_version")"
     echo " TCP CC             : $(_yellow "$congestion_algorithm $queue_algorithm")"
-    echo " Virtualization     : $(_blue "$virt_type")"
+    echo " Virtualization     : $(_cyan "$virt_type")"
     echo " IPv4/IPv6          : $online"
 }
 
@@ -358,10 +357,10 @@ ip_info() {
     region=$(curl -fskL -m 10 ipinfo.io/region)
 
     if [ -n "$org" ]; then
-        echo " Organization       : $(_blue "$org")"
+        echo " Organization       : $(_cyan "$org")"
     fi
     if [ -n "$city" ] && [ -n "$country" ]; then
-        echo " Location           : $(_blue "$city / $country")"
+        echo " Location           : $(_cyan "$city / $country")"
     fi
     if [ -n "$region" ]; then
         echo " Region             : $(_yellow "$region")"
