@@ -46,7 +46,7 @@ mkdir -p "$temp_Dir"
 print_title() {
     echo "--------------------- A Bench.sh Script By honeok --------------------"
     echo " Version            : $(_green "$version")"
-    echo " Usage              : $(_red 'bash <(curl -sL https://tinyurl.com/honeokbench)')"
+    echo " $(_cyan 'bash <(curl -sL https://github.com/honeok/cross/raw/master/bench.sh)')"
 }
 
 _exists() {
