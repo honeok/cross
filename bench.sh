@@ -11,10 +11,8 @@
 # This program is distributed WITHOUT ANY WARRANTY.
 # See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
 
-# shellcheck disable=SC2034
-
 # 当前脚本版本号
-readonly version='v0.0.1 (2025.02.26)'
+readonly version='v0.1.1 (2025.02.28)'
 
 yellow='\033[93m'
 red='\033[31m'
@@ -29,12 +27,13 @@ _blue() { echo -e "${blue}$*${white}"; }
 _err_msg() { echo -e "\033[41m\033[1mwarn${white} $*"; }
 _suc_msg() { echo -e "\033[42m\033[1msuccess${white} $*"; }
 
+# 分割符
+separator() { printf "%-70s\n" "-" | sed 's/\s/-/g'; }
+
 # 预定义常量
 github_Proxy='https://gh-proxy.com/'
 temp_Dir='/tmp/bench'
-# userAgent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.74 Safari/537.36'
-
-separator() { printf "%-70s\n" "-" | sed 's/\s/-/g'; }
+speedtest_Dir="$temp_Dir/speedtest"
 
 _exit() {
     separator
@@ -123,7 +122,6 @@ prerun_check() {
     # if curl -sLI -o /dev/null -w "%{http_code}" https://www.deepseek.com/cdn-cgi/trace | grep -q '^200$'; then
     #     github_Proxy=''
     # fi
-
     if [ "$(curl -fskL "https://www.qualcomm.cn/cdn-cgi/trace" | grep -i '^loc=' | cut -d'=' -f2 | xargs)" != "CN" ]; then
         github_Proxy=''
     fi
@@ -427,6 +425,75 @@ print_io_test() {
     fi
 }
 
+install_speedtest() {
+    local speedtest_ver sys_arch
+
+    speedtest_ver="1.7.9"
+    mkdir -p "$speedtest_Dir"
+
+    case "$(uname -m)" in
+        'i386' | 'i686' )
+            sys_arch="i386"
+        ;;
+        'x86_64' )
+            sys_arch="x86_64"
+        ;;
+        'armv6')
+            sys_arch="armv6"
+        ;;
+        'armv7' | 'armv7l' )
+            sys_arch="armv7"
+        ;;
+        'armv8' | 'armv8l' | 'aarch64' | 'arm64' )
+            sys_arch="arm64"
+        ;;
+        *)
+            _err_msg "$(_red "Error: Unsupported system architecture (${sys_arch})")" && exit 1
+        ;;
+    esac
+
+    if ! curl -fskL -o "$speedtest_Dir/speedtest.tar.gz" "${github_Proxy}https://github.com/showwin/speedtest-go/releases/download/v${speedtest_ver}/speedtest-go_${speedtest_ver}_Linux_${sys_arch}.tar.gz"; then
+        _err_msg "$(_red 'Error: Failed to download speedtest-go')" && exit 1
+    fi
+
+    tar zxf "$speedtest_Dir/speedtest.tar.gz" -C "$speedtest_Dir"
+
+    printf "%-18s%-18s%-20s%-12s\n" " Node Name" "Upload Speed" "Download Speed" "Latency"
+}
+
+# https://github.com/showwin/speedtest-go
+speed_test() {
+    local upload_speed download_speed latency
+    local nodeName="$2"
+
+    if [ -z "$1" ]; then
+        "$speedtest_Dir/speedtest-go" --unix > "$speedtest_Dir/speedtest.log" 2>&1 || return
+    else
+        "$speedtest_Dir/speedtest-go" --unix -s "$1" > "$speedtest_Dir/speedtest.log" 2>&1 || return
+    fi
+
+    upload_speed=$(awk -F': ' '/Upload/ {split($2, a, " "); print a[1] " " a[2]; exit}' "$speedtest_Dir/speedtest.log")
+    download_speed=$(awk -F': ' '/Download/ {split($2, a, " "); print a[1] " " a[2]; exit}' "$speedtest_Dir/speedtest.log")
+    latency=$(awk '/Latency:/ {sub(/ms$/, "", $2); printf "%.2fms", $2; exit}' "$speedtest_Dir/speedtest.log")
+
+    if [ -n "$download_speed" ] && [ -n "$upload_speed" ] && [ -n "$latency" ]; then
+        printf "${yellow}%-18s${green}%-18s${red}%-20s${blue}%-12s${white}\n" " $nodeName" "$upload_speed" "$download_speed" "$latency"
+    fi
+}
+
+run_speed() {
+    speed_test '' 'Speedtest.net'
+    speed_test '65463' 'Hong Kong, HK'
+    speed_test '50406' 'Singapore, SG'
+    speed_test '62217' 'Tokyo, JP'
+    speed_test '67564' 'Seoul, KR'
+    speed_test '13516' 'Los Angeles, US'
+    speed_test '31120' 'Frankfurt, DE'
+    speed_test '57725' 'Warsaw, PL'
+    speed_test '54312' 'Zhejiang, CN'
+    speed_test '5396' 'JiangSu, CN'
+}
+
 print_end_time() {
     end_time=$(date +%s)
     time=$((end_time - start_time))
@@ -447,13 +514,15 @@ bench_all() {
     virt_check # 虚拟化校验
     check_ip_status # IP双栈检查
     clear
-    # -----
     print_title # 打印title
     separator
     print_system_info # 打印系统信息
     ip_info # 打印IP归属
     separator
     print_io_test # 磁盘IO测试
+    separator
+    install_speedtest # speedtest
+    run_speed
     separator
     print_end_time # 打印执行时间
 }
