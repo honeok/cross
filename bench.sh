@@ -100,12 +100,16 @@ pkg_install() {
     done
 }
 
-prerun_check() {
+preRun_check() {
     local depend_pkg
     depend_pkg=( "curl" "tar" "bc" )
 
     if [ "$(id -ru)" -ne "0" ]; then
         _err_msg "$(_red 'This script must be run as root!')" && exit 1
+    fi
+
+    if readlink /proc/$$/exe | grep -q "dash"; then
+        _err_msg "$(_red 'This script needs to be run with bash, not sh!')" && exit 1
     fi
 
     for pkg in "${depend_pkg[@]}"; do
@@ -508,7 +512,7 @@ print_end_time() {
 }
 
 bench_all() {
-    prerun_check # 运行前校验
+    preRun_check # 运行前校验
     obtain_system_info # 获取系统信息
     virt_check # 虚拟化校验
     check_ip_status # IP双栈检查
