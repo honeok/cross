@@ -29,44 +29,42 @@ trap "_exit" SIGINT SIGQUIT SIGTERM EXIT
 
 mkdir -p "$temp_Dir"
 
-# install_speedtest() {
-#     if [ ! -e "./speedtest-cli/speedtest" ]; then
-#         sys_bit=""
-#         local sysarch
-#         sysarch="$(uname -m)"
-#         if [ "${sysarch}" = "unknown" ] || [ "${sysarch}" = "" ]; then
-#             sysarch="$(arch)"
-#         fi
-#         if [ "${sysarch}" = "x86_64" ]; then
-#             sys_bit="x86_64"
-#         fi
-#         if [ "${sysarch}" = "i386" ] || [ "${sysarch}" = "i686" ]; then
-#             sys_bit="i386"
-#         fi
-#         if [ "${sysarch}" = "armv8" ] || [ "${sysarch}" = "armv8l" ] || [ "${sysarch}" = "aarch64" ] || [ "${sysarch}" = "arm64" ]; then
-#             sys_bit="aarch64"
-#         fi
-#         if [ "${sysarch}" = "armv7" ] || [ "${sysarch}" = "armv7l" ]; then
-#             sys_bit="armhf"
-#         fi
-#         if [ "${sysarch}" = "armv6" ]; then
-#             sys_bit="armel"
-#         fi
-#         [ -z "${sys_bit}" ] && _red "Error: Unsupported system architecture (${sysarch}).\n" && exit 1
-#         url1="https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-${sys_bit}.tgz"
-#         url2="https://dl.lamp.sh/files/ookla-speedtest-1.2.0-linux-${sys_bit}.tgz"
-#         if ! wget --no-check-certificate -q -T10 -O speedtest.tgz ${url1}; then
-#             if ! wget --no-check-certificate -q -T10 -O speedtest.tgz ${url2}; then
-#                 _red "Error: Failed to download speedtest-cli.\n" && exit 1
-#             fi
-#         fi
-#         mkdir -p speedtest-cli && tar zxf speedtest.tgz -C ./speedtest-cli && chmod +x ./speedtest-cli/speedtest
-#         rm -f speedtest.tgz
-#     fi
-#     printf "%-18s%-18s%-20s%-12s\n" " Node Name" "Upload Speed" "Download Speed" "Latency"
-# }
+install_speedtest() {
+    local speedtest_ver sys_arch
 
-mkdir -p "$temp_Dir/speedtest"
+    speedtest_ver="1.7.9"
+    speedtest_dir="$temp_Dir/speedtest"
+    mkdir -p "$speedtest_dir"
+
+    case "$(uname -m)" in
+        'i386' | 'i686' )
+            sys_arch="i386"
+        ;;
+        'x86_64' )
+            sys_arch="x86_64"
+        ;;
+        'armv6')
+            sys_arch="armv6"
+        ;;
+        'armv7' | 'armv7l' )
+            sys_arch="armv7"
+        ;;
+        'armv8' | 'armv8l' | 'aarch64' | 'arm64' )
+            sys_arch="arm64"
+        ;;
+        *)
+            _err_msg "$(_red "Error: Unsupported system architecture (${sys_arch})")" && exit 1
+        ;;
+    esac
+
+    if ! curl -fskL -o "$speedtest_dir/speedtest.tar.gz" "https://github.com/showwin/speedtest-go/releases/download/v${speedtest_ver}/speedtest-go_${speedtest_ver}_Linux_${sys_arch}.tar.gz"; then
+        _err_msg "$(_red 'Error: Failed to download speedtest-go')" && exit 1
+    fi
+
+    tar zxf "$speedtest_dir/speedtest.tar.gz" -C "$speedtest_dir"
+
+    printf "%-18s%-18s%-20s%-12s\n" " Node Name" "Upload Speed" "Download Speed" "Latency"
+}
 
 # https://github.com/showwin/speedtest-go
 speed_test() {
@@ -74,14 +72,14 @@ speed_test() {
     local nodeName="$2"
 
     if [ -z "$1" ]; then
-        ./speedtest-go --unix > "$temp_Dir/speedtest/speedtest.log" 2>&1 || return
+        "$speedtest_dir/speedtest-go" --unix > "$speedtest_dir/speedtest.log" 2>&1 || return
     else
-        ./speedtest-go --unix -s "$1" > "$temp_Dir/speedtest/speedtest.log" 2>&1 || return
+        "$speedtest_dir/speedtest-go" --unix -s "$1" > "$speedtest_dir/speedtest.log" 2>&1 || return
     fi
 
-    upload_speed=$(awk -F': ' '/Upload/ {split($2, a, " "); print a[1] " " a[2]; exit}' "$temp_Dir/speedtest/speedtest.log")
-    download_speed=$(awk -F': ' '/Download/ {split($2, a, " "); print a[1] " " a[2]; exit}' "$temp_Dir/speedtest/speedtest.log")
-    latency=$(awk '/Latency:/ {sub(/ms$/, "", $2); printf "%.2fms", $2; exit}' "$temp_Dir/speedtest/speedtest.log")
+    upload_speed=$(awk -F': ' '/Upload/ {split($2, a, " "); print a[1] " " a[2]; exit}' "$speedtest_dir/speedtest.log")
+    download_speed=$(awk -F': ' '/Download/ {split($2, a, " "); print a[1] " " a[2]; exit}' "$speedtest_dir/speedtest.log")
+    latency=$(awk '/Latency:/ {sub(/ms$/, "", $2); printf "%.2fms", $2; exit}' "$speedtest_dir/speedtest.log")
 
     if [ -n "$download_speed" ] && [ -n "$upload_speed" ] && [ -n "$latency" ]; then
         printf "${yellow}%-18s${green}%-18s${red}%-20s${blue}%-12s${white}\n" " $nodeName" "$upload_speed" "$download_speed" "$latency"
@@ -101,4 +99,5 @@ speed() {
     speed_test '5396' 'JiangSu, CN'
 }
 
+install_speedtest
 speed
