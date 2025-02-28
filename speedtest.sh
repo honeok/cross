@@ -68,25 +68,26 @@ mkdir -p "$temp_Dir"
 
 mkdir -p "$temp_Dir/speedtest"
 
+# https://github.com/showwin/speedtest-go
 speed_test() {
-    local dl_speed up_speed latency
+    local upload_speed download_speed latency
     local nodeName="$2"
 
     if [ -z "$1" ]; then
-        ./speedtest-go > "$temp_Dir/speedtest/speedtest.log" 2>&1 || return
+        ./speedtest-go --unix > "$temp_Dir/speedtest/speedtest.log" 2>&1 || return
     else
-        ./speedtest-go -s "$1" > "$temp_Dir/speedtest/speedtest.log" 2>&1 || return
+        ./speedtest-go --unix -s "$1" > "$temp_Dir/speedtest/speedtest.log" 2>&1 || return
     fi
 
-    eval "$(awk -F': ' '/Upload/{split($2, a, " "); printf "up_speed=\"%s %s\"\n", a[1], a[2]} /Download/{split($2, a, " "); printf "dl_speed=\"%s %s\"\n", a[1], a[2]}' "$temp_Dir/speedtest/speedtest.log")"
-    latency=$(awk -F': ' '/^✓ Latency:/ {split($2, a, " "); print a[1]; exit}' "$temp_Dir/speedtest/speedtest.log")
+    upload_speed=$(awk -F': ' '/Upload/ {split($2, a, " "); print a[1] " " a[2]; exit}' "$temp_Dir/speedtest/speedtest.log")
+    download_speed=$(awk -F': ' '/Download/ {split($2, a, " "); print a[1] " " a[2]; exit}' "$temp_Dir/speedtest/speedtest.log")
+    latency=$(awk '/Latency:/ {sub(/ms$/, "", $2); printf "%.2fms", $2; exit}' "$temp_Dir/speedtest/speedtest.log")
 
-    if [ -n "$dl_speed" ] && [ -n "$up_speed" ] && [ -n "$latency" ]; then
-        printf "${yellow}%-18s${green}%-18s${red}%-20s${blue}%-12s${white}\n" " $nodeName" "$up_speed" "$dl_speed" "$latency"
+    if [ -n "$download_speed" ] && [ -n "$upload_speed" ] && [ -n "$latency" ]; then
+        printf "${yellow}%-18s${green}%-18s${red}%-20s${blue}%-12s${white}\n" " $nodeName" "$upload_speed" "$download_speed" "$latency"
     fi
 }
 
-# https://github.com/spiritLHLS/speedtest.net-CN-ID/blob/main/ls_sg_hk_jp.csv
 speed() {
     speed_test '' 'Speedtest.net'
     speed_test '65463' 'Hong Kong, HK'
@@ -95,8 +96,9 @@ speed() {
     speed_test '67564' 'Seoul, KR'
     speed_test '13516' 'Los Angeles, US'
     speed_test '31120' 'Frankfurt, DE'
-    speed_test '24447' 'Shanghai, CN'
-    speed_test '60584' 'ShenZhen, CN'
+    speed_test '57725' 'Warsaw, PL'
+    speed_test '54312' 'Zhejiang, CN'
+    speed_test '5396' 'JiangSu, CN'
 }
 
 speed
