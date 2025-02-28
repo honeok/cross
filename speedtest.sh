@@ -33,7 +33,7 @@ install_speedtest() {
     local speedtest_ver sys_arch
 
     speedtest_ver="1.7.9"
-    speedtest_dir="$temp_Dir/speedtest"
+    speedtest_dir="$temp_Dir/speedtest" # 被调用后全局变量
     mkdir -p "$speedtest_dir"
 
     case "$(uname -m)" in
