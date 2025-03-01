@@ -388,18 +388,10 @@ ip_details() {
     local ipinfo_result ip_org ip_city ip_country ip_region
 
     ipinfo_result=$(curl -fskL -m 10 ipinfo.io)
-
-    if [ -z "$ipinfo_result" ]; then
-        echo " Region             : $(_red "No ISP detected")"
-        return
-    fi
-
-    eval "$(echo "$ipinfo_result" | awk -F'"' '
-        /"org":/ {print "ip_org="$4}
-        /"city":/ {print "ip_city="$4}
-        /"country":/ {print "ip_country="$4}
-        /"region":/ {print "ip_region="$4}
-    ')"
+    ip_org=$(echo "$ipinfo_result" | awk -F'"' '/"org":/ {print $4}')
+    ip_city=$(echo "$ipinfo_result" | awk -F'"' '/"city":/ {print $4}')
+    ip_country=$(echo "$ipinfo_result" | awk -F'"' '/"country":/ {print $4}')
+    ip_region=$(echo "$ipinfo_result" | awk -F'"' '/"region":/ {print $4}')
 
     if [ -n "$ip_org" ]; then
         echo " Organization       : $(_cyan "$ip_org")"
