@@ -114,9 +114,10 @@ pkg_uninstall() {
     done
 }
 
+# 运行前校验
 pre_check() {
-    local depend_pkg
-    depend_pkg=( "curl" "tar" "bc" )
+    local install_depend_pkg
+    install_depend_pkg=( "curl" "tar" "bc" )
 
     if [ "$(id -ru)" -ne "0" ]; then
         _err_msg "$(_red 'Error: This script must be run as root!')" && exit 1
@@ -124,7 +125,7 @@ pre_check() {
     if [ "$(ps -p $$ -o comm=)" != "bash" ]; then
         _err_msg "$(_red 'Error: This script needs to be run with bash, not sh!')" && exit 1
     fi
-    for pkg in "${depend_pkg[@]}"; do
+    for pkg in "${install_depend_pkg[@]}"; do
         if ! _exists "$pkg" >/dev/null 2>&1; then
             uninstall_depend_pkg+=("$pkg")
             pkg_install "$pkg"
@@ -181,7 +182,7 @@ format_size() {
     echo "$size $unit"
 }
 
-# System info
+# 获取系统信息
 obtain_system_info() {
     # CPU信息
     cpu_model=$(awk -F: '/model name/ {name=$2} END {print name}' /proc/cpuinfo | sed 's/^[ \t]*//;s/[ \t]*$//')
@@ -249,6 +250,7 @@ obtain_system_info() {
     fi
 }
 
+# 虚拟化校验
 virt_check() {
     local processor_type kernel_logs system_manufacturer system_product_name system_version
 
@@ -309,7 +311,8 @@ virt_check() {
     fi
 }
 
-check_ip_status() {
+# IP双栈检查
+ip_dual_stack() {
     local ipv4_check ipv6_check
 
     if ping -4 -c 1 -W 4 1.1.1.1 >/dev/null 2>&1; then
@@ -338,7 +341,7 @@ check_ip_status() {
     fi
 }
 
-# Print System info
+# 打印系统信息
 print_system_info() {
     if [ -n "$cpu_model" ]; then
         echo " CPU Model          : $(_cyan "$cpu_model")"
@@ -378,6 +381,7 @@ print_system_info() {
     echo " IPv4/IPv6          : $online"
 }
 
+# 获取当前IP相关信息
 ip_info() {
     local org city country region
     org=$(curl -fskL -m 10 ipinfo.io/org)
@@ -407,6 +411,7 @@ io_test() {
     echo "$speed"
 }
 
+# 磁盘IO测试
 print_io_test() {
     local free_space write_mb io1 io2 io3 speed1 speed2 speed3 ioavg
 
@@ -530,19 +535,19 @@ print_end_msg() {
 }
 
 bench() {
-    pre_check            # 运行前校验
-    obtain_system_info   # 获取系统信息
-    virt_check           # 虚拟化校验
-    check_ip_status      # IP双栈检查
+    pre_check
+    obtain_system_info
+    virt_check
+    ip_dual_stack
     clear
-    print_title          # 打印title
+    print_title
     separator
-    print_system_info    # 打印系统信息
-    ip_info              # 打印IP归属
+    print_system_info
+    ip_info
     separator
-    print_io_test        # 磁盘IO测试
+    print_io_test
     separator
-    install_speedtest    # speedtest
+    install_speedtest
     run_speedtest
     separator
     print_end_msg
