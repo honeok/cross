@@ -13,14 +13,16 @@
 # 当前脚本版本号
 readonly version='v0.1.5 (2025.03.01)'
 
-yellow='\033[93m'
-red='\033[31m'
+red='\033[91m'
 green='\033[92m'
+yellow='\033[93m'
+purple='\033[95m'
 cyan='\033[96m'
 white='\033[0m'
-_yellow() { echo -e "${yellow}$*${white}"; }
 _red() { echo -e "${red}$*${white}"; }
 _green() { echo -e "${green}$*${white}"; }
+_yellow() { echo -e "${yellow}$*${white}"; }
+_purple() { echo -e "${purple}$*${white}"; }
 _cyan() { echo -e "${cyan}$*${white}"; }
 
 _err_msg() { echo -e "\033[41m\033[1mwarn${white} $*"; }
@@ -50,7 +52,7 @@ mkdir -p "$temp_Dir"
 
 print_title() {
     echo "--------------------- A Bench.sh Script By honeok --------------------"
-    echo " Version            : $(_green "$version")"
+    echo " Version            : $(_green "$version") $(_purple "\xf0\x9f\x92\x80")"
     echo " $(_cyan 'bash <(curl -sL https://github.com/honeok/cross/raw/master/bench.sh)')"
 }
 
