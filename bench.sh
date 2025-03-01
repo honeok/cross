@@ -11,7 +11,7 @@
 # See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
 
 # 当前脚本版本号
-readonly version='v0.1.6 (2025.03.02)'
+readonly version='v0.1.7 (2025.03.02)'
 
 red='\033[91m'
 green='\033[92m'
@@ -384,23 +384,33 @@ print_system_info() {
 }
 
 # 获取当前IP相关信息
-ip_info() {
-    local org city country region
-    org=$(curl -fskL -m 10 ipinfo.io/org)
-    city=$(curl -fskL -m 10 ipinfo.io/city)
-    country=$(curl -fskL -m 10 ipinfo.io/country)
-    region=$(curl -fskL -m 10 ipinfo.io/region)
+ip_details() {
+    local ipinfo_result ip_org ip_city ip_country ip_region
 
-    if [ -n "$org" ]; then
-        echo " Organization       : $(_cyan "$org")"
+    ipinfo_result=$(curl -fskL -m 10 ipinfo.io)
+
+    if [ -z "$ipinfo_result" ]; then
+        echo " Region             : $(_red "No ISP detected")"
+        return
     fi
-    if [ -n "$city" ] && [ -n "$country" ]; then
-        echo " Location           : $(_cyan "$city / $country")"
+
+    eval "$(echo "$ipinfo_result" | awk -F'"' '
+        /"org":/ {print "ip_org="$4}
+        /"city":/ {print "ip_city="$4}
+        /"country":/ {print "ip_country="$4}
+        /"region":/ {print "ip_region="$4}
+    ')"
+
+    if [ -n "$ip_org" ]; then
+        echo " Organization       : $(_cyan "$ip_org")"
     fi
-    if [ -n "$region" ]; then
-        echo " Region             : $(_yellow "$region")"
+    if [ -n "$ip_city" ] && [ -n "$ip_country" ]; then
+        echo " Location           : $(_cyan "$ip_city / $ip_country")"
     fi
-    if [ -z "$org" ]; then
+    if [ -n "$ip_region" ]; then
+        echo " Region             : $(_yellow "$ip_region")"
+    fi
+    if [ -z "$ip_org" ]; then
         echo " Region             : $(_red "No ISP detected")"
     fi
 }
@@ -545,7 +555,7 @@ bench() {
     print_title
     separator
     print_system_info
-    ip_info
+    ip_details
     separator
     print_io_test
     separator
