@@ -11,7 +11,7 @@
 # See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
 
 # 当前脚本版本号
-readonly version='v0.1.4 (2025.03.01)'
+readonly version='v0.1.5 (2025.03.01)'
 
 yellow='\033[93m'
 red='\033[31m'
@@ -160,7 +160,7 @@ format_size() {
     local unit="KB"
 
     # 检查输入是否为非负整数
-    if ! [[ "$bytes" =~ ^[0-9]+$ ]]; then
+    if echo "$bytes" | grep -vE '^[0-9]+$' >/dev/null 2>&1; then
         return 1
     fi
     # 根据字节数大小选择单位和除数
@@ -266,41 +266,41 @@ virt_check() {
         system_version=$(dmidecode -s system-version 2>/dev/null)
     fi
 
-    if grep -qa docker /proc/1/cgroup; then
+    if grep -qai docker /proc/1/cgroup; then
         virt_type="Docker"
-    elif grep -qa lxc /proc/1/cgroup; then
+    elif grep -qai lxc /proc/1/cgroup; then
         virt_type="LXC"
-    elif grep -qa container=lxc /proc/1/environ; then
+    elif grep -qai container=lxc /proc/1/environ; then
         virt_type="LXC"
     elif [ -f /proc/user_beancounters ]; then
         virt_type="OpenVZ"
-    elif [[ "$kernel_logs" == *kvm-clock* ]]; then
+    elif echo "$kernel_logs" | grep -qi "kvm-clock" 2>/dev/null; then
         virt_type="KVM"
-    elif [[ "$processor_type" == *KVM* ]]; then
+    elif echo "$processor_type" | grep -qi "kvm" 2>/dev/null; then
         virt_type="KVM"
-    elif [[ "$processor_type" == *QEMU* ]]; then
+    elif echo "$processor_type" | grep -qi "qemu" 2>/dev/null; then
         virt_type="KVM"
     elif grep -qi "kvm" "/sys/devices/virtual/dmi/id/product_name" 2>/dev/null; then
         virt_type="KVM"
     elif grep -qi "qemu" "/proc/scsi/scsi" 2>/dev/null; then
         virt_type="KVM"
-    elif [[ "$kernel_logs" == *"VMware Virtual Platform"* ]]; then
+    elif echo "$kernel_logs" | grep -qi "vmware virtual platform" 2>/dev/null; then
         virt_type="VMware"
-    elif [[ "$kernel_logs" == *"Parallels Software International"* ]]; then
+    elif echo "$kernel_logs" | grep -qi "parallels software international" 2>/dev/null; then
         virt_type="Parallels"
-    elif [[ "$kernel_logs" == *VirtualBox* ]]; then
+    elif echo "$kernel_logs" | grep -qi "virtualbox" 2>/dev/null; then
         virt_type="VirtualBox"
     elif [ -e /proc/xen ]; then
-        if grep -q "control_d" "/proc/xen/capabilities" 2>/dev/null; then
+        if grep -qi "control_d" "/proc/xen/capabilities" 2>/dev/null; then
             virt_type="Xen-Dom0"
         else
             virt_type="Xen-DomU"
         fi
-    elif [ -f "/sys/hypervisor/type" ] && grep -q "xen" "/sys/hypervisor/type"; then
+    elif [ -f "/sys/hypervisor/type" ] && grep -qi "xen" "/sys/hypervisor/type" 2>/dev/null; then
         virt_type="Xen"
-    elif [[ "$system_manufacturer" == *"Microsoft Corporation"* ]]; then
-        if [[ "$system_product_name" == *"Virtual Machine"* ]]; then
-            if [[ "$system_version" == *"7.0"* || "$system_version" == *"Hyper-V" ]]; then
+    elif echo "$system_manufacturer" | grep -qi "microsoft corporation" 2>/dev/null; then
+        if echo "$system_product_name" | grep -qi "virtual machine" 2>/dev/null; then
+            if echo "$system_version" | grep -qi "7.0" 2>/dev/null || echo "$system_version" | grep -qi "hyper-v" 2>/dev/null; then
                 virt_type="Hyper-V"
             else
                 virt_type="Microsoft Virtual Machine"
