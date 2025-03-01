@@ -24,7 +24,6 @@ _green() { echo -e "${green}$*${white}"; }
 _cyan() { echo -e "${cyan}$*${white}"; }
 
 _err_msg() { echo -e "\033[41m\033[1mwarn${white} $*"; }
-# _suc_msg() { echo -e "\033[42m\033[1msuccess${white} $*"; }
 
 # 分割符
 separator() { printf "%-70s\n" "-" | sed 's/\s/-/g'; }
@@ -34,8 +33,14 @@ github_Proxy='https://gh-proxy.com/'
 temp_Dir='/tmp/bench'
 speedtest_Dir="$temp_Dir/speedtest"
 
+# 定义一个数组存储用户未安装的软件包
+declare -a uninstall_depend_pkg=()
+
 _exit() {
     rm -rf "$temp_Dir"
+    if [ ${#uninstall_depend_pkg[@]} -gt 0 ]; then
+        (for pkg in "${uninstall_depend_pkg[@]}"; do pkg_uninstall "$pkg" >/dev/null 2>&1; done) & disown
+    fi
     exit 0
 }
 
@@ -85,6 +90,30 @@ pkg_install() {
     done
 }
 
+pkg_uninstall() {
+    for package in "$@"; do
+        if _exists dnf; then
+            dnf remove -y "$package"
+        elif _exists yum; then
+            yum remove -y "$package"
+        elif _exists apt; then
+            apt purge -y "$package"
+        elif _exists apt-get; then
+            apt-get purge -y "$package"
+        elif _exists apk; then
+            apk del "$package"
+        elif _exists pacman; then
+            pacman -Rns --noconfirm "$package"
+        elif _exists zypper; then
+            zypper remove -y "$package"
+        elif _exists opkg; then
+            opkg remove "$package"
+        elif _exists pkg; then
+            pkg delete -y "$package"
+        fi
+    done
+}
+
 pre_check() {
     local depend_pkg
     depend_pkg=( "curl" "tar" "bc" )
@@ -97,6 +126,7 @@ pre_check() {
     fi
     for pkg in "${depend_pkg[@]}"; do
         if ! _exists "$pkg" >/dev/null 2>&1; then
+            uninstall_depend_pkg+=("$pkg")
             pkg_install "$pkg"
         fi
     done
@@ -493,7 +523,7 @@ print_end_msg() {
     echo " Timestamp          : $(date '+%Y-%m-%d %H:%M:%S %Z')"
 }
 
-bench_all() {
+bench() {
     pre_check            # 运行前校验
     obtain_system_info   # 获取系统信息
     virt_check           # 虚拟化校验
@@ -513,4 +543,4 @@ bench_all() {
     separator
 }
 
-bench_all
+bench
