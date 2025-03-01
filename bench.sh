@@ -11,7 +11,7 @@
 # See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
 
 # 当前脚本版本号
-readonly version='v0.1.3 (2025.03.01)'
+readonly version='v0.1.4 (2025.03.01)'
 
 yellow='\033[93m'
 red='\033[31m'
@@ -133,6 +133,8 @@ pre_check() {
     if [ "$(curl -fskL "https://www.qualcomm.cn/cdn-cgi/trace" | grep -i '^loc=' | cut -d'=' -f2 | xargs)" != "CN" ]; then
         github_Proxy=''
     fi
+    # 脚本当天及累计运行次数统计
+    runcount=$(curl -fskL -m 2 --retry 1 "https://hit.forvps.gq/https://github.com/honeok/cross/raw/master/bench.sh" 2>&1 | grep -m1 -oE "[0-9]+[ ]+/[ ]+[0-9]+")
 
     start_time=$(date +%s)
 }
@@ -507,7 +509,7 @@ run_speedtest() {
 }
 
 print_end_msg() {
-    local end_time time_count min sec
+    local end_time time_count min sec today_runcount total_runcount
 
     end_time=$(date +%s)
     time_count=$(( end_time - start_time ))
@@ -519,7 +521,11 @@ print_end_msg() {
     else
         echo " Finished in        : $time_count sec"
     fi
-
+    if [ -n "$runcount" ]; then
+        today_runcount=$(awk -F ' ' '{print $1}' <<< "$runcount")
+        total_runcount=$(awk -F ' ' '{print $3}' <<< "$runcount")
+        echo " Run Today/Total    : $today_runcount / $total_runcount"
+    fi
     echo " Timestamp          : $(date '+%Y-%m-%d %H:%M:%S %Z')"
 }
 
