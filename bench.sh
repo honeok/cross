@@ -11,7 +11,7 @@
 # See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
 
 # 当前脚本版本号
-readonly version='v0.1.5 (2025.03.01)'
+readonly version='v0.1.6 (2025.03.02)'
 
 red='\033[91m'
 green='\033[92m'
@@ -531,7 +531,7 @@ print_end_msg() {
     if [ -n "$runcount" ]; then
         today_runcount=$(awk -F ' ' '{print $1}' <<< "$runcount")
         total_runcount=$(awk -F ' ' '{print $3}' <<< "$runcount")
-        echo " Run Today/Total    : $today_runcount / $total_runcount"
+        echo " Runs (Today/Total) : $today_runcount / $total_runcount"
     fi
     echo " Timestamp          : $(date '+%Y-%m-%d %H:%M:%S %Z')"
 }
