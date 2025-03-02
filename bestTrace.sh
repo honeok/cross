@@ -124,15 +124,17 @@ nt_uninstall() {
     [ -f "/usr/bin/nexttrace" ] && rm -f "/usr/bin/nexttrace" >/dev/null 2>&1
 }
 
+# 单地区追踪处理
 trace_single() {
     local -n areas="$1"
     local -n ip_list="$2"
+    local ip_address
 
-    for i in {0..2}; do
+    for operator in {0..2}; do
         separator
-        local ip="${ip_list[$i]}"
-        _yellow "${areas[$i]} $ip"
-        nexttrace -M "$ip"
+        ip_address="${ip_list[$operator]}"
+        _yellow "${areas[$operator]} $ip_address"
+        nexttrace -M "$ip_address"
     done
 }
 
