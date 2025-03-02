@@ -94,21 +94,20 @@ pre_runcheck() {
     runcount=$(curl -fskL -m 2 --retry 1 "https://hit.forvps.gq/https://github.com/honeok/cross/raw/master/bestTrace.sh" 2>&1 | grep -m1 -oE "[0-9]+[ ]+/[ ]+[0-9]+")
 }
 
-# IP双栈检查
+# IP dual stack check
+# https://www.shellcheck.net/wiki/SC2015
+# shellcheck disable=SC2015
 pre_ipcheck() {
-    if ping -4 -c 1 -W 4 1.1.1.1 >/dev/null 2>&1; then
-        ipv4_check="true"
-    elif [ -z "$ipv4_check" ] && curl -sL -m 4 -4 ipinfo.io/ip >/dev/null 2>&1; then
-        ipv4_check="true"
-    fi
+    ipv4_check="false"
+    ipv6_check="false"
 
-    if ping -6 -c 1 -W 4 2606:4700:4700::1111 >/dev/null 2>&1; then
-        ipv6_check="true"
-    elif [ -z "$ipv6_check" ] && curl -sL -m 4 -6 v6.ipinfo.io/ip >/dev/null 2>&1; then
-        ipv6_check="true"
-    fi
+    ping -4 -c 1 -W 4 1.1.1.1 >/dev/null 2>&1 && ipv4_check="true" || \
+        { [ -z "$ipv4_check" ] && curl -sL -m 4 -4 ipinfo.io/ip 2>/dev/null && ipv4_check="true"; }
 
-    if [ -z "$ipv4_check" ] && [ -z "$ipv6_check" ]; then
+    ping -6 -c 1 -W 4 2606:4700:4700::1111 >/dev/null 2>&1 && ipv6_check="true" || \
+        { [ -z "$ipv6_check" ] && curl -sL -m 4 -6 v6.ipinfo.io/ip 2>/dev/null && ipv6_check="true"; }
+
+    if [ "$ipv4_check" = "false" ] && [ "$ipv6_check" = "false" ]; then
         _err_msg "$(_red 'Error: Both IPv4 and IPv6 connectivity were not detected.')" && exit 1
     fi
 }
@@ -138,7 +137,7 @@ trace_single() {
 }
 
 exec_bestTrace() {
-    if [ "$ipv4_check" ] && [ "$ipv6_check" ]; then
+    if [ "$ipv4_check" = "true" ] && [ "$ipv6_check" = "true" ]; then
         trace_single "area_bj" "bj_v4"
         trace_single "area_sh" "sh_v4"
         trace_single "area_gz" "gz_v4"
@@ -148,12 +147,12 @@ exec_bestTrace() {
         trace_single "area_sh" "sh_v6"
         trace_single "area_gz" "gz_v6"
         trace_single "area_cd" "cd_v6"
-    elif [ "$ipv4_check" ]; then
+    elif [ "$ipv4_check" = "true" ]; then
         trace_single "area_bj" "bj_v4"
         trace_single "area_sh" "sh_v4"
         trace_single "area_gz" "gz_v4"
         trace_single "area_cd" "cd_v4"
-    elif [ "$ipv6_check" ]; then
+    elif [ "$ipv6_check" = "true" ]; then
         trace_single "area_bj" "bj_v6"
         trace_single "area_sh" "sh_v6"
         trace_single "area_gz" "gz_v6"
