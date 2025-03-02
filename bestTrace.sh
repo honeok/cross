@@ -20,13 +20,11 @@ readonly version='v0.1.1 (2025.03.02)'
 red='\033[91m'
 green='\033[92m'
 yellow='\033[93m'
-purple='\033[95m'
 cyan='\033[96m'
 white='\033[0m'
 _red() { echo -e "${red}$*${white}"; }
 _green() { echo -e "${green}$*${white}"; }
 _yellow() { echo -e "${yellow}$*${white}"; }
-_purple() { echo -e "${purple}$*${white}"; }
 _cyan() { echo -e "${cyan}$*${white}"; }
 
 _err_msg() { echo -e "\033[41m\033[1mwarn${white} $*"; }
@@ -57,7 +55,7 @@ declare -a cd_v6=("240e:974:e601:200::14" "2408:8766:1:14::18" "2409:8c62:e10:79
 
 print_title() {
     echo "------------------- A bestTrace.sh Script By honeok ------------------"
-    echo " Version            : $(_green "$version") $(_purple "\xf0\x9f\x92\x80")"
+    echo " Version            : $(_green "$version") $(_cyan "\xe2\x9b\x8f\xef\xb8\x8f")"
     echo " $(_cyan 'bash <(curl -sL https://github.com/honeok/cross/raw/master/bestTrace.sh)')"
 }
 
