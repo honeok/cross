@@ -15,7 +15,7 @@
 # shellcheck disable=SC2034
 
 # 当前脚本版本号
-readonly version='v0.1.1 (2025.03.02)'
+readonly version='v0.1.2 (2025.03.03)'
 
 red='\033[91m'
 green='\033[92m'
@@ -82,14 +82,15 @@ pre_runcheck() {
     if [ "$(id -ru)" -ne "0" ] || [ "$EUID" -ne "0" ]; then
         _err_msg "$(_red 'Error: This script must be run as root!')" && exit 1
     fi
-    if [ "$(ps -p $$ -o comm=)" != "bash" ]; then
+    if [ "$(ps -p $$ -o comm=)" != "bash" ] || readlink /proc/$$/exe | grep -q "dash"; then
         _err_msg "$(_red 'Error: This script needs to be run with bash, not sh!')" && exit 1
     fi
-    if curl -sLI -o /dev/null -w "%{http_code}" "https://www.deepseek.com/cdn-cgi/trace" | grep -q '^200$'; then
+    # 境外服务器仅ipv4访问测试通过后取消github代理
+    if curl -sLI -4 -m 3 -o /dev/null -w "%{http_code}" "https://www.deepseek.com/cdn-cgi/trace" | grep -q '^200$'; then
         github_Proxy=''
     fi
     # 脚本当天及累计运行次数统计
-    runcount=$(curl -fskL -m 2 --retry 1 "https://hit.forvps.gq/https://github.com/honeok/cross/raw/master/bestTrace.sh" 2>&1 | grep -m1 -oE "[0-9]+[ ]+/[ ]+[0-9]+")
+    runcount=$(curl -fskL -m 3 --retry 1 "https://hit.forvps.gq/https://github.com/honeok/cross/raw/master/bestTrace.sh" 2>&1 | grep -m1 -oE "[0-9]+[ ]+/[ ]+[0-9]+")
 }
 
 # IP dual stack check
