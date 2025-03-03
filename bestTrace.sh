@@ -86,7 +86,7 @@ pre_runcheck() {
         _err_msg "$(_red 'Error: This script needs to be run with bash, not sh!')" && exit 1
     fi
     # 境外服务器仅ipv4访问测试通过后取消github代理
-    if curl -sLI -4 -m 3 -o /dev/null -w "%{http_code}" "https://www.deepseek.com/cdn-cgi/trace" | grep -q '^200$'; then
+    if curl -sLI -m 3 -4 -o /dev/null -w "%{http_code}" "https://www.deepseek.com/cdn-cgi/trace" | grep -q '^200$'; then
         github_Proxy=''
     fi
     # 脚本当天及累计运行次数统计
@@ -101,10 +101,10 @@ pre_ipcheck() {
     ipv6_check="false"
 
     ping -4 -c 1 -W 4 1.1.1.1 >/dev/null 2>&1 && ipv4_check="true" || \
-        { [ -z "$ipv4_check" ] && curl -sL -m 4 -4 ipinfo.io/ip 2>/dev/null && ipv4_check="true"; }
+        { curl -sL -m 4 -4 ipinfo.io/ip >/dev/null 2>&1 && ipv4_check="true"; }
 
     ping -6 -c 1 -W 4 2606:4700:4700::1111 >/dev/null 2>&1 && ipv6_check="true" || \
-        { [ -z "$ipv6_check" ] && curl -sL -m 4 -6 v6.ipinfo.io/ip 2>/dev/null && ipv6_check="true"; }
+        { curl -sL -m 4 -6 v6.ipinfo.io/ip >/dev/null 2>&1 && ipv6_check="true"; }
 
     if [ "$ipv4_check" = "false" ] && [ "$ipv6_check" = "false" ]; then
         _err_msg "$(_red 'Error: Both IPv4 and IPv6 connectivity were not detected.')" && exit 1
