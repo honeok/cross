@@ -55,7 +55,7 @@ declare -a cd_v6=("240e:974:e601:200::14" "2408:8766:1:14::18" "2409:8c62:e10:79
 
 print_title() {
     echo "------------------- A bestTrace.sh Script By honeok ------------------"
-    echo " Version            : $(_green "$version") $(_red "\xe2\x9b\x8f\xef\xb8\x8f")"
+    echo " Version            : $(_green "$version") $(_red "\xe2\x99\xbb\xef\xb8\x8f")"
     echo " $(_cyan 'bash <(curl -sL https://github.com/honeok/cross/raw/master/bestTrace.sh)')"
 }
 
