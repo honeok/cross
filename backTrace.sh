@@ -11,7 +11,6 @@
 # See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
 
 set \
-    -o errexit \
     -o nounset
 
 red='\033[91m'
@@ -35,7 +34,7 @@ pre_runcheck() {
         _err_msg "$(_red 'Error: This script needs to be run with bash, not sh!')" && exit 1
     fi
     if [ "$(cd -P -- "$(dirname -- "$0")" && pwd -P)" != "/root" ]; then
-        cd /root >/dev/null 2>&1 || _err_msg "$(_red 'Error: Failed to change directory. Check permissions and try again!')" && exit 1
+        cd /root >/dev/null 2>&1 || { _err_msg "$(_red 'Error: Failed to change directory. Check permissions and try again!')" && exit 1; }
     fi
     if [ "$(curl -skL -m 3 -4 "https://www.qualcomm.cn/cdn-cgi/trace" | grep -i '^loc=' | cut -d'=' -f2 | xargs)" != "CN" ]; then
         github_Proxy=''
