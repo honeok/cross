@@ -9,17 +9,30 @@
 
 Life is vast and unpredictable, yet ultimately insignificant.
 
+## bench.sh
+
+Description: A script for automated testing of I/O performance, upload & download speed, global network benchmarking, system information retrieval, and disk I/O tests.
+
+Acknowledgment: teddysun
+
+```shell
+bash <(curl -sL https://github.com/honeok/cross/raw/master/bench.sh)
+```
+or
+```shell
+bash <(curl -sL https://gitlab.com/honeok/cross/-/raw/master/bench.sh)
+```
+
 ## bestTrace.sh
 
 Description: This script is designed for measuring network speed and performing routing trace across three networks.
 
-For international users:
 ```shell
 bash <(curl -sL https://github.com/honeok/cross/raw/master/bestTrace.sh)
 ```
-For users in Mainland China:
+or
 ```shell
-bash <(curl -sL https://cdn.611611.best/https://github.com/honeok/cross/raw/master/bestTrace.sh)
+bash <(curl -sL https://gitlab.com/honeok/cross/-/raw/master/bestTrace.sh)
 ```
 
 ## backTrace.sh
@@ -27,13 +40,12 @@ bash <(curl -sL https://cdn.611611.best/https://github.com/honeok/cross/raw/mast
 Description: This script is used for testing the routing path across three networks.<br>
 It is based on the optimization of the one-click installation script from https://github.com/oneclickvirt/backtrace.
 
-For international users:
 ```shell
 bash <(curl -sL https://github.com/honeok/cross/raw/master/backTrace.sh)
 ```
-For users in Mainland China:
+or
 ```shell
-bash <(curl -sL https://cdn.611611.best/https://github.com/honeok/cross/raw/master/backTrace.sh)
+bash <(curl -sL https://gitlab.com/honeok/cross/-/raw/master/backTrace.sh)
 ```
 
 ## get-docker.sh
@@ -44,11 +56,10 @@ bash <(curl -sL https://cdn.611611.best/https://github.com/honeok/cross/raw/mast
 
 Description: This script allows you to install the latest version of Docker on your server with a single command.
 
-For international users:
 ```shell
 bash <(curl -sL https://github.com/honeok/cross/raw/master/get-docker.sh)
 ```
-For users in Mainland China:
+or
 ```shell
-bash <(curl -sL https://cdn.611611.best/https://github.com/honeok/cross/raw/master/get-docker.sh)
+bash <(curl -sL https://gitlab.com/honeok/cross/-/raw/master/get-docker.sh)
 ```
