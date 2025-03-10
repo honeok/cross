@@ -21,7 +21,7 @@ jobs:
           target_repo_url:
             git@gitlab.com:${{ github.repository }}.git
           ssh_private_key:
-            ${{ secrets.PRIVATE_KEY }}
+            ${{ secrets.SYNC_PRIVATE_KEY }}
 
   mirror_to_framagit:
     name: Mirror to framagit
@@ -37,4 +37,4 @@ jobs:
           target_repo_url:
             git@framagit.org:${{ github.repository }}.git
           ssh_private_key:
-            ${{ secrets.PRIVATE_KEY }}
+            ${{ secrets.SYNC_PRIVATE_KEY }}
