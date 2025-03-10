@@ -11,7 +11,7 @@
 # See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
 
 # 当前脚本版本号
-readonly version='v0.1.7 (2025.03.02)'
+readonly version='v0.1.8 (2025.03.11)'
 
 red='\033[91m'
 green='\033[92m'
@@ -39,11 +39,13 @@ speedtest_Dir="$temp_Dir/speedtest"
 declare -a uninstall_depend_pkg=()
 
 _exit() {
+    local return_value=$?
+
     rm -rf "$temp_Dir"
     if [ ${#uninstall_depend_pkg[@]} -gt 0 ]; then
         (for pkg in "${uninstall_depend_pkg[@]}"; do pkg_uninstall "$pkg" >/dev/null 2>&1; done) & disown
     fi
-    exit 0
+    exit "$return_value"
 }
 
 trap "_exit" SIGINT SIGQUIT SIGTERM EXIT
@@ -121,11 +123,11 @@ pre_check() {
     local install_depend_pkg
     install_depend_pkg=( "curl" "tar" "bc" )
 
-    if [ "$(id -ru)" -ne "0" ]; then
-        _err_msg "$(_red 'Error: This script must be run as root!')" && exit 1
+    if [ "$(id -ru)" -ne "0" ] || [ "$EUID" -ne "0" ]; then
+        _err_msg "$(_red 'This script must be run as root!')" && exit 1
     fi
-    if [ "$(ps -p $$ -o comm=)" != "bash" ]; then
-        _err_msg "$(_red 'Error: This script needs to be run with bash, not sh!')" && exit 1
+    if [ "$(ps -p $$ -o comm=)" != "bash" ] || readlink /proc/$$/exe | grep -q "dash"; then
+        _err_msg "$(_red 'This script needs to be run with bash, not sh!')" && exit 1
     fi
     for pkg in "${install_depend_pkg[@]}"; do
         if ! _exists "$pkg" >/dev/null 2>&1; then
@@ -133,7 +135,8 @@ pre_check() {
             pkg_install "$pkg"
         fi
     done
-    if [ "$(curl -fskL "https://www.qualcomm.cn/cdn-cgi/trace" | grep -i '^loc=' | cut -d'=' -f2 | xargs)" != "CN" ]; then
+    # 境外服务器仅ipv4访问测试通过后取消github代理
+    if [ "$(curl -fskL -m 3 -4 "https://www.qualcomm.cn/cdn-cgi/trace" | grep -i '^loc=' | cut -d'=' -f2 | xargs)" != "CN" ]; then
         github_Proxy=''
     fi
     # 脚本当天及累计运行次数统计
@@ -444,7 +447,7 @@ print_io_test() {
         ioavg=$(echo "$speed1 $speed2 $speed3" | awk '{print ($1 + $2 + $3) / 3}')
         echo " I/O Speed(average) : $(_yellow "$ioavg MB/s")"
     else
-        echo " $(_red "Not enough space for I/O Speed test!")"
+        echo " $(_red 'Not enough space for I/O Speed test!')"
     fi
 }
 
