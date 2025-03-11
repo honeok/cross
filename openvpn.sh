@@ -10,9 +10,7 @@
 # This program is distributed WITHOUT ANY WARRANTY.
 # See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
 
-# shellcheck disable=SC2034
-
-export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+# shellcheck disable=all
 
 red='\033[91m'
 green='\033[92m'
@@ -26,6 +24,8 @@ _err_msg() { echo -e "\033[41m\033[1mwarn${white} $*"; }
 _suc_msg() { echo -e "\033[42m\033[1msuccess${white} $*"; }
 _info_msg() { echo -e "\033[43m\033[1mtip${white} $*"; }
 
+reading() { read -rep "$(_yellow "$1")" "$2"; }
+
 # 预定义常量
 os_name=$(grep "^ID=" /etc/*-release | awk -F'=' '{print $2}' | sed 's/"//g')
 openvpn_conf="/etc/openvpn/server/server.conf"
@@ -33,9 +33,6 @@ readonly os_name openvpn_conf
 
 # 预定义变量
 github_Proxy='https://gh-proxy.com/'
-
-# 定义一个数组存储用户未安装的软件包
-declare -a uninstall_depend_pkg=()
 
 _exit() {
     local return_value=$?
@@ -63,9 +60,6 @@ _exists() {
 
 # 运行前环境校验
 pre_check() {
-    local install_depend_pkg
-    install_depend_pkg=( "curl" )
-
     cloudflare_api='www.qualcomm.cn/cdn-cgi/trace'
     UA_BROWSER="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
 
@@ -75,13 +69,7 @@ pre_check() {
     if [ "$(ps -p $$ -o comm=)" != "bash" ] || readlink /proc/$$/exe | grep -q "dash"; then
         _err_msg "$(_red 'This script needs to be run with bash, not sh!')" && exit 1
     fi
-    # 检验运行时必备的软件包
-    for pkg in "${install_depend_pkg[@]}"; do
-        if ! _exists "$pkg" >/dev/null 2>&1; then
-            uninstall_depend_pkg+=("$pkg")
-            pkg_install "$pkg"
-        fi
-    done
+
     # 内核版本校验
     if [ "$(uname -r | cut -d "." -f 1)" -eq 2 ]; then
         _err_msg "$(_red 'The system is running an old kernel, which is incompatible with this installer.')" && exit 1
@@ -90,6 +78,7 @@ pre_check() {
     # 获取IP地址
     ipv4_address=$(curl -A "$UA_BROWSER" -fskL -m 3 -4 "$cloudflare_api" | grep -i '^ip=' | cut -d'=' -f2 | xargs)
     ipv6_address=$(curl -A "$UA_BROWSER" -fskL -m 3 -6 "$cloudflare_api" | grep -i '^ip=' | cut -d'=' -f2 | xargs)
+
     # 获取服务器地区
     loc=$(curl -A "$UA_BROWSER" -fskL -m 3 "$cloudflare_api" | grep '^loc=' | cut -d'=' -f2 | xargs)
     # 境外服务器仅ipv4访问测试通过后取消github代理
@@ -170,11 +159,6 @@ check_os_ver() {
             os_version=$(grep -oE '[0-9]+' /etc/fedora-release | head -1)
             group_name="nobody"
         ;;
-        'opensuse')
-            os="openSUSE"
-            os_version=$(tail -1 /etc/SUSE-brand | grep -oE '[0-9\\.]+')
-            group_name="nogroup"
-        ;;
         *)
             _err_msg "$(_red 'This installer seems to be running on an unsupported distribution.')" && exit 1
         ;;
@@ -185,6 +169,57 @@ check_os_ver() {
 check_tun() {
     if [ ! -e /dev/net/tun ] || ! (exec 7<>/dev/net/tun) 2>/dev/null; then
         _err_msg "$(_red 'The system does not have the TUN device available.')" && exit 1
+    fi
+}
+
+# 客户端配置文件生成
+generate_client() {
+    {
+        cat /etc/openvpn/server/client-common.txt
+        echo "<ca>"
+        cat /etc/openvpn/server/easy-rsa/pki/ca.crt
+        echo "</ca>"
+        echo "<cert>"
+        sed -ne '/BEGIN CERTIFICATE/,$ p' /etc/openvpn/server/easy-rsa/pki/issued/"$client".crt
+        echo "</cert>"
+        echo "<key>"
+        cat /etc/openvpn/server/easy-rsa/pki/private/"$client".key
+        echo "</key>"
+        echo "<tls-crypt>"
+        sed -ne '/BEGIN OpenVPN Static key/,$ p' /etc/openvpn/server/tc.key
+        echo "</tls-crypt>"
+    } > "$HOME/$client.ovpn"
+}
+
+install_ovpn() {
+    local check_ip ip_count choose
+    echo "$(_yellow 'Welcome to this OpenVPN road warrior installer!')"
+
+    # 如果系统中只有一个ipv4地址, 自动选择
+    if [ "$(ip -4 addr | grep inet | grep -vEc '127(\.[0-9]{1,3}){3}')" -eq 1 ]; then
+        check_ip=$(ip -4 addr | grep inet | grep -vE '127(\.[0-9]{1,3}){3}' | cut -d '/' -f 1 | grep -oE '[0-9]{1,3}(\.[0-9]{1,3}){3}')
+    else
+        ip_count=$(ip -4 addr | grep inet | grep -vEc '127(\.[0-9]{1,3}){3}') # 内网ip计数
+        printf "\n"
+        echo "$(_yellow 'Which IPv4 address should be used?')"
+        ip -4 addr | grep inet | grep -vE '127(\.[0-9]{1,3}){3}' | cut -d '/' -f 1 | grep -oE '[0-9]{1,3}(\.[0-9]{1,3}){3}' | nl -s ') '
+
+        # 读取用户输入并校验
+        while true; do
+            reading 'IPv4 address [1]: ' choose
+            [ -z "$choose" ] && choose="1"
+            echo "$choose" | grep -qE '^[0-9]+$' && [ "$choose" -le "$ip_count" ] && break
+            echo "$choose: invalid selection."
+        done
+        # 根据用户选择的编号取出对应ip
+        check_ip=$(ip -4 addr | grep inet | grep -vE '127(\.[0-9]{1,3}){3}' | cut -d '/' -f 1 | grep -oE '[0-9]{1,3}(\.[0-9]{1,3}){3}' | sed -n "$choose"p)
+    fi
+
+    # 如果check_ip是私有ip地址, 则服务器必须位于NAT之后
+    if echo "$check_ip" | grep -qE '^(10\.|172\.1[6789]\.|172\.2[0-9]\.|172\.3[01]\.|192\.168)'; then
+        printf "\n"
+        echo "$(_yellow 'This server is behind NAT. What is the public IPv4 address or hostname?')"
+        reading 
     fi
 }
 
