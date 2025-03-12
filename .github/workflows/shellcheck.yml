@@ -4,13 +4,6 @@ on:
   push:
     branches:
       - master
-    paths:
-      - '*.sh'
-      - '**/*.sh'
-  pull_request:
-    paths:
-      - '*.sh'
-      - '**/*.sh'
   workflow_dispatch:
 
 jobs:
