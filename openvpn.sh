@@ -27,15 +27,19 @@ _info_msg() { echo -e "\033[43m\033[1mtip${white} $*"; }
 reading() { read -rep "$(_yellow "$1")" "$2"; }
 
 # 预定义常量
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}" )" && pwd)"
+UA_BROWSER='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'
 os_name=$(grep "^ID=" /etc/*-release | awk -F'=' '{print $2}' | sed 's/"//g')
-openvpn_conf="/etc/openvpn/server/server.conf"
-readonly os_name openvpn_conf
+readonly SCRIPT_DIR UA_BROWSER os_name
 
 # 预定义变量
 github_Proxy='https://gh-proxy.com/'
 
+# 定义一个数组存储用户未安装的软件包
+declare -a uninstall_depend_pkg=()
+
 _exit() {
-    local return_value=$?
+    local return_value="$?"
 
     if [ ${#uninstall_depend_pkg[@]} -gt 0 ]; then
         (for pkg in "${uninstall_depend_pkg[@]}"; do pkg_uninstall "$pkg" >/dev/null 2>&1; done) & disown
@@ -61,7 +65,6 @@ _exists() {
 # 运行前环境校验
 pre_check() {
     cloudflare_api='www.qualcomm.cn/cdn-cgi/trace'
-    UA_BROWSER="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
 
     if [ "$(id -ru)" -ne "0" ] || [ "$EUID" -ne "0" ]; then
         _err_msg "$(_red 'This installer needs to be run with superuser privileges!')" && exit 1
@@ -188,45 +191,65 @@ generate_client() {
         echo "<tls-crypt>"
         sed -ne '/BEGIN OpenVPN Static key/,$ p' /etc/openvpn/server/tc.key
         echo "</tls-crypt>"
-    } > "$HOME/$client.ovpn"
+    } > "$SCRIPT_DIR/$client.ovpn"
 }
 
-install_ovpn() {
-    local check_ip ip_count choose
-    echo "$(_yellow 'Welcome to this OpenVPN road warrior installer!')"
+# 验证输入的字符串是否是有效的IPv4地址
+check_ip() {
+    printf '%s' "$1" | tr -d '\n' | grep -Eq '^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$'
+}
+
+# ipv4合法性检测
+detect_ipv4() {
+    local ip_match ip_count choose
+
+    # 匹配公网标记 0: 未匹配 1: 成功匹配
+    [ -n "$ipv4_address" ] && ip_match=1 || ip_match=0
 
     # 如果系统中只有一个ipv4地址, 自动选择
     if [ "$(ip -4 addr | grep inet | grep -vEc '127(\.[0-9]{1,3}){3}')" -eq 1 ]; then
-        check_ip=$(ip -4 addr | grep inet | grep -vE '127(\.[0-9]{1,3}){3}' | cut -d '/' -f 1 | grep -oE '[0-9]{1,3}(\.[0-9]{1,3}){3}')
+        choose_ip=$(ip -4 addr | grep inet | grep -vE '127(\.[0-9]{1,3}){3}' | cut -d '/' -f 1 | grep -oE '[0-9]{1,3}(\.[0-9]{1,3}){3}')
     else
-        ip_count=$(ip -4 addr | grep inet | grep -vEc '127(\.[0-9]{1,3}){3}') # 内网ip计数
-        printf "\n"
-        echo "$(_yellow 'Which IPv4 address should be used?')"
-        ip -4 addr | grep inet | grep -vE '127(\.[0-9]{1,3}){3}' | cut -d '/' -f 1 | grep -oE '[0-9]{1,3}(\.[0-9]{1,3}){3}' | nl -s ') '
-
-        # 读取用户输入并校验
-        while true; do
-            reading 'IPv4 address [1]: ' choose
-            [ -z "$choose" ] && choose="1"
-            echo "$choose" | grep -qE '^[0-9]+$' && [ "$choose" -le "$ip_count" ] && break
-            echo "$choose: invalid selection."
-        done
-        # 根据用户选择的编号取出对应ip
-        check_ip=$(ip -4 addr | grep inet | grep -vE '127(\.[0-9]{1,3}){3}' | cut -d '/' -f 1 | grep -oE '[0-9]{1,3}(\.[0-9]{1,3}){3}' | sed -n "$choose"p)
+        # 获取外网默认出站路由
+        choose_ip=$(ip -4 route get 1 | sed 's/ uid .*//' | awk '{print $NF;exit}' 2>/dev/null)
+        if ! check_ip "$choose_ip"; then
+            if [ "$ip_match" = 1 ]; then
+                while IFS= read -r line; do
+                    [ "$line" = "$ipv4_address" ] && choose_ip="$line"
+                done < <(ip -4 addr | grep inet | grep -vE '127(\.[0-9]{1,3}){3}' | cut -d '/' -f 1 | grep -oE '[0-9]{1,3}(\.[0-9]{1,3}){3}')
+            fi
+            if [ "$ip_match" = 0 ]; then
+                printf "\n"
+                _info_msg "$(_yellow 'Which IPv4 address should be used?')"
+                ip_count=$(ip -4 addr | grep inet | grep -vEc '127(\.[0-9]{1,3}){3}')
+                ip -4 addr | grep inet | grep -vE '127(\.[0-9]{1,3}){3}' | cut -d '/' -f 1 | grep -oE '[0-9]{1,3}(\.[0-9]{1,3}){3}' | nl -s ') '
+                while true; do
+                    reading 'IPv4 address [1]: ' option
+                    [ -z "$option" ] && option="1"
+                    echo "$option" | grep -qE '^[0-9]+$' && [ "$option" -le "$ip_count" ] && break
+                    echo "$option: invalid selection."
+                done
+                # 根据用户选择的编号取出对应ip
+                choose_ip=$(ip -4 addr | grep inet | grep -vE '127(\.[0-9]{1,3}){3}' | cut -d '/' -f 1 | grep -oE '[0-9]{1,3}(\.[0-9]{1,3}){3}' | sed -n "$option"p)
+            fi
+        fi
     fi
-
-    # 如果check_ip是私有ip地址, 则服务器必须位于NAT之后
-    if echo "$check_ip" | grep -qE '^(10\.|172\.1[6789]\.|172\.2[0-9]\.|172\.3[01]\.|192\.168)'; then
-        printf "\n"
-        echo "$(_yellow 'This server is behind NAT. What is the public IPv4 address or hostname?')"
-        reading 
+    if ! check_ip "$choose_ip"; then
+        _err_msg "$(_red "Could not detect this server's IP address.")" && exit 1
     fi
+}
+
+install_ovpn() {
+    
+    _yellow 'Welcome to this OpenVPN road warrior installer!'
+
 }
 
 ovpn() {
     pre_check
     check_os_ver
     check_tun
+    detect_ipv4
 }
 
 ovpn
