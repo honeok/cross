@@ -193,7 +193,7 @@ generate_client() {
     } > "$SCRIPT_DIR/$client.ovpn"
 }
 
-# 选择openvpn运行协议
+# openvpn运行协议
 select_protocol() {
     printf "\n"
     _yellow 'Which protocol should OpenVPN use?'
@@ -210,7 +210,7 @@ select_protocol() {
     esac
 }
 
-# 选择openvpn运行端口
+# openvpn运行端口
 select_port() {
     printf "\n"
     _yellow 'Which port should OpenVPN listen to?'
@@ -220,6 +220,32 @@ select_port() {
         reading 'Port [1194]: ' port
     done
     [ -z "$port" ] && port=1194
+}
+
+# 客户端选择dns服务器
+select_dns() {
+    printf "\n"
+    while true; do
+        _yellow 'Select a DNS server for the clients: '
+        echo "   1) Current system resolvers"
+        echo "   2) Google Public DNS"
+        echo "   3) Cloudflare DNS"
+        echo "   4) OpenDNS"
+        echo "   5) Quad9"
+        echo "   6) AdGuard"
+        reading 'DNS server [2]: ' dns
+
+        case "$dns" in
+            1) : ; break;;
+            2) : ; break;;
+            3) : ; break;;
+            4) : ; break;;
+            5) : ; break;;
+            6) : ; break;;
+            ;;
+            *) _err_msg "$(_red 'Invalid parameter, please re-enter.')" ;;
+        esac
+    done
 }
 
 install_ovpn() {
