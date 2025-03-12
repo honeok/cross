@@ -20,9 +20,9 @@ _red() { echo -e "${red}$*${white}"; }
 _green() { echo -e "${green}$*${white}"; }
 _yellow() { echo -e "${yellow}$*${white}"; }
 
-_err_msg() { echo -e "\033[41m\033[1mwarn${white} $*"; }
-_suc_msg() { echo -e "\033[42m\033[1msuccess${white} $*"; }
-_info_msg() { echo -e "\033[43m\033[1mtip${white} $*"; }
+_err_msg() { echo -e "\033[41m\033[1mError${white} $*"; }
+_suc_msg() { echo -e "\033[42m\033[1mSuccess${white} $*"; }
+_info_msg() { echo -e "\033[43m\033[1mTip${white} $*"; }
 
 reading() { read -rep "$(_yellow "$1")" "$2"; }
 
@@ -83,10 +83,13 @@ pre_check() {
     ipv6_address=$(curl -A "$UA_BROWSER" -fskL -m 3 -6 "$cloudflare_api" | grep -i '^ip=' | cut -d'=' -f2 | xargs)
 
     # 获取服务器地区
-    loc=$(curl -A "$UA_BROWSER" -fskL -m 3 "$cloudflare_api" | grep '^loc=' | cut -d'=' -f2 | xargs)
+    _loc=$(curl -A "$UA_BROWSER" -fskL -m 3 "$cloudflare_api" | grep '^loc=' | cut -d'=' -f2 | xargs)
     # 境外服务器仅ipv4访问测试通过后取消github代理
-    if [ -n "$ipv4_address" ] && [ "$loc" != "CN" ]; then
+    if [ -n "$ipv4_address" ] && [ "$_loc" != "CN" ]; then
         github_Proxy=''
+    fi
+    if [ -z "$ipv4_address" ] || [ -z "$ipv6_address" ]; then
+        _err_msg "$(_red "Could not detect this server's IP address.")" && exit 1
     fi
 }
 
@@ -116,9 +119,9 @@ pkg_uninstall() {
         elif _exists yum; then
             yum remove -y "$package"
         elif _exists apt; then
-            apt purge -y "$package"
+            DEBIAN_FRONTEND=noninteractive apt purge -y "$package"
         elif _exists apt-get; then
-            apt-get purge -y "$package"
+            DEBIAN_FRONTEND=noninteractive apt-get purge -y "$package"
         elif _exists pacman; then
             pacman -Rns --noconfirm "$package"
         elif _exists zypper; then
@@ -190,81 +193,7 @@ generate_client() {
     } > "$SCRIPT_DIR/$client.ovpn"
 }
 
-# 验证输入的字符串是否是有效的IPv4地址
-check_ip() {
-    printf '%s' "$1" | tr -d '\n' | grep -Eq '^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$'
-}
-
-# 校验ip是否为私有IP地址
-private_ip() {
-    printf '%s' "$1" | tr -d '\n' | grep -Eq '^(10|127|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168|169\.254)\.'
-}
-
-# ipv4检测
-detect_ipv4() {
-    local ip_match ip_count option
-
-    # 匹配公网标记 0: 未匹配 1: 成功匹配
-    ip_match=$( [ -n "$ipv4_address" ] && echo 1 || echo 0 )
-
-    # 如果系统中只有一个ipv4地址, 自动选择
-    if [ "$(ip -4 addr | grep inet | grep -vEc '127(\.[0-9]{1,3}){3}')" -eq 1 ]; then
-        choose_ipv4=$(ip -4 addr | grep inet | grep -vE '127(\.[0-9]{1,3}){3}' | cut -d '/' -f 1 | grep -oE '[0-9]{1,3}(\.[0-9]{1,3}){3}')
-    else
-        # 获取外网默认出站路由
-        choose_ipv4=$(ip -4 route get 1 | sed 's/ uid .*//' | awk '{print $NF;exit}' 2>/dev/null)
-        if ! check_ip "$choose_ipv4"; then
-            if [ "$ip_match" = 1 ]; then
-                while IFS= read -r line; do
-                    [ "$line" = "$ipv4_address" ] && choose_ipv4="$line"
-                done < <(ip -4 addr | grep inet | grep -vE '127(\.[0-9]{1,3}){3}' | cut -d '/' -f 1 | grep -oE '[0-9]{1,3}(\.[0-9]{1,3}){3}')
-            fi
-            if [ "$ip_match" = 0 ]; then
-                printf "\n"
-                _info_msg "$(_yellow 'Which IPv4 address should be used?')"
-                ip_count=$(ip -4 addr | grep inet | grep -vEc '127(\.[0-9]{1,3}){3}')
-                ip -4 addr | grep inet | grep -vE '127(\.[0-9]{1,3}){3}' | cut -d '/' -f 1 | grep -oE '[0-9]{1,3}(\.[0-9]{1,3}){3}' | nl -s ') '
-                while true; do
-                    reading 'IPv4 address [1]: ' option
-                    [ -z "$option" ] && option="1"
-                    echo "$option" | grep -qE '^[0-9]+$' && [ "$option" -le "$ip_count" ] && break
-                    echo "$option: invalid selection."
-                done
-                # 根据用户选择的编号取出对应ip
-                choose_ipv4=$(ip -4 addr | grep inet | grep -vE '127(\.[0-9]{1,3}){3}' | cut -d '/' -f 1 | grep -oE '[0-9]{1,3}(\.[0-9]{1,3}){3}' | sed -n "$option"p)
-            fi
-        fi
-    fi
-    if ! check_ip "$choose_ipv4"; then
-        _err_msg "$(_red "Could not detect this server's IP address.")" && exit 1
-    fi
-}
-
-detect_ipv6() {
-    if [ "$(ip -6 addr | grep -c 'inet6 [23]')" -ne "0" ]; then
-        choose_ipv6=$(ip -6 addr | grep 'inet6 [23]' | cut -d '/' -f 1 | grep -oE '([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}' | sed -n 1p)
-    fi
-}
-
-check_private_ip() {
-    # 如果ip是私有ip地址, 则服务器必须位于NAT之后
-    if private_ip "$choose_ipv4"; then
-        if [ -z "$ipv4_address" ]; then
-            _err_msg "$(_red "Could not detect this server's public IP.")" && exit 1
-        fi
-        # 判断ip是一个合法的公网ip范围
-        if ! check_ip "$ipv4_address"; then
-            _yellow 'This server is behind NAT. What is the public IPv4 address?'
-            reading 'Public IPv4 address: ' option
-            until check_ip "$option"; do
-                _err_msg "$(_red 'Invalid option.')"
-                reading 'Public IPv4 address: ' option
-            done
-        fi
-    fi
-}
-
-# 选择OpenVPN运行的协议
+# 选择openvpn运行协议
 select_protocol() {
     printf "\n"
     _yellow 'Which protocol should OpenVPN use?'
@@ -281,12 +210,22 @@ select_protocol() {
     esac
 }
 
+# 选择openvpn运行端口
+select_port() {
+    printf "\n"
+    _yellow 'Which port should OpenVPN listen to?'
+    reading 'Port [1194]: ' port
+    until [ -z "$port" ] || { echo "$port" | grep -qv '[^0-9]' && [ "$port" -le 65535 ]; }; do
+        _err_msg "$(_red "$port: invalid port.")"
+        reading 'Port [1194]: ' port
+    done
+    [ -z "$port" ] && port=1194
+}
+
 install_ovpn() {
     _yellow 'Welcome to this OpenVPN road warrior installer!'
-    detect_ipv4
-    check_private_ip
-    detect_ipv6
     select_protocol
+    select_port
 }
 
 ovpn() {
