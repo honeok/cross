@@ -29,8 +29,8 @@ reading() { read -rep "$(_yellow "$1")" "$2"; }
 # 预定义常量
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}" )" && pwd)"
 UA_BROWSER='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'
-os_name=$(grep "^ID=" /etc/*-release | awk -F'=' '{print $2}' | sed 's/"//g')
-readonly SCRIPT_DIR UA_BROWSER os_name
+OS_NAME=$(grep "^ID=" /etc/*-release | awk -F'=' '{print $2}' | sed 's/"//g')
+readonly SCRIPT_DIR UA_BROWSER OS_NAME
 
 # 预定义变量
 github_Proxy='https://gh-proxy.com/'
@@ -129,9 +129,8 @@ pkg_uninstall() {
 
 # 系统校验
 check_os_ver() {
-    case "$os_name" in
+    case "$OS_NAME" in
         'debian')
-            os="debian"
             os_version=$(grep -oE '[0-9]+' /etc/debian_version | head -1)
             group_name="nogroup"
             if grep -q '/sid' /etc/debian_version; then
@@ -142,7 +141,6 @@ check_os_ver() {
             fi
         ;;
         'ubuntu')
-            os="ubuntu"
             os_version=$(grep "^VERSION_ID" /etc/*-release | cut -d '"' -f 2 | tr -d '.')
             group_name="nogroup"
             if [ "$os_version" -lt "2004" ]; then
@@ -150,15 +148,13 @@ check_os_ver() {
             fi
         ;;
         'almalinux' | 'centos' | 'rhel' | 'rocky')
-            os="centos"
             os_version=$(grep -shoE '[0-9]+' /etc/redhat-release /etc/centos-release /etc/rocky-release /etc/almalinux-release | head -1)
             group_name="nobody"
             if [ "$os_version" -lt "7" ]; then
-                _err_msg "$(_red "$os_name 7 or higher is required to use this installer.")" && exit 1
+                _err_msg "$(_red "$OS_NAME 7 or higher is required to use this installer.")" && exit 1
             fi
         ;;
         'fedora')
-            os="fedora"
             os_version=$(grep -oE '[0-9]+' /etc/fedora-release | head -1)
             group_name="nobody"
         ;;
@@ -199,23 +195,28 @@ check_ip() {
     printf '%s' "$1" | tr -d '\n' | grep -Eq '^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$'
 }
 
-# ipv4合法性检测
+# 校验ip是否为私有IP地址
+private_ip() {
+    printf '%s' "$1" | tr -d '\n' | grep -Eq '^(10|127|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168|169\.254)\.'
+}
+
+# ipv4检测
 detect_ipv4() {
-    local ip_match ip_count choose
+    local ip_match ip_count option
 
     # 匹配公网标记 0: 未匹配 1: 成功匹配
-    [ -n "$ipv4_address" ] && ip_match=1 || ip_match=0
+    ip_match=$( [ -n "$ipv4_address" ] && echo 1 || echo 0 )
 
     # 如果系统中只有一个ipv4地址, 自动选择
     if [ "$(ip -4 addr | grep inet | grep -vEc '127(\.[0-9]{1,3}){3}')" -eq 1 ]; then
-        choose_ip=$(ip -4 addr | grep inet | grep -vE '127(\.[0-9]{1,3}){3}' | cut -d '/' -f 1 | grep -oE '[0-9]{1,3}(\.[0-9]{1,3}){3}')
+        choose_ipv4=$(ip -4 addr | grep inet | grep -vE '127(\.[0-9]{1,3}){3}' | cut -d '/' -f 1 | grep -oE '[0-9]{1,3}(\.[0-9]{1,3}){3}')
     else
         # 获取外网默认出站路由
-        choose_ip=$(ip -4 route get 1 | sed 's/ uid .*//' | awk '{print $NF;exit}' 2>/dev/null)
-        if ! check_ip "$choose_ip"; then
+        choose_ipv4=$(ip -4 route get 1 | sed 's/ uid .*//' | awk '{print $NF;exit}' 2>/dev/null)
+        if ! check_ip "$choose_ipv4"; then
             if [ "$ip_match" = 1 ]; then
                 while IFS= read -r line; do
-                    [ "$line" = "$ipv4_address" ] && choose_ip="$line"
+                    [ "$line" = "$ipv4_address" ] && choose_ipv4="$line"
                 done < <(ip -4 addr | grep inet | grep -vE '127(\.[0-9]{1,3}){3}' | cut -d '/' -f 1 | grep -oE '[0-9]{1,3}(\.[0-9]{1,3}){3}')
             fi
             if [ "$ip_match" = 0 ]; then
@@ -230,26 +231,70 @@ detect_ipv4() {
                     echo "$option: invalid selection."
                 done
                 # 根据用户选择的编号取出对应ip
-                choose_ip=$(ip -4 addr | grep inet | grep -vE '127(\.[0-9]{1,3}){3}' | cut -d '/' -f 1 | grep -oE '[0-9]{1,3}(\.[0-9]{1,3}){3}' | sed -n "$option"p)
+                choose_ipv4=$(ip -4 addr | grep inet | grep -vE '127(\.[0-9]{1,3}){3}' | cut -d '/' -f 1 | grep -oE '[0-9]{1,3}(\.[0-9]{1,3}){3}' | sed -n "$option"p)
             fi
         fi
     fi
-    if ! check_ip "$choose_ip"; then
+    if ! check_ip "$choose_ipv4"; then
         _err_msg "$(_red "Could not detect this server's IP address.")" && exit 1
     fi
 }
 
-install_ovpn() {
-    
-    _yellow 'Welcome to this OpenVPN road warrior installer!'
+detect_ipv6() {
+    if [ "$(ip -6 addr | grep -c 'inet6 [23]')" -ne "0" ]; then
+        choose_ipv6=$(ip -6 addr | grep 'inet6 [23]' | cut -d '/' -f 1 | grep -oE '([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}' | sed -n 1p)
+    fi
+}
 
+check_private_ip() {
+    # 如果ip是私有ip地址, 则服务器必须位于NAT之后
+    if private_ip "$choose_ipv4"; then
+        if [ -z "$ipv4_address" ]; then
+            _err_msg "$(_red "Could not detect this server's public IP.")" && exit 1
+        fi
+        # 判断ip是一个合法的公网ip范围
+        if ! check_ip "$ipv4_address"; then
+            _yellow 'This server is behind NAT. What is the public IPv4 address?'
+            reading 'Public IPv4 address: ' option
+            until check_ip "$option"; do
+                _err_msg "$(_red 'Invalid option.')"
+                reading 'Public IPv4 address: ' option
+            done
+        fi
+    fi
+}
+
+# 选择OpenVPN运行的协议
+select_protocol() {
+    printf "\n"
+    _yellow 'Which protocol should OpenVPN use?'
+    echo "   1) UDP (recommended)"
+    echo "   2) TCP"
+    reading 'Protocol [1]: ' protocol
+    until [ -z "$protocol" ] || [ "$protocol" = "1" ] || [ "$protocol" = "2" ]; do
+        _err_msg "$(_red "$protocol: invalid selection.")"
+        reading 'Protocol [1]: ' protocol
+    done
+    case "$protocol" in
+        1|"") protocol=udp ;;
+        2) protocol=tcp ;;
+    esac
+}
+
+install_ovpn() {
+    _yellow 'Welcome to this OpenVPN road warrior installer!'
+    detect_ipv4
+    check_private_ip
+    detect_ipv6
+    select_protocol
 }
 
 ovpn() {
     pre_check
     check_os_ver
     check_tun
-    detect_ipv4
+
+    install_ovpn
 }
 
 ovpn
