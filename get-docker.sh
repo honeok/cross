@@ -41,7 +41,7 @@ ua_browser='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
 readonly getdocker_pid os_info os_name script_url ua_browser
 
 if [ -f "$getdocker_pid" ] && kill -0 "$(cat "$getdocker_pid")" 2>/dev/null; then
-    _err_msg "$(_red '脚本似乎正在运行, 请不要重复运行!')" && exit 1
+    _err_msg "$(_red 'The script seems to be running, please do not run it again!')" && exit 1
 fi
 
 _exit() {
@@ -102,9 +102,9 @@ end_message() {
     local current_time
     current_time=$(date '+%Y-%m-%d %H:%M:%S %Z')
     runtime_count
-    _green "服务器当前时间: $current_time 脚本执行完成"
-    _purple '感谢使用本脚本! 如有疑问, 请访问 https://www.honeok.com 获取更多信息'
-    _yellow "脚本当天运行次数: $today_runcount 累计运行次数: $total_runcount"
+    _green "Current server time: $current_time Script execution completed."
+    _purple 'Thank you for using this script! If you have any questions, please visit https://www.honeok.com get more information.'
+    _yellow "Number of script runs today: $today_runcount Total number of script runs: $total_runcount"
 }
 
 os_permission() {
@@ -112,28 +112,28 @@ os_permission() {
         'debian')
             # 检查Debian版本是否小于10
             if [ "$(grep -oE '[0-9]+' /etc/debian_version | head -1)" -lt 10 ]; then
-                _err_msg "$(_red '此版本的Debian已不再受支持!')" && end_message && exit 1
+                _err_msg "$(_red 'This version of Debian is no longer supported!')" && end_message && exit 1
             fi
         ;;
         'ubuntu')
             # 检查Ubuntu版本是否小于20.04
             if [ "$(grep "^VERSION_ID" /etc/*-release | cut -d '"' -f 2 | tr -d '.')" -lt '2004' ]; then
-                _err_msg "$(_red '此版本的Ubuntu已不再受支持!')" && end_message && exit 1
+                _err_msg "$(_red 'This version of Ubuntu is no longer supported!')" && end_message && exit 1
             fi
         ;;
         'rhel' | 'centos' | 'rocky' | 'almalinux')
             # 检查RHEL/CentOS/Rocky/AlmaLinux版本是否小于7
             if [ "$(grep -shoE '[0-9]+' /etc/redhat-release /etc/centos-release /etc/rocky-release /etc/almalinux-release | head -1)" -lt 7 ]; then
-                _err_msg "$(_red "$os_name 9 或更高版本才能使用此安装程序")" && end_message && exit 1
+                _err_msg "$(_red "This installer requires version $os_name 9 or higher.")" && end_message && exit 1
             fi
         ;;
         'alpine')
             # 检查Alpine版本是否小于3.20
             if [ "$(awk -F'.' '{print $1$2}' /etc/alpine-release)" -lt 320 ]; then
-                _err_msg "$(_red "Alpine3.20 或更高版本才能使用此安装程序")" && end_message && exit 1
+                _err_msg "$(_red "This installer requires Alpine 3.20 or higher.")" && end_message && exit 1
             fi
         ;;
-        *) _err_msg "$(_red '当前操作系统不被支持!')" && end_message && exit 1 ;;
+        *) _err_msg "$(_red 'The current operating system is not supported!')" && end_message && exit 1 ;;
     esac
 }
 
@@ -202,7 +202,7 @@ virt_permission() {
     virt_check
 
     if [ "$virt_type" = 'Docker' ] || [ "$virt_type" = 'LXC' ] || [ "$virt_type" = "OpenVZ" ]; then
-        _err_msg "$(_red '当前虚拟化架构不被支持!')" && end_message && exit 1
+        _err_msg "$(_red 'The current virtualization architecture is not supported!')" && end_message && exit 1
     fi
 }
 
@@ -285,7 +285,7 @@ _install() {
     if [ "$os_name" = "rocky" ] || [ "$os_name" = "almalinux" ] || [ "$os_name" = "centos" ]; then
         pkg_uninstall docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine >/dev/null 2>&1
 
-        if [ "$_loc" == "CN" ]; then
+        if [ "$_loc" = "CN" ]; then
             repo_url="https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo"
         else
             repo_url="https://download.docker.com/linux/centos/docker-ce.repo"
@@ -310,7 +310,7 @@ _install() {
 
         systemctl enable docker
         systemctl start docker
-    elif [ "$os_name" == "rhel" ]; then
+    elif [ "$os_name" = "rhel" ]; then
         pkg_uninstall docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine podman runc >/dev/null 2>&1
 
         if ! dnf config-manager --help >/dev/null 2>&1; then
@@ -330,7 +330,7 @@ _install() {
         version_code="$(grep "^VERSION_CODENAME" /etc/*-release | cut -d= -f2)"
         pkg_uninstall docker.io docker-doc docker-compose podman-docker containerd runc >/dev/null 2>&1
 
-        if [ "$_loc" == "CN" ]; then
+        if [ "$_loc" = "CN" ]; then
             repo_url="https://mirrors.aliyun.com/docker-ce/linux/${os_name}"
             gpgkey_url="https://mirrors.aliyun.com/docker-ce/linux/${os_name}/gpg"
         else
@@ -340,7 +340,6 @@ _install() {
 
         fix_dpkg
         apt-get -qq update
-        #  apt-get install -y -qq ca-certificates curl apt-transport-https lsb-release gnupg
         apt-get install -y -qq ca-certificates curl
         install -m 0755 -d /etc/apt/keyrings
         curl -fsSL "$gpgkey_url" -o /etc/apt/keyrings/docker.asc
@@ -352,7 +351,7 @@ _install() {
         apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
         systemctl enable docker
         systemctl start docker
-    elif [ "$os_name" == "alpine" ]; then
+    elif [ "$os_name" = "alpine" ]; then
         [ "$_loc" = "CN" ] && sed -i -E 's|^https?://dl-cdn.alpinelinux.org|https://mirrors.aliyun.com|g' /etc/apk/repositories 2>/dev/null
         apk update
         apk add docker docker-compose
@@ -491,7 +490,7 @@ else
                 docker_uninstall
                 shift 1
             ;;
-            *) _err_msg "$(_red "无效选项, 当前参数${1}不被支持!")" && end_message && _show_usage ;;
+            *) _err_msg "$(_red "Invalid option, current parameter $1 Not supported!")" && end_message && _show_usage ;;
         esac
     done
 fi
