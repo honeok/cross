@@ -2,7 +2,7 @@
 #
 # Description: The most convenient route tracing tool based on NextTrace.
 #
-# Copyright (C) 2024 - 2025 honeok <honeok@duck.com>
+# Copyright (C) 2024-2025 honeok <honeok@duck.com>
 #
 # This script utilizes NextTrace, a powerful network diagnostic tool.
 # NextTrace is copyrighted and developed by the NextTrace project team.
@@ -15,7 +15,7 @@
 # shellcheck disable=SC2034
 
 # 当前脚本版本号
-readonly version='v0.1.2 (2025.03.03)'
+readonly version='v0.1.3 (2025.03.26)'
 
 red='\033[91m'
 green='\033[92m'
@@ -32,13 +32,14 @@ _err_msg() { echo -e "\033[41m\033[1mwarn${white} $*"; }
 # 分割符
 separator() { printf "%-70s\n" "-" | sed 's/\s/-/g'; }
 
-# 预定义常量
-github_Proxy='https://gh-proxy.com/'
+# 各变量默认值
+GITHUB_PROXY='https://goppx.com/'
 
+# https://dnsdaquan.com
 # https://www.nodeseek.com/post-68572-1
 # https://www.nodeseek.com/post-129987-1
 declare -a area_bj=("北京电信" "北京联通" "北京移动")
-declare -a bj_v4=("219.141.140.10" "202.106.195.68" "221.179.155.161")
+declare -a bj_v4=("219.141.140.10" "123.123.123.124" "221.179.155.161")
 declare -a bj_v6=("2400:89c0:1053:3::69" "2400:89c0:1013:3::54" "2409:8c00:8421:1303::55")
 
 declare -a area_sh=("上海电信" "上海联通" "上海移动")
@@ -79,15 +80,20 @@ clear_screen() {
 
 # 运行前校验
 pre_runcheck() {
-    if [ "$(id -ru)" -ne "0" ] || [ "$EUID" -ne "0" ]; then
+    # 备用 www.bose.cn
+    # 备用 www.qualcomm.cn
+    # 备用 www.autodesk.com.cn
+    cloudflare_api='www.garmin.com.cn'
+
+    if [ "$(id -ru)" -ne 0 ] || [ "$EUID" -ne 0 ]; then
         _err_msg "$(_red 'Error: This script must be run as root!')" && exit 1
     fi
     if [ "$(ps -p $$ -o comm=)" != "bash" ] || readlink /proc/$$/exe | grep -q "dash"; then
         _err_msg "$(_red 'Error: This script needs to be run with bash, not sh!')" && exit 1
     fi
     # 境外服务器仅ipv4访问测试通过后取消github代理
-    if curl -sLI -m 3 -4 -o /dev/null -w "%{http_code}" "https://www.deepseek.com/cdn-cgi/trace" | grep -q '^200$'; then
-        github_Proxy=''
+    if [ "$(curl -fskL -m 3 -4 "https://$cloudflare_api/cdn-cgi/trace" | grep -i '^loc=' | cut -d'=' -f2 | xargs)" != "CN" ]; then
+        unset GITHUB_PROXY
     fi
     # 脚本当天及累计运行次数统计
     runcount=$(curl -fskL -m 3 --retry 1 "https://hit.forvps.gq/https://github.com/honeok/cross/raw/master/bestTrace.sh" 2>&1 | grep -m1 -oE "[0-9]+[ ]+/[ ]+[0-9]+")
@@ -113,7 +119,7 @@ pre_ipcheck() {
 
 nt_install() {
     if ! _exists nexttrace || [ ! -f "/usr/local/bin/nexttrace" ] || [ ! -f "/usr/bin/nexttrace" ]; then
-        bash <(curl -fskL "${github_Proxy}https://github.com/nxtrace/NTrace-core/raw/main/nt_install.sh") || { _err_msg "$(_red 'Error: Nexttrace installation failed.')"; exit 1; }
+        bash <(curl -fskL "${GITHUB_PROXY}https://github.com/nxtrace/NTrace-core/raw/main/nt_install.sh") || { _err_msg "$(_red 'Error: Nexttrace installation failed.')"; exit 1; }
     fi
     clear_screen
 }
