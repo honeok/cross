@@ -1,20 +1,15 @@
 #!/usr/bin/env bash
 #
 # Description: Installs the latest Docker CE on supported Linux distributions.
-# Supported Systems: debian10+ ubuntu20+ centos7+ rhel8+ rocky8+ alma8+ alpine3.20+
 #
-# Copyright (C) 2023 - 2025 honeok <honeok@duck.com>
-#
-# References:
-# https://docs.docker.com/engine/install
-# https://docs.docker.com/reference/cli/dockerd/#daemon-configuration-file
+# Copyright (c) 2023 - 2025 honeok <honeok@duck.com>
 #
 # Licensed under the GNU General Public License, version 2 only.
 # This program is distributed WITHOUT ANY WARRANTY.
 # See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
 
 # 当前脚本版本号
-readonly version='v0.1.3 (2025.03.20)'
+readonly version='v0.1.4 (2025.03.30)'
 
 red='\033[91m'
 green='\033[92m'
@@ -22,52 +17,51 @@ yellow='\033[93m'
 purple='\033[95m'
 cyan='\033[96m'
 white='\033[0m'
-_red() { echo -e "${red}$*${white}"; }
-_green() { echo -e "${green}$*${white}"; }
-_yellow() { echo -e "${yellow}$*${white}"; }
-_purple() { echo -e "${purple}$*${white}"; }
-_cyan() { echo -e "${cyan}$*${white}"; }
+function _red { echo -e "${red}$*${white}"; }
+function _green { echo -e "${green}$*${white}"; }
+function _yellow { echo -e "${yellow}$*${white}"; }
+function _purple { echo -e "${purple}$*${white}"; }
+function _cyan { echo -e "${cyan}$*${white}"; }
 
-_err_msg() { echo -e "\033[41m\033[1mWarn${white} $*"; }
-_suc_msg() { echo -e "\033[42m\033[1mSuccess${white} $*"; }
-_info_msg() { echo -e "\033[43m\033[1mTis${white} $*"; }
+function _err_msg { echo -e "\033[41m\033[1mError${white} $*"; }
+function _suc_msg { echo -e "\033[42m\033[1mSuccess${white} $*"; }
+function _info_msg { echo -e "\033[43m\033[1mTis${white} $*"; }
 
 # 各变量默认值
-getdocker_pid='/tmp/getdocker.pid'
-os_info=$(grep "^PRETTY_NAME=" /etc/*-release | cut -d '"' -f 2 | sed 's/ (.*)//')
-os_name=$(grep "^ID=" /etc/*-release | awk -F'=' '{print $2}' | sed 's/"//g')
-script_url='https://github.com/honeok/cross/raw/master/get-docker.sh'
-ua_browser='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'
-readonly getdocker_pid os_info os_name script_url ua_browser
+GETDOCKER_PID='/tmp/getdocker.pid'
+OS_INFO=$(grep "^PRETTY_NAME=" /etc/*-release | cut -d '"' -f 2 | sed 's/ (.*)//')
+OS_NAME=$(grep "^ID=" /etc/*-release | awk -F'=' '{print $2}' | sed 's/"//g')
+SCRIPT_URL='https://github.com/honeok/cross/raw/master/get-docker.sh'
+UA_BROWSER='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'
 
-if [ -f "$getdocker_pid" ] && kill -0 "$(cat "$getdocker_pid")" 2>/dev/null; then
+if [ -f "$GETDOCKER_PID" ] && kill -0 "$(cat "$GETDOCKER_PID")" 2>/dev/null; then
     _err_msg "$(_red 'The script seems to be running, please do not run it again!')" && exit 1
 fi
 
-_exit() {
+function _exit {
     local return_value="$?"
 
-    [ -f "$getdocker_pid" ] && rm -f "$getdocker_pid" 2>/dev/null
+    [ -f "$GETDOCKER_PID" ] && rm -f "$GETDOCKER_PID" 2>/dev/null
     exit "$return_value"
 }
 
 trap '_exit' SIGINT SIGQUIT SIGTERM EXIT
 
-echo $$ > "$getdocker_pid"
+echo $$ > "$GETDOCKER_PID"
 
 # Logo generation from: https://www.lddgo.net/string/text-to-ascii-art (Small Slant)
-_show_logo() {
-    echo -e "${yellow}  _____    __     __        __ 
+function _show_logo {
+    echo -e "$yellow  _____    __     __        __ 
  / ______ / /____/ ___ ____/ /_____ ____
 / (_ / -_/ __/ _  / _ / __/  '_/ -_/ __/
 \___/\__/\__/\_,_/\___\__/_/\_\\__/_/
 "
     printf "\n"
-    _green " System   : $os_info"
+    _green " System   : $OS_INFO"
     echo "$(_green " Version  : $version") $(_purple '\xF0\x9F\x90\xB3')"
 }
 
-_exists() {
+function _exists {
     local _cmd="$1"
     if type "$_cmd" >/dev/null 2>&1; then
         return 0
@@ -78,27 +72,14 @@ _exists() {
     fi
 }
 
-runtime_count() {
+function runtime_count {
     local runcount
-    runcount=$(curl -fskL -m 3 --retry 1 "https://hit.forvps.gq/$script_url" | grep -m1 -oE "[0-9]+[ ]+/[ ]+[0-9]+")
+    runcount=$(curl -fskL -m 3 --retry 1 "https://hit.forvps.gq/$SCRIPT_URL" | grep -m1 -oE "[0-9]+[ ]+/[ ]+[0-9]+")
     today_runcount=$(awk -F ' ' '{print $1}' <<< "$runcount")
     total_runcount=$(awk -F ' ' '{print $3}' <<< "$runcount")
 }
 
-_show_usage() {
-    cat <<EOF
-Usage: $0
-
-       Options:        [--install]
-                       [--uninstall]
-
-Manual: https://github.com/honeok/cross/blob/master/get-docker.sh
-
-EOF
-    exit 1
-}
-
-end_message() {
+function end_message {
     local current_time
     current_time=$(date '+%Y-%m-%d %H:%M:%S %Z')
     runtime_count
@@ -107,8 +88,8 @@ end_message() {
     _yellow "Number of script runs today: $today_runcount Total number of script runs: $total_runcount"
 }
 
-os_permission() {
-    case "$os_name" in
+function os_permission {
+    case "$OS_NAME" in
         'debian')
             # 检查Debian版本是否小于10
             if [ "$(grep -oE '[0-9]+' /etc/debian_version | head -1)" -lt 10 ]; then
@@ -124,134 +105,30 @@ os_permission() {
         'rhel' | 'centos' | 'rocky' | 'almalinux')
             # 检查RHEL/CentOS/Rocky/AlmaLinux版本是否小于7
             if [ "$(grep -shoE '[0-9]+' /etc/redhat-release /etc/centos-release /etc/rocky-release /etc/almalinux-release | head -1)" -lt 7 ]; then
-                _err_msg "$(_red "This installer requires version $os_name 9 or higher.")" && end_message && exit 1
-            fi
-        ;;
-        'alpine')
-            # 检查Alpine版本是否小于3.20
-            if [ "$(awk -F'.' '{print $1$2}' /etc/alpine-release)" -lt 320 ]; then
-                _err_msg "$(_red "This installer requires Alpine 3.20 or higher.")" && end_message && exit 1
+                _err_msg "$(_red "This installer requires version $OS_NAME 9 or higher.")" && end_message && exit 1
             fi
         ;;
         *) _err_msg "$(_red 'The current operating system is not supported!')" && end_message && exit 1 ;;
     esac
 }
 
-# 虚拟化校验
-virt_check() {
-    local processor_type kernel_logs system_manufacturer system_product_name system_version
-
-    processor_type=$(awk -F: '/model name/ {name=$2} END {print name}' /proc/cpuinfo | sed 's/^[ \t]*//;s/[ \t]*$//')
-
-    if _exists "dmesg" >/dev/null 2>&1; then
-        kernel_logs=$(dmesg 2>/dev/null)
-    fi
-
-    if _exists "dmidecode" >/dev/null 2>&1; then
-        system_manufacturer=$(dmidecode -s system-manufacturer 2>/dev/null)
-        system_product_name=$(dmidecode -s system-product-name 2>/dev/null)
-        system_version=$(dmidecode -s system-version 2>/dev/null)
-    fi
-
-    if grep -qai docker /proc/1/cgroup; then
-        virt_type="Docker"
-    elif grep -qai lxc /proc/1/cgroup; then
-        virt_type="LXC"
-    elif grep -qai container=lxc /proc/1/environ; then
-        virt_type="LXC"
-    elif [ -f /proc/user_beancounters ]; then
-        virt_type="OpenVZ"
-    elif echo "$kernel_logs" | grep -qi "kvm-clock" 2>/dev/null; then
-        virt_type="KVM"
-    elif echo "$processor_type" | grep -qi "kvm" 2>/dev/null; then
-        virt_type="KVM"
-    elif echo "$processor_type" | grep -qi "qemu" 2>/dev/null; then
-        virt_type="KVM"
-    elif grep -qi "kvm" "/sys/devices/virtual/dmi/id/product_name" 2>/dev/null; then
-        virt_type="KVM"
-    elif grep -qi "qemu" "/proc/scsi/scsi" 2>/dev/null; then
-        virt_type="KVM"
-    elif echo "$kernel_logs" | grep -qi "vmware virtual platform" 2>/dev/null; then
-        virt_type="VMware"
-    elif echo "$kernel_logs" | grep -qi "parallels software international" 2>/dev/null; then
-        virt_type="Parallels"
-    elif echo "$kernel_logs" | grep -qi "virtualbox" 2>/dev/null; then
-        virt_type="VirtualBox"
-    elif [ -e /proc/xen ]; then
-        if grep -qi "control_d" "/proc/xen/capabilities" 2>/dev/null; then
-            virt_type="Xen-Dom0"
-        else
-            virt_type="Xen-DomU"
-        fi
-    elif [ -f "/sys/hypervisor/type" ] && grep -qi "xen" "/sys/hypervisor/type" 2>/dev/null; then
-        virt_type="Xen"
-    elif echo "$system_manufacturer" | grep -qi "microsoft corporation" 2>/dev/null; then
-        if echo "$system_product_name" | grep -qi "virtual machine" 2>/dev/null; then
-            if echo "$system_version" | grep -qi "7.0" 2>/dev/null || echo "$system_version" | grep -qi "hyper-v" 2>/dev/null; then
-                virt_type="Hyper-V"
-            else
-                virt_type="Microsoft Virtual Machine"
-            fi
-        fi
-    else
-        virt_type="Dedicated"
-    fi
-}
-
-virt_permission() {
-    virt_check
-
-    if [ "$virt_type" = 'Docker' ] || [ "$virt_type" = 'LXC' ] || [ "$virt_type" = "OpenVZ" ]; then
-        _err_msg "$(_red 'The current virtualization architecture is not supported!')" && end_message && exit 1
-    fi
-}
-
-pkg_uninstall() {
-    for package in "$@"; do
-        if _exists dnf; then
-            dnf remove -y "$package"
-        elif _exists yum; then
-            yum remove -y "$package"
-        elif _exists apt; then
-            apt purge -y "$package"
-        elif _exists apt-get; then
-            apt-get purge -y "$package"
-        elif _exists apk; then
-            apk del "$package"
-        fi
-    done
-}
-
-pre_check() {
+function pre_check {
     # 备用 www.qualcomm.cn
     cloudflare_api='www.garmin.com.cn'
 
-    if [ "$(id -ru)" -ne "0" ] || [ "$EUID" -ne "0" ]; then
+    if [ "$(id -ru)" -ne 0 ] || [ "$EUID" -ne 0 ]; then
         _err_msg "$(_red 'This script must be run as root!')" && exit 1
     fi
     if [ "$(ps -p $$ -o comm=)" != "bash" ] || readlink /proc/$$/exe | grep -q "dash"; then
         _err_msg "$(_red 'This script needs to be run with bash, not sh!')" && exit 1
     fi
-    _loc=$(curl -A "$ua_browser" -fskL -m 3 "https://$cloudflare_api/cdn-cgi/trace" | grep -i '^loc=' | cut -d'=' -f2 | xargs)
+    _loc=$(curl -A "$UA_BROWSER" -fskL -m 3 "https://$cloudflare_api/cdn-cgi/trace" | grep -i '^loc=' | cut -d'=' -f2 | xargs)
     if [ -z "$_loc" ]; then
         _err_msg "$(_red 'Cannot retrieve server location. Check your network and try again.')" && end_message && exit 1
     fi
 }
 
-systemctl() {
-    local _cmd="$1"
-    local service_name="$2"
-
-    systemctl_cmd=$(which systemctl 2>/dev/null)
-
-    if _exists apk >/dev/null 2>&1; then
-        service "$service_name" "$_cmd"
-    else
-        "$systemctl_cmd" "$_cmd" "$service_name"
-    fi
-}
-
-fix_dpkg() {
+function fix_dpkg {
     pkill -f -15 'apt|dpkg' || pkill -f -9 'apt|dpkg'
     for lockfile in "/var/lib/dpkg/lock" "/var/lib/dpkg/lock-frontend"; do
         [ -f "$lockfile" ] &&  rm -f "$lockfile" >/dev/null 2>&1
@@ -259,14 +136,14 @@ fix_dpkg() {
     dpkg --configure -a
 }
 
-clean_repo_files() {
+function clean_repo_files {
     [ -f "/etc/yum.repos.d/docker-ce.repo" ] &&  rm -f /etc/yum.repos.d/docker-ce.repo 2>/dev/null
     [ -f "/etc/yum.repos.d/docker-ce-staging.repo" ] &&  rm -f /etc/yum.repos.d/docker-ce-staging.repo 2>/dev/null
     [ -f "/etc/apt/keyrings/docker.asc" ] &&  rm -f /etc/apt/keyrings/docker.asc 2>/dev/null
     [ -f "/etc/apt/sources.list.d/docker.list" ] &&  rm -f /etc/apt/sources.list.d/docker.list 2>/dev/null
 }
 
-_check_install() {
+function _check_install {
     if _exists 'docker' >/dev/null 2>&1 || \
         docker --version >/dev/null 2>&1 || \
         docker compose version >/dev/null 2>&1 || \
@@ -275,14 +152,14 @@ _check_install() {
     fi
 }
 
-_install() {
+function _install {
     local version_code repo_url gpgkey_url
 
     pre_check
     clean_repo_files
 
     _info_msg "$(_yellow 'Installing the Docker environment!')"
-    if [ "$os_name" = "rocky" ] || [ "$os_name" = "almalinux" ] || [ "$os_name" = "centos" ]; then
+    if [ "$OS_NAME" = "rocky" ] || [ "$OS_NAME" = "almalinux" ] || [ "$OS_NAME" = "centos" ]; then
         pkg_uninstall docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine >/dev/null 2>&1
 
         if [ "$_loc" = "CN" ]; then
@@ -310,7 +187,7 @@ _install() {
 
         systemctl enable docker
         systemctl start docker
-    elif [ "$os_name" = "rhel" ]; then
+    elif [ "$OS_NAME" = "rhel" ]; then
         pkg_uninstall docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine podman runc >/dev/null 2>&1
 
         if ! dnf config-manager --help >/dev/null 2>&1; then
@@ -326,16 +203,16 @@ _install() {
         dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
         systemctl enable docker
         systemctl start docker
-    elif [ "$os_name" = "debian" ] || [ "$os_name" = "ubuntu" ]; then
+    elif [ "$OS_NAME" = "debian" ] || [ "$OS_NAME" = "ubuntu" ]; then
         version_code="$(grep "^VERSION_CODENAME" /etc/*-release | cut -d= -f2)"
         pkg_uninstall docker.io docker-doc docker-compose podman-docker containerd runc >/dev/null 2>&1
 
         if [ "$_loc" = "CN" ]; then
-            repo_url="https://mirrors.aliyun.com/docker-ce/linux/${os_name}"
-            gpgkey_url="https://mirrors.aliyun.com/docker-ce/linux/${os_name}/gpg"
+            repo_url="https://mirrors.aliyun.com/docker-ce/linux/${OS_NAME}"
+            gpgkey_url="https://mirrors.aliyun.com/docker-ce/linux/${OS_NAME}/gpg"
         else
-            repo_url="https://download.docker.com/linux/${os_name}"
-            gpgkey_url="https://download.docker.com/linux/${os_name}/gpg"
+            repo_url="https://download.docker.com/linux/${OS_NAME}"
+            gpgkey_url="https://download.docker.com/linux/${OS_NAME}/gpg"
         fi
 
         fix_dpkg
@@ -351,7 +228,7 @@ _install() {
         apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
         systemctl enable docker
         systemctl start docker
-    elif [ "$os_name" = "alpine" ]; then
+    elif [ "$OS_NAME" = "alpine" ]; then
         [ "$_loc" = "CN" ] && sed -i -E 's|^https?://dl-cdn.alpinelinux.org|https://mirrors.aliyun.com|g' /etc/apk/repositories 2>/dev/null
         apk update
         apk add docker docker-compose
@@ -445,7 +322,7 @@ _version() {
 }
 
 _status() {
-    if "$systemctl_cmd" is-active --quiet docker || \
+    if systemctl is-active --quiet docker || \
         docker info >/dev/null 2>&1 || \
         /etc/init.d/docker status | grep -q 'started' || \
         service docker status >/dev/null 2>&1 || \
@@ -468,29 +345,4 @@ docker_install() {
     end_message
 }
 
-docker_uninstall() {
-    clear
-    _show_logo
-    os_permission
-    virt_permission
-    _uninstall
-    end_message
-}
-
-if [ "$#" -eq 0 ]; then
-    docker_install
-else
-    while [ "$#" -ge 1 ]; do
-        case "$1" in
-            --install)
-                docker_install
-                shift 1
-            ;;
-            --uninstall)
-                docker_uninstall
-                shift 1
-            ;;
-            *) _err_msg "$(_red "Invalid option, current parameter $1 Not supported!")" && end_message && _show_usage ;;
-        esac
-    done
-fi
+docker_install
