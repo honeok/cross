@@ -47,19 +47,3 @@ or
 ```shell
 bash <(curl -sL https://gitlab.com/honeok/cross/-/raw/master/backTrace.sh)
 ```
-
-## get-docker.sh
-
-<p align="center">
-  <img src="https://hits.seeyoufarm.com/api/count/keep/badge.svg?url=https%3A%2F%2Fgithub.com%2Fhoneok%2Fcross%2Fraw%2Fmaster%2Fget-docker.sh" alt="Hits" />
-</p>
-
-Description: This script allows you to install the latest version of Docker on your server with a single command.
-
-```shell
-bash <(curl -sL https://github.com/honeok/cross/raw/master/get-docker.sh)
-```
-or
-```shell
-bash <(curl -sL https://gitlab.com/honeok/cross/-/raw/master/get-docker.sh)
-```
