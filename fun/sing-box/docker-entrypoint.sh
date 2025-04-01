@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 #
-# Copyright (C) 2025 honeok <honeok@duck.com>
+# Copyright (c) 2025 honeok <honeok@duck.com>
 #
 # References:
 # https://sing-box.sagernet.org/zh/configuration
@@ -17,6 +17,7 @@ set \
     -o nounset
 
 SINGBOX_WORKDIR="/etc/sing-box"
+SINGBOX_BINDIR="$SINGBOX_WORKDIR/bin"
 SINGBOX_CONFDIR="$SINGBOX_WORKDIR/conf"
 SINGBOX_LOGDIR="/var/log/sing-box"
 SINGBOX_LOGFILE="$SINGBOX_LOGDIR/access.log"
@@ -27,8 +28,18 @@ GENERATE_UUID=$(sing-box generate uuid)
 GENERATE_KEYS=$(sing-box generate reality-keypair)
 PRIVATE_KEY=$(printf "%s" "$GENERATE_KEYS" | sed -n 's/^PrivateKey: *\(.*\)$/\1/p')
 PUBLIC_KEY=$(printf "%s" "$GENERATE_KEYS" | sed -n 's/^PublicKey: *\(.*\)$/\1/p')
-PUBLIC_IP=$(curl -fsL4 -m 2 https://ipinfo.io/ip || \
-            curl -fsL6 -m 2 https://v6.ipinfo.io/ip)
+# tls generation
+GENERATE_TLS_KEY=$(sing-box generate tls-keypair tls -m 456)
+TLS_PRIVATE_KEY=$(printf "%s\n" "$GENERATE_TLS_KEY" | awk '/-----BEGIN PRIVATE KEY-----/{p=1} p{print} /-----END PRIVATE KEY-----/{p=0;exit}')
+TLS_CERTIFICATE=$(printf "%s\n" "$GENERATE_TLS_KEY" | awk '/-----BEGIN CERTIFICATE-----/{p=1} p{print} /-----END CERTIFICATE-----/{p=0;exit}')
+
+PUBLIC_IP=$(curl -fskL -m 3 -4 https://www.qualcomm.cn/cdn-cgi/trace 2>/dev/null | grep -i '^ip=' | cut -d'=' -f2 | xargs || \
+            curl -fskL -m 3 -6 https://www.qualcomm.cn/cdn-cgi/trace 2>/dev/null | grep -i '^ip=' | cut -d'=' -f2 | xargs)
+
+if [ ! -s "$SINGBOX_BINDIR/tls.key" ] || [ ! -s "$SINGBOX_BINDIR/tls.cer" ]; then
+    echo "$TLS_PRIVATE_KEY" > "$SINGBOX_BINDIR/tls.key"
+    echo "$TLS_CERTIFICATE" > "$SINGBOX_BINDIR/tls.cer"
+fi
 
 # Generate default config if not provided by the user
 if [ ! -s "$SINGBOX_WORKDIR/config.json" ]; then
