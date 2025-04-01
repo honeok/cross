@@ -2,7 +2,7 @@
 #
 # Description: The most convenient route tracing tool based on NextTrace.
 #
-# Copyright (C) 2024-2025 honeok <honeok@duck.com>
+# Copyright (c) 2024-2025 honeok <honeok@duck.com>
 #
 # This script utilizes NextTrace, a powerful network diagnostic tool.
 # NextTrace is copyrighted and developed by the NextTrace project team.
@@ -15,7 +15,7 @@
 # shellcheck disable=SC2034
 
 # 当前脚本版本号
-readonly version='v0.1.3 (2025.03.26)'
+readonly version='v0.1.4 (2025.04.01)'
 
 red='\033[91m'
 green='\033[92m'
@@ -27,13 +27,14 @@ _green() { echo -e "${green}$*${white}"; }
 _yellow() { echo -e "${yellow}$*${white}"; }
 _cyan() { echo -e "${cyan}$*${white}"; }
 
-_err_msg() { echo -e "\033[41m\033[1mwarn${white} $*"; }
+_err_msg() { echo -e "\033[41m\033[1mError${white} $*"; }
 
 # 分割符
 separator() { printf "%-70s\n" "-" | sed 's/\s/-/g'; }
 
 # 各变量默认值
-GITHUB_PROXY='https://goppx.com/'
+github_proxy='https://goppx.com/'
+ua_browser='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'
 
 # https://dnsdaquan.com
 # https://www.nodeseek.com/post-68572-1
@@ -61,10 +62,10 @@ print_title() {
 }
 
 _exists() {
-    local cmd="$1"
-    if type "$cmd" >/dev/null 2>&1; then
+    local _cmd="$1"
+    if type "$_cmd" >/dev/null 2>&1; then
         return 0
-    elif command -v "$cmd" >/dev/null 2>&1; then
+    elif command -v "$_cmd" >/dev/null 2>&1; then
         return 0
     else
         return 1
@@ -80,23 +81,23 @@ clear_screen() {
 
 # 运行前校验
 pre_runcheck() {
-    # 备用 www.bose.cn
-    # 备用 www.qualcomm.cn
+    # 备用 www.prologis.cn
     # 备用 www.autodesk.com.cn
-    cloudflare_api='www.garmin.com.cn'
+    # 备用 www.keysight.com.cn
+    cloudflare_api='www.qualcomm.cn'
 
     if [ "$(id -ru)" -ne 0 ] || [ "$EUID" -ne 0 ]; then
-        _err_msg "$(_red 'Error: This script must be run as root!')" && exit 1
+        _err_msg "$(_red 'This script must be run as root!')" && exit 1
     fi
     if [ "$(ps -p $$ -o comm=)" != "bash" ] || readlink /proc/$$/exe | grep -q "dash"; then
-        _err_msg "$(_red 'Error: This script needs to be run with bash, not sh!')" && exit 1
+        _err_msg "$(_red 'This script needs to be run with bash, not sh!')" && exit 1
     fi
     # 境外服务器仅ipv4访问测试通过后取消github代理
-    if [ "$(curl -fskL -m 3 -4 "https://$cloudflare_api/cdn-cgi/trace" | grep -i '^loc=' | cut -d'=' -f2 | xargs)" != "CN" ]; then
-        unset GITHUB_PROXY
+    if [ "$(curl -A "$ua_browser" -fskL -m 3 "https://$cloudflare_api/cdn-cgi/trace" | grep -i '^loc=' | cut -d'=' -f2 | xargs)" != "CN" ]; then
+        unset github_proxy
     fi
     # 脚本当天及累计运行次数统计
-    runcount=$(curl -fskL -m 3 --retry 1 "https://hit.forvps.gq/https://github.com/honeok/cross/raw/master/bestTrace.sh" 2>&1 | grep -m1 -oE "[0-9]+[ ]+/[ ]+[0-9]+")
+    runcount=$(curl -fskL -m 10 --retry 1 "https://hits.honeok.com/bestTrace?action=hit")
 }
 
 # IP dual stack check
@@ -113,13 +114,13 @@ pre_ipcheck() {
         { curl -sL -m 4 -6 v6.ipinfo.io/ip >/dev/null 2>&1 && ipv6_check="true"; }
 
     if [ "$ipv4_check" = "false" ] && [ "$ipv6_check" = "false" ]; then
-        _err_msg "$(_red 'Error: Both IPv4 and IPv6 connectivity were not detected.')" && exit 1
+        _err_msg "$(_red 'Both IPv4 and IPv6 connectivity were not detected.')" && exit 1
     fi
 }
 
 nt_install() {
     if ! _exists nexttrace || [ ! -f "/usr/local/bin/nexttrace" ] || [ ! -f "/usr/bin/nexttrace" ]; then
-        bash <(curl -fskL "${GITHUB_PROXY}https://github.com/nxtrace/NTrace-core/raw/main/nt_install.sh") || { _err_msg "$(_red 'Error: Nexttrace installation failed.')"; exit 1; }
+        bash <(curl -fskL "${github_proxy}https://github.com/nxtrace/NTrace-core/raw/main/nt_install.sh") || { _err_msg "$(_red 'Nexttrace installation failed.')"; exit 1; }
     fi
     clear_screen
 }
@@ -168,11 +169,13 @@ exec_bestTrace() {
 }
 
 print_end_msg() {
+    local today total
+
     separator
     if [ -n "$runcount" ]; then
-        today_runcount=$(awk -F ' ' '{print $1}' <<< "$runcount")
-        total_runcount=$(awk -F ' ' '{print $3}' <<< "$runcount")
-        _yellow "The script has run: $today_runcount times today. Total executions: $total_runcount."
+        today=$(echo "$runcount" | grep '"daily"' | sed 's/.*"daily": *\([0-9]*\).*/\1/')
+        total=$(echo "$runcount" | grep '"total"' | sed 's/.*"total": *\([0-9]*\).*/\1/')
+        echo "$(_yellow 'The script has run:') $(_cyan "$today") $(_yellow 'times today. Total executions:') $(_cyan "$total")"
     fi
 }
 
