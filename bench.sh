@@ -2,7 +2,7 @@
 #
 # Description: Gather system information, test disk I/O, and assess network performance to China.
 #
-# Copyright (C) 2025 honeok <honeok@duck.com>
+# Copyright (c) 2025 honeok <honeok@duck.com>
 #
 # Thanks: Teddysun <i@teddysun.com>
 #
@@ -11,7 +11,7 @@
 # See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
 
 # 当前脚本版本号
-readonly version='v0.1.8 (2025.03.11)'
+readonly version='v0.1.9 (2025.04.01)'
 
 red='\033[91m'
 green='\033[92m'
@@ -25,23 +25,27 @@ _yellow() { echo -e "${yellow}$*${white}"; }
 _purple() { echo -e "${purple}$*${white}"; }
 _cyan() { echo -e "${cyan}$*${white}"; }
 
-_err_msg() { echo -e "\033[41m\033[1mwarn${white} $*"; }
+_err_msg() { echo -e "\033[41m\033[1mError${white} $*"; }
+
+# 环境变量用于在debian或ubuntu操作系统中设置非交互式 (noninteractive) 安装模式
+export DEBIAN_FRONTEND=noninteractive
 
 # 分割符
 separator() { printf "%-70s\n" "-" | sed 's/\s/-/g'; }
 
-# 预定义常量
-github_Proxy='https://gh-proxy.com/'
-temp_Dir='/tmp/bench'
-speedtest_Dir="$temp_Dir/speedtest"
+# 各变量默认值
+github_proxy='https://gh-proxy.com/'
+temp_dir='/tmp/bench'
+speedtest_dir="$temp_dir/speedtest"
+ua_browser='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'
 
 # 定义一个数组存储用户未安装的软件包
 declare -a uninstall_depend_pkg=()
 
 _exit() {
-    local return_value=$?
+    local return_value="$?"
 
-    rm -rf "$temp_Dir"
+    rm -rf "$temp_dir"
     if [ ${#uninstall_depend_pkg[@]} -gt 0 ]; then
         (for pkg in "${uninstall_depend_pkg[@]}"; do pkg_uninstall "$pkg" >/dev/null 2>&1; done) & disown
     fi
@@ -50,7 +54,7 @@ _exit() {
 
 trap "_exit" SIGINT SIGQUIT SIGTERM EXIT
 
-mkdir -p "$temp_Dir"
+mkdir -p "$temp_dir"
 
 print_title() {
     echo "--------------------- A Bench.sh Script By honeok --------------------"
@@ -59,10 +63,10 @@ print_title() {
 }
 
 _exists() {
-    local cmd="$1"
-    if type "$cmd" >/dev/null 2>&1; then
+    local _cmd="$1"
+    if type "$_cmd" >/dev/null 2>&1; then
         return 0
-    elif command -v "$cmd" >/dev/null 2>&1; then
+    elif command -v "$_cmd" >/dev/null 2>&1; then
         return 0
     else
         return 1
@@ -76,10 +80,10 @@ pkg_install() {
             dnf install -y "$package"
         elif _exists yum; then
             yum install -y "$package"
-        elif _exists apt; then
-            DEBIAN_FRONTEND=noninteractive apt install -y -q "$package"
         elif _exists apt-get; then
-            DEBIAN_FRONTEND=noninteractive apt-get install -y -q "$package"
+            apt-get install -y -q "$package"
+        elif _exists apt; then
+            apt install -y -q "$package"
         elif _exists apk; then
             apk add --no-cache "$package"
         elif _exists pacman; then
@@ -100,10 +104,10 @@ pkg_uninstall() {
             dnf remove -y "$package"
         elif _exists yum; then
             yum remove -y "$package"
-        elif _exists apt; then
-            apt purge -y "$package"
         elif _exists apt-get; then
             apt-get purge -y "$package"
+        elif _exists apt; then
+            apt purge -y "$package"
         elif _exists apk; then
             apk del "$package"
         elif _exists pacman; then
@@ -121,14 +125,20 @@ pkg_uninstall() {
 # 运行前校验
 pre_check() {
     local install_depend_pkg
-    install_depend_pkg=( "curl" "tar" "bc" )
+    install_depend_pkg=( 'tar' 'bc' )
 
-    if [ "$(id -ru)" -ne "0" ] || [ "$EUID" -ne "0" ]; then
+    # 备用 www.prologis.cn
+    # 备用 www.autodesk.com.cn
+    # 备用 www.keysight.com.cn
+    cloudflare_api='www.qualcomm.cn'
+
+    if [ "$(id -ru)" -ne 0 ] || [ "$EUID" -ne 0 ]; then
         _err_msg "$(_red 'This script must be run as root!')" && exit 1
     fi
     if [ "$(ps -p $$ -o comm=)" != "bash" ] || readlink /proc/$$/exe | grep -q "dash"; then
         _err_msg "$(_red 'This script needs to be run with bash, not sh!')" && exit 1
     fi
+    # 安装必要的软件包
     for pkg in "${install_depend_pkg[@]}"; do
         if ! _exists "$pkg" >/dev/null 2>&1; then
             uninstall_depend_pkg+=("$pkg")
@@ -136,11 +146,11 @@ pre_check() {
         fi
     done
     # 境外服务器仅ipv4访问测试通过后取消github代理
-    if [ "$(curl -fskL -m 3 -4 "https://www.qualcomm.cn/cdn-cgi/trace" | grep -i '^loc=' | cut -d'=' -f2 | xargs)" != "CN" ]; then
-        github_Proxy=''
+    if [ "$(curl -A "$ua_browser" -fskL -m 3 "https://$cloudflare_api/cdn-cgi/trace" | grep -i '^loc=' | cut -d'=' -f2 | xargs)" != "CN" ]; then
+        unset github_proxy
     fi
     # 脚本当天及累计运行次数统计
-    runcount=$(curl -fskL -m 2 --retry 1 "https://hit.forvps.gq/https://github.com/honeok/cross/raw/master/bench.sh" 2>&1 | grep -m1 -oE "[0-9]+[ ]+/[ ]+[0-9]+")
+    runcount=$(curl -fskL -m 10 --retry 1 "https://hits.honeok.com/bench?action=hit")
 
     start_time=$(date +%s)
 }
@@ -414,7 +424,7 @@ io_test() {
     local speed
     local block_count="$1"
 
-    speed=$(LANG=C dd if=/dev/zero of="$temp_Dir/io_$$" bs=512k count="$block_count" conv=fdatasync 2>&1 | grep -o "[0-9.]\+ [MG]B/s")
+    speed=$(LANG=C dd if=/dev/zero of="$temp_dir/io_$$" bs=512k count="$block_count" conv=fdatasync 2>&1 | grep -o "[0-9.]\+ [MG]B/s")
     echo "$speed"
 }
 
@@ -454,8 +464,8 @@ print_io_test() {
 install_speedtest() {
     local speedtest_ver sys_arch
 
-    speedtest_ver="1.7.9"
-    mkdir -p "$speedtest_Dir"
+    speedtest_ver="1.7.10"
+    mkdir -p "$speedtest_dir"
 
     case "$(uname -m)" in
         'i386' | 'i686')
@@ -474,15 +484,15 @@ install_speedtest() {
             sys_arch="arm64"
         ;;
         *)
-            _err_msg "$(_red "Error: Unsupported system architecture (${sys_arch})")" && exit 1
+            _err_msg "$(_red "Unsupported system architecture (${sys_arch})")" && exit 1
         ;;
     esac
 
-    if ! curl -fskL -o "$speedtest_Dir/speedtest.tar.gz" "${github_Proxy}https://github.com/showwin/speedtest-go/releases/download/v${speedtest_ver}/speedtest-go_${speedtest_ver}_Linux_${sys_arch}.tar.gz"; then
-        _err_msg "$(_red 'Error: Failed to download speedtest-go')" && exit 1
+    if ! curl -fskL -o "$speedtest_dir/speedtest.tar.gz" "${github_proxy}https://github.com/showwin/speedtest-go/releases/download/v${speedtest_ver}/speedtest-go_${speedtest_ver}_Linux_${sys_arch}.tar.gz"; then
+        _err_msg "$(_red 'Failed to download speedtest-go')" && exit 1
     fi
 
-    tar zxf "$speedtest_Dir/speedtest.tar.gz" -C "$speedtest_Dir"
+    tar zxf "$speedtest_dir/speedtest.tar.gz" -C "$speedtest_dir"
 
     printf "%-18s%-18s%-20s%-12s\n" " Node Name" "Upload Speed" "Download Speed" "Latency"
 }
@@ -493,14 +503,14 @@ speedtest() {
     local nodeName="$2"
 
     if [ -z "$1" ]; then
-        "$speedtest_Dir/speedtest-go" --unix > "$speedtest_Dir/speedtest.log" 2>&1 || return
+        "$speedtest_dir/speedtest-go" --unix > "$speedtest_dir/speedtest.log" 2>&1 || return
     else
-        "$speedtest_Dir/speedtest-go" --unix -s "$1" > "$speedtest_Dir/speedtest.log" 2>&1 || return
+        "$speedtest_dir/speedtest-go" --unix -s "$1" > "$speedtest_dir/speedtest.log" 2>&1 || return
     fi
 
-    upload_speed=$(awk -F': ' '/Upload/ {split($2, a, " "); print a[1] " " a[2]; exit}' "$speedtest_Dir/speedtest.log")
-    download_speed=$(awk -F': ' '/Download/ {split($2, a, " "); print a[1] " " a[2]; exit}' "$speedtest_Dir/speedtest.log")
-    latency=$(awk '/Latency:/ {sub(/ms$/, "", $2); printf "%.2fms", $2; exit}' "$speedtest_Dir/speedtest.log")
+    upload_speed=$(awk -F': ' '/Upload/ {split($2, a, " "); print a[1] " " a[2]; exit}' "$speedtest_dir/speedtest.log")
+    download_speed=$(awk -F': ' '/Download/ {split($2, a, " "); print a[1] " " a[2]; exit}' "$speedtest_dir/speedtest.log")
+    latency=$(awk '/Latency:/ {sub(/ms$/, "", $2); printf "%.2fms", $2; exit}' "$speedtest_dir/speedtest.log")
 
     if [ -n "$download_speed" ] && [ -n "$upload_speed" ] && [ -n "$latency" ]; then
         printf "${yellow}%-18s${green}%-18s${red}%-20s${cyan}%-12s${white}\n" " $nodeName" "$upload_speed" "$download_speed" "$latency"
@@ -521,7 +531,7 @@ run_speedtest() {
 }
 
 print_end_msg() {
-    local end_time time_count min sec today_runcount total_runcount
+    local end_time time_count min sec today total
 
     end_time=$(date +%s)
     time_count=$(( end_time - start_time ))
@@ -534,9 +544,9 @@ print_end_msg() {
         echo " Finished in        : $time_count sec"
     fi
     if [ -n "$runcount" ]; then
-        today_runcount=$(awk -F ' ' '{print $1}' <<< "$runcount")
-        total_runcount=$(awk -F ' ' '{print $3}' <<< "$runcount")
-        echo " Runs (Today/Total) : $today_runcount / $total_runcount"
+        today=$(echo "$runcount" | grep '"daily"' | sed 's/.*"daily": *\([0-9]*\).*/\1/')
+        total=$(echo "$runcount" | grep '"total"' | sed 's/.*"total": *\([0-9]*\).*/\1/')
+        echo " Runs (Today/Total) : $today / $total"
     fi
     echo " Timestamp          : $(date '+%Y-%m-%d %H:%M:%S %Z')"
 }
