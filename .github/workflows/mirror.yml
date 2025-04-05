@@ -1,4 +1,4 @@
-name: GitHub Actions Mirror
+name: 'gitHub actions mirror'
 
 on:
   push:
@@ -8,14 +8,15 @@ on:
 
 jobs:
   mirror_to_gitlab:
-    name: Mirror to gitlab
+    name: 'mirror to gitlab'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: 'checkout repository'
         uses: actions/checkout@v4.2.2
         with:
           fetch-depth: 0
-      - name: Mirror to gitlab
+
+      - name: 'mirror to gitlab'
         uses: fscarmen/repository-mirroring-action@v1.0.0
         with:
           target_repo_url:
@@ -24,14 +25,15 @@ jobs:
             ${{ secrets.SYNC_PRIVATE_KEY }}
 
   mirror_to_framagit:
-    name: Mirror to framagit
+    name: 'mirror to framagit'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: 'checkout repository'
         uses: actions/checkout@v4.2.2
         with:
           fetch-depth: 0
-      - name: Mirror to framagit
+
+      - name: 'mirror to framagit'
         uses: fscarmen/repository-mirroring-action@v1.0.0
         with:
           target_repo_url:
