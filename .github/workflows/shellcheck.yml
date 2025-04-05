@@ -1,4 +1,4 @@
-name: Shellcheck
+name: 'Shellcheck'
 
 on:
   push:
@@ -6,16 +6,21 @@ on:
       - master
       - release
       - dev
+    paths:
+        - '**/*.sh'
+  pull_request:
+    paths:
+      - '**/*.sh'
   workflow_dispatch:
 
 jobs:
   shellcheck:
-    name: Shellcheck
+    name: 'Shellcheck'
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4.1.1
+      - name: 'Check out repository'
+        uses: actions/checkout@v4.2.2
 
-      - name: Run ShellCheck
+      - name: 'Run ShellCheck'
         uses: ludeeus/action-shellcheck@2.0.0
