@@ -20,7 +20,7 @@ bash <(curl -sL https://github.com/honeok/cross/raw/master/bench.sh)
 ```
 or
 ```shell
-bash <(curl -sL https://gitlab.com/honeok/cross/-/raw/master/bench.sh)
+bash <(curl -sL https://gitlab.com/honeok/cross/raw/master/bench.sh)
 ```
 
 ## bestTrace.sh
@@ -32,7 +32,7 @@ bash <(curl -sL https://github.com/honeok/cross/raw/master/bestTrace.sh)
 ```
 or
 ```shell
-bash <(curl -sL https://gitlab.com/honeok/cross/-/raw/master/bestTrace.sh)
+bash <(curl -sL https://gitlab.com/honeok/cross/raw/master/bestTrace.sh)
 ```
 
 ## backTrace.sh
@@ -45,5 +45,5 @@ bash <(curl -sL https://github.com/honeok/cross/raw/master/backTrace.sh)
 ```
 or
 ```shell
-bash <(curl -sL https://gitlab.com/honeok/cross/-/raw/master/backTrace.sh)
+bash <(curl -sL https://gitlab.com/honeok/cross/raw/master/backTrace.sh)
 ```
