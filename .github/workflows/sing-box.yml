@@ -50,7 +50,7 @@ jobs:
 
       - name: 'Build and push Sing-box image'
         if: ${{ env.BUILD_IMAGE == 'true' || github.event_name == 'workflow_dispatch' }}
-        uses: docker/build-push-action@v6.11.0
+        uses: docker/build-push-action@v6.15.0
         with:
           context: "{{ defaultContext }}:fun/sing-box"
           file: Dockerfile
