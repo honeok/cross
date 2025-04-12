@@ -62,3 +62,12 @@ jobs:
             "${{ env.DOCKER_USERNAME }}/x-ui:xray-${{ env.LATEST_VERSION }}"
             "${{ env.DOCKER_USERNAME }}/x-ui:latest"
           platforms: linux/amd64, linux/arm64/v8, linux/s390x
+
+      - name: 'Sync dockerhub README.md'
+        if: env.BUILD_IMAGE == true || github.event_name == 'workflow_dispatch'
+        uses: ms-jpq/sync-dockerhub-readme@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: ${{ secrets.DOCKER_USERNAME }}/x-ui
+          readme: "./fun/x-ui/README.zh_CN.md"
