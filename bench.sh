@@ -149,7 +149,7 @@ pre_check() {
         fi
     done
     # 境外服务器仅ipv4访问测试通过后取消github代理
-    if [ "$(curl -A "$UA_BROWSER" -fsSL "${CURL_OPTS[@]}" "https://$CLOUDFLARE_API/cdn-cgi/trace" | grep -i '^loc=' | cut -d'=' -f2 | xargs)" != "CN" ]; then
+    if [ "$(curl -A "$UA_BROWSER" -fsSL "${CURL_OPTS[@]}" -4 "https://$CLOUDFLARE_API/cdn-cgi/trace" | grep -i '^loc=' | cut -d'=' -f2 | xargs)" != "CN" ]; then
         unset GITHUB_PROXY
     fi
     # 脚本当天及累计运行次数统计
