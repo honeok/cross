@@ -11,7 +11,7 @@
 # See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
 
 # 当前脚本版本号
-readonly version='v0.1.9 (2025.04.01)'
+readonly VERSION='v0.1.10 (2025.04.21)'
 
 red='\033[91m'
 green='\033[92m'
@@ -19,13 +19,13 @@ yellow='\033[93m'
 purple='\033[95m'
 cyan='\033[96m'
 white='\033[0m'
-_red() { echo -e "${red}$*${white}"; }
-_green() { echo -e "${green}$*${white}"; }
-_yellow() { echo -e "${yellow}$*${white}"; }
-_purple() { echo -e "${purple}$*${white}"; }
-_cyan() { echo -e "${cyan}$*${white}"; }
+_red() { echo -e "$red$*$white"; }
+_green() { echo -e "$green$*$white"; }
+_yellow() { echo -e "$yellow$*$white"; }
+_purple() { echo -e "$purple$*$white"; }
+_cyan() { echo -e "$cyan$*$white"; }
 
-_err_msg() { echo -e "\033[41m\033[1mError${white} $*"; }
+_err_msg() { echo -e "\033[41m\033[1mError$white $*"; }
 
 # 环境变量用于在debian或ubuntu操作系统中设置非交互式 (noninteractive) 安装模式
 export DEBIAN_FRONTEND=noninteractive
@@ -34,39 +34,40 @@ export DEBIAN_FRONTEND=noninteractive
 separator() { printf "%-70s\n" "-" | sed 's/\s/-/g'; }
 
 # 各变量默认值
-github_proxy='https://gh-proxy.com/'
-temp_dir='/tmp/bench'
-speedtest_dir="$temp_dir/speedtest"
-ua_browser='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'
+GITHUB_PROXY="https://gh-proxy.com/"
+TEMP_DIR="/tmp/bench"
+SPEEDTEST_DIR="$TEMP_DIR/speedtest"
+UA_BROWSER="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
 
-# 定义一个数组存储用户未安装的软件包
-declare -a uninstall_depend_pkg=()
+declare -a CURL_OPTS=(-m 5 --retry 1 --retry-max-time 10)
+declare -a UNINSTALL_PKG=()
+declare -a ONLINE=()
 
 _exit() {
-    local return_value="$?"
+    local RETURN_VALUE="$?"
 
-    rm -rf "$temp_dir"
-    if [ ${#uninstall_depend_pkg[@]} -gt 0 ]; then
-        (for pkg in "${uninstall_depend_pkg[@]}"; do pkg_uninstall "$pkg" >/dev/null 2>&1; done) & disown
+    rm -rf "$TEMP_DIR" >/dev/null 2>&1
+    if [ ${#UNINSTALL_PKG[@]} -gt 0 ]; then
+        (for pkg in "${UNINSTALL_PKG[@]}"; do pkg_uninstall "$pkg" >/dev/null 2>&1; done) & disown
     fi
-    exit "$return_value"
+    exit "$RETURN_VALUE"
 }
 
-trap "_exit" SIGINT SIGQUIT SIGTERM EXIT
+trap '_exit' SIGINT SIGQUIT SIGTERM EXIT
 
-mkdir -p "$temp_dir"
+mkdir -p "$TEMP_DIR" >/dev/null 2>&1
 
 print_title() {
     echo "--------------------- A Bench.sh Script By honeok --------------------"
-    echo " Version            : $(_green "$version") $(_purple "\xf0\x9f\x92\x80")"
+    echo " Version            : $(_green "$VERSION") $(_purple "\xF0\x9F\x9A\x80")"
     echo " $(_cyan 'bash <(curl -sL https://github.com/honeok/cross/raw/master/bench.sh)')"
 }
 
 _exists() {
-    local _cmd="$1"
-    if type "$_cmd" >/dev/null 2>&1; then
+    local _CMD="$1"
+    if type "$_CMD" >/dev/null 2>&1; then
         return 0
-    elif command -v "$_cmd" >/dev/null 2>&1; then
+    elif command -v "$_CMD" >/dev/null 2>&1; then
         return 0
     else
         return 1
@@ -74,63 +75,65 @@ _exists() {
 }
 
 pkg_install() {
-    for package in "$@"; do
-        _yellow "Installing $package"
+    for pkg in "$@"; do
+        _yellow "Installing $pkg"
         if _exists dnf; then
-            dnf install -y "$package"
+            dnf install -y "$pkg"
         elif _exists yum; then
-            yum install -y "$package"
+            yum install -y "$pkg"
         elif _exists apt-get; then
-            apt-get install -y -q "$package"
+            apt-get install -y -q "$pkg"
         elif _exists apt; then
-            apt install -y -q "$package"
+            apt install -y -q "$pkg"
         elif _exists apk; then
-            apk add --no-cache "$package"
+            apk add --no-cache "$pkg"
         elif _exists pacman; then
-            pacman -S --noconfirm --needed "$package"
+            pacman -S --noconfirm --needed "$pkg"
         elif _exists zypper; then
-            zypper install -y "$package"
+            zypper install -y "$pkg"
         elif _exists opkg; then
-            opkg install "$package"
+            opkg install "$pkg"
         elif _exists pkg; then
-            pkg install -y "$package"
+            pkg install -y "$pkg"
+        else
+            _err_msg "$(_red 'The package manager is not supported.')" && exit 1
         fi
     done
 }
 
 pkg_uninstall() {
-    for package in "$@"; do
+    for pkg in "$@"; do
         if _exists dnf; then
-            dnf remove -y "$package"
+            dnf remove -y "$pkg"
         elif _exists yum; then
-            yum remove -y "$package"
+            yum remove -y "$pkg"
         elif _exists apt-get; then
-            apt-get purge -y "$package"
+            apt-get purge -y "$pkg"
         elif _exists apt; then
-            apt purge -y "$package"
+            apt purge -y "$pkg"
         elif _exists apk; then
-            apk del "$package"
+            apk del "$pkg"
         elif _exists pacman; then
-            pacman -Rns --noconfirm "$package"
+            pacman -Rns --noconfirm "$pkg"
         elif _exists zypper; then
-            zypper remove -y "$package"
+            zypper remove -y "$pkg"
         elif _exists opkg; then
-            opkg remove "$package"
+            opkg remove "$pkg"
         elif _exists pkg; then
-            pkg delete -y "$package"
+            pkg delete -y "$pkg"
         fi
     done
 }
 
 # 运行前校验
 pre_check() {
-    local install_depend_pkg
-    install_depend_pkg=( 'tar' 'bc' )
+    local INSTALL_PKG
+    INSTALL_PKG=("tar" "bc")
 
     # 备用 www.prologis.cn
     # 备用 www.autodesk.com.cn
     # 备用 www.keysight.com.cn
-    cloudflare_api='www.qualcomm.cn'
+    CLOUDFLARE_API="www.qualcomm.cn"
 
     if [ "$(id -ru)" -ne 0 ] || [ "$EUID" -ne 0 ]; then
         _err_msg "$(_red 'This script must be run as root!')" && exit 1
@@ -139,20 +142,20 @@ pre_check() {
         _err_msg "$(_red 'This script needs to be run with bash, not sh!')" && exit 1
     fi
     # 安装必要的软件包
-    for pkg in "${install_depend_pkg[@]}"; do
+    for pkg in "${INSTALL_PKG[@]}"; do
         if ! _exists "$pkg" >/dev/null 2>&1; then
-            uninstall_depend_pkg+=("$pkg")
+            UNINSTALL_PKG+=("$pkg")
             pkg_install "$pkg"
         fi
     done
     # 境外服务器仅ipv4访问测试通过后取消github代理
-    if [ "$(curl -A "$ua_browser" -fskL -m 3 "https://$cloudflare_api/cdn-cgi/trace" | grep -i '^loc=' | cut -d'=' -f2 | xargs)" != "CN" ]; then
-        unset github_proxy
+    if [ "$(curl -A "$UA_BROWSER" -fsSL "${CURL_OPTS[@]}" "https://$CLOUDFLARE_API/cdn-cgi/trace" | grep -i '^loc=' | cut -d'=' -f2 | xargs)" != "CN" ]; then
+        unset GITHUB_PROXY
     fi
     # 脚本当天及累计运行次数统计
-    runcount=$(curl -fskL -m 10 --retry 1 "https://hits.honeok.com/bench?action=hit")
+    RUNCOUNT=$(curl -fsSL "${CURL_OPTS[@]}" -k "https://hits.honeok.com/bench?action=hit")
 
-    start_time=$(date +%s)
+    START_TIME=$(date +%s)
 }
 
 to_kibyte() {
@@ -160,360 +163,367 @@ to_kibyte() {
 }
 
 calc_sum() {
-    local sum=0
+    local SUM=0
     for num in "$@"; do
-        sum=$(( sum + num ))
+        SUM=$((SUM + num))
     done
-    echo "$sum"
+    echo "$SUM"
 }
 
 format_size() {
     # 获取字节
-    local bytes="$1"
-    local size=0
-    local divisor=1
-    local unit="KB"
+    local BYTES="$1"
+    local SIZE=0
+    local DIVISOR=1
+    local UNIT="KB"
 
     # 检查输入是否为非负整数
-    if echo "$bytes" | grep -vE '^[0-9]+$' >/dev/null 2>&1; then
+    if echo "$BYTES" | grep -vE '^[0-9]+$' >/dev/null 2>&1; then
         return 1
     fi
     # 根据字节数大小选择单位和除数
-    if [ "$bytes" -ge 1073741824 ]; then
-        divisor=1073741824
-        unit="TB"
-    elif [ "$bytes" -ge 1048576 ]; then
-        divisor=1048576
-        unit="GB"
-    elif [ "$bytes" -ge 1024 ]; then
-        divisor=1024
-        unit="MB"
-    elif [ "$bytes" -eq 0 ]; then
-        echo "$size"
+    if [ "$BYTES" -ge 1073741824 ]; then
+        DIVISOR=1073741824
+        UNIT="TB"
+    elif [ "$BYTES" -ge 1048576 ]; then
+        DIVISOR=1048576
+        UNIT="GB"
+    elif [ "$BYTES" -ge 1024 ]; then
+        DIVISOR=1024
+        UNIT="MB"
+    elif [ "$BYTES" -eq 0 ]; then
+        echo "$SIZE"
         return 0
     fi
     # 计算并格式化结果保留一位小数
-    size=$(awk "BEGIN {printf \"%.1f\", $bytes / $divisor}")
-    echo "$size $unit"
+    SIZE=$(awk "BEGIN {printf \"%.1f\", $BYTES / $DIVISOR}")
+    echo "$SIZE $UNIT"
 }
 
 # 获取系统信息
 obtain_system_info() {
     # CPU信息
-    cpu_model=$(awk -F: '/model name/ {name=$2} END {print name}' /proc/cpuinfo | sed 's/^[ \t]*//;s/[ \t]*$//')
-    cpu_cores=$(awk -F: '/model name/ {core++} END {print core}' /proc/cpuinfo 2>/dev/null)
-    cpu_frequency=$(awk -F: '/cpu MHz/ {freq=$2} END {print freq}' /proc/cpuinfo | sed 's/^[ \t]*//;s/[ \t]*$//')
-    cpu_cache=$(awk -F: '/cache size/ {cache=$2} END {print cache}' /proc/cpuinfo | sed 's/^[ \t]*//;s/[ \t]*$//')
-    cpu_aes=$(grep -i 'aes' /proc/cpuinfo) # 检查AES-NI指令集支持
-    cpu_virt=$(grep -Ei 'vmx|svm' /proc/cpuinfo) # 检查VM-x/AMD-V支持
+    CPU_MODEL=$(awk -F: '/model name/ {name=$2} END {print name}' /proc/cpuinfo | sed 's/^[ \t]*//;s/[ \t]*$//')
+    CPU_CORES=$(awk -F: '/model name/ {core++} END {print core}' /proc/cpuinfo 2>/dev/null)
+    CPU_FREQUENCY=$(awk -F: '/cpu MHz/ {freq=$2} END {print freq}' /proc/cpuinfo | sed 's/^[ \t]*//;s/[ \t]*$//')
+    CPU_CACHE=$(awk -F: '/cache size/ {cache=$2} END {print cache}' /proc/cpuinfo | sed 's/^[ \t]*//;s/[ \t]*$//')
+    CPU_AES=$(grep -i 'aes' /proc/cpuinfo) # 检查AES-NI指令集支持
+    CPU_VIRT=$(grep -Ei 'vmx|svm' /proc/cpuinfo) # 检查VM-x/AMD-V支持
 
     # 内存和交换空间
-    tram=$(format_size "$(free -k | awk '/Mem/ {print $2}')")
-    uram=$(format_size "$(free -k | awk '/Mem/ {print $3}')")
-    swap=$(format_size "$(free -k | awk '/Swap/ {print $2}')")
-    uswap=$(format_size "$(free -k | awk '/Swap/ {print $3}')")
+    TRAM=$(format_size "$(free -k | awk '/Mem/ {print $2}')")
+    URAM=$(format_size "$(free -k | awk '/Mem/ {print $3}')")
+    SWAP=$(format_size "$(free -k | awk '/Swap/ {print $2}')")
+    USWAP=$(format_size "$(free -k | awk '/Swap/ {print $3}')")
 
     # 系统运行时间
-    uptime_str=$(awk '{printf "%d days, %d hr %d min\n", $1/86400, ($1%86400)/3600, ($1%3600)/60}' /proc/uptime)
+    UPTIME_STR=$(awk '{printf "%d days, %d hr %d min\n", $1/86400, ($1%86400)/3600, ($1%3600)/60}' /proc/uptime)
     # 系统负载
     if _exists "w"; then
-        load_average=$(w | head -1 | awk -F'load average:' '{print $2}' | sed 's/^[ \t]*//;s/[ \t]*$//')
+        LOAD_AVERAGE=$(w | head -1 | awk -F'load average:' '{print $2}' | sed 's/^[ \t]*//;s/[ \t]*$//')
     elif _exists "uptime"; then
-        load_average=$(uptime | awk -F'load average:' '{print $2}' | awk '{print $1, $2, $3}')
+        LOAD_AVERAGE=$(uptime | awk -F'load average:' '{print $2}' | awk '{print $1, $2, $3}')
     fi
 
     # 系统基本信息
     if _exists "lsb_release" >/dev/null 2>&1; then
-        os_release=$(lsb_release -d | awk -F: '{print $2}' | xargs | sed 's/ (.*)//')
+        OS_RELEASE=$(lsb_release -d | awk -F: '{print $2}' | xargs | sed 's/ (.*)//')
     elif [ -f /etc/redhat-release ]; then
-        os_release=$(awk '{print ($1, $3~/^[0-9]/ ? $3 : $4)}' /etc/redhat-release)
+        OS_RELEASE=$(awk '{print ($1, $3~/^[0-9]/ ? $3 : $4)}' /etc/redhat-release)
     elif [ -f /etc/os-release ]; then
-        os_release=$(awk -F'[= "]' '/PRETTY_NAME/{print $3, $4, $5}' /etc/os-release)
+        OS_RELEASE=$(awk -F'[= "]' '/PRETTY_NAME/{print $3, $4, $5}' /etc/os-release)
     elif [ -f /etc/lsb-release ]; then
-        os_release=$(awk -F'[="]+' '/DESCRIPTION/{print $2}' /etc/lsb-release)
+        OS_RELEASE=$(awk -F'[="]+' '/DESCRIPTION/{print $2}' /etc/lsb-release)
     else
-        os_release="Unknown OS"
+        OS_RELEASE="Unknown OS"
     fi
-    cpu_architecture=$(uname -m 2>/dev/null || lscpu | awk -F ': +' '/Architecture/{print $2}' || echo "Full Unknown")
+    CPU_ARCHITECTURE=$(uname -m 2>/dev/null || lscpu | awk -F ': +' '/Architecture/{print $2}' || echo "Full Unknown")
     if _exists "getconf"; then
-        sys_bits=$(getconf LONG_BIT)
+        SYS_BITS=$(getconf LONG_BIT)
     else
-        echo "$cpu_architecture" | grep -q "64" && sys_bits="64" || sys_bits="32"
+        echo "$CPU_ARCHITECTURE" | grep -q "64" && SYS_BITS="64" || SYS_BITS="32"
     fi
     if _exists "hostnamectl"; then
-        kernel_version=$(hostnamectl | sed -n 's/^.*Kernel: Linux //p')
+        KERNEL_VER=$(hostnamectl | sed -n 's/^.*Kernel: Linux //p')
     else
-        kernel_version=$(uname -r)
+        KERNEL_VER=$(uname -r)
     fi
 
     # 磁盘大小 (包含swap和ZFS)
-    in_kernel_no_swap_total_size=$(df -t simfs -t ext2 -t ext3 -t ext4 -t btrfs -t xfs -t vfat -t ntfs --total 2>/dev/null | awk '/total/ {print $2}')
-    swap_total_size=$(free -k | awk '/Swap/ {print $2}')
-    zfs_total_size=$(to_kibyte "$(calc_sum "$(zpool list -o size -Hp 2>/dev/null)")")
-    disk_total_size=$(format_size $((swap_total_size + in_kernel_no_swap_total_size + zfs_total_size)))
+    IN_KERNEL_NO_SWAP_TOTAL_SIZE=$(df -t simfs -t ext2 -t ext3 -t ext4 -t btrfs -t xfs -t vfat -t ntfs --total 2>/dev/null | awk '/total/ {print $2}')
+    SWAP_TOTAL_SIZE=$(free -k | awk '/Swap/ {print $2}')
+    ZFS_TOTAL_SIZE=$(to_kibyte "$(calc_sum "$(zpool list -o size -Hp 2>/dev/null)")")
+    DISK_TOTAL_SIZE=$(format_size $((SWAP_TOTAL_SIZE + IN_KERNEL_NO_SWAP_TOTAL_SIZE + ZFS_TOTAL_SIZE)))
 
-    in_kernel_no_swap_used_size=$(df -t simfs -t ext2 -t ext3 -t ext4 -t btrfs -t xfs -t vfat -t ntfs --total 2>/dev/null | awk '/total/ {print $3}')
-    swap_used_size=$(free -k | awk '/Swap/ {print $3}')
-    zfs_used_size=$(to_kibyte "$(calc_sum "$(zpool list -o allocated -Hp 2>/dev/null)")")
-    disk_used_size=$(format_size $((swap_used_size + in_kernel_no_swap_used_size + zfs_used_size)))
+    IN_KERNEL_NO_SWAP_USED_SIZE=$(df -t simfs -t ext2 -t ext3 -t ext4 -t btrfs -t xfs -t vfat -t ntfs --total 2>/dev/null | awk '/total/ {print $3}')
+    SWAP_USED_SIZE=$(free -k | awk '/Swap/ {print $3}')
+    ZFS_USED_SIZE=$(to_kibyte "$(calc_sum "$(zpool list -o allocated -Hp 2>/dev/null)")")
+    DISK_USED_SIZE=$(format_size $((SWAP_USED_SIZE + IN_KERNEL_NO_SWAP_USED_SIZE + ZFS_USED_SIZE)))
 
     # 获取网络拥塞控制算法
     # 获取队列算法
     if _exists "sysctl"; then
-        congestion_algorithm=$(sysctl -n net.ipv4.tcp_congestion_control 2>/dev/null)
-        queue_algorithm=$(sysctl -n net.core.default_qdisc 2>/dev/null)
+        CONGESTION_ALGORITHM=$(sysctl -n net.ipv4.tcp_congestion_control 2>/dev/null)
+        QUEUE_ALGORITHM=$(sysctl -n net.core.default_qdisc 2>/dev/null)
     fi
 }
 
 # 虚拟化校验
 virt_check() {
-    local processor_type kernel_logs system_manufacturer system_product_name system_version
+    local PROCESSOR_TYPE KERNEL_LOGS SYSTEM_MANUFACTURER SYSTEM_PRODUCT_NAME SYSTEM_VER
 
-    processor_type=$(awk -F: '/model name/ {name=$2} END {print name}' /proc/cpuinfo | sed 's/^[ \t]*//;s/[ \t]*$//')
+    PROCESSOR_TYPE=$(awk -F: '/model name/ {name=$2} END {print name}' /proc/cpuinfo | sed 's/^[ \t]*//;s/[ \t]*$//')
 
     if _exists "dmesg" >/dev/null 2>&1; then
-        kernel_logs=$(dmesg 2>/dev/null)
+        KERNEL_LOGS=$(dmesg 2>/dev/null)
     fi
 
     if _exists "dmidecode" >/dev/null 2>&1; then
-        system_manufacturer=$(dmidecode -s system-manufacturer 2>/dev/null)
-        system_product_name=$(dmidecode -s system-product-name 2>/dev/null)
-        system_version=$(dmidecode -s system-version 2>/dev/null)
+        SYSTEM_MANUFACTURER=$(dmidecode -s system-manufacturer 2>/dev/null)
+        SYSTEM_PRODUCT_NAME=$(dmidecode -s system-product-name 2>/dev/null)
+        SYSTEM_VER=$(dmidecode -s system-version 2>/dev/null)
     fi
 
     if grep -qai docker /proc/1/cgroup; then
-        virt_type="Docker"
+        VIRT_TYPE="Docker"
     elif grep -qai lxc /proc/1/cgroup; then
-        virt_type="LXC"
+        VIRT_TYPE="LXC"
     elif grep -qai container=lxc /proc/1/environ; then
-        virt_type="LXC"
+        VIRT_TYPE="LXC"
     elif [ -f /proc/user_beancounters ]; then
-        virt_type="OpenVZ"
-    elif echo "$kernel_logs" | grep -qi "kvm-clock" 2>/dev/null; then
-        virt_type="KVM"
-    elif echo "$processor_type" | grep -qi "kvm" 2>/dev/null; then
-        virt_type="KVM"
-    elif echo "$processor_type" | grep -qi "qemu" 2>/dev/null; then
-        virt_type="KVM"
+        VIRT_TYPE="OpenVZ"
+    elif echo "$KERNEL_LOGS" | grep -qi "kvm-clock" 2>/dev/null; then
+        VIRT_TYPE="KVM"
+    elif echo "$PROCESSOR_TYPE" | grep -qi "kvm" 2>/dev/null; then
+        VIRT_TYPE="KVM"
+    elif echo "$PROCESSOR_TYPE" | grep -qi "qemu" 2>/dev/null; then
+        VIRT_TYPE="KVM"
     elif grep -qi "kvm" "/sys/devices/virtual/dmi/id/product_name" 2>/dev/null; then
-        virt_type="KVM"
+        VIRT_TYPE="KVM"
     elif grep -qi "qemu" "/proc/scsi/scsi" 2>/dev/null; then
-        virt_type="KVM"
-    elif echo "$kernel_logs" | grep -qi "vmware virtual platform" 2>/dev/null; then
-        virt_type="VMware"
-    elif echo "$kernel_logs" | grep -qi "parallels software international" 2>/dev/null; then
-        virt_type="Parallels"
-    elif echo "$kernel_logs" | grep -qi "virtualbox" 2>/dev/null; then
-        virt_type="VirtualBox"
+        VIRT_TYPE="KVM"
+    elif echo "$KERNEL_LOGS" | grep -qi "vmware virtual platform" 2>/dev/null; then
+        VIRT_TYPE="VMware"
+    elif echo "$KERNEL_LOGS" | grep -qi "parallels software international" 2>/dev/null; then
+        VIRT_TYPE="Parallels"
+    elif echo "$KERNEL_LOGS" | grep -qi "virtualbox" 2>/dev/null; then
+        VIRT_TYPE="VirtualBox"
     elif [ -e /proc/xen ]; then
         if grep -qi "control_d" "/proc/xen/capabilities" 2>/dev/null; then
-            virt_type="Xen-Dom0"
+            VIRT_TYPE="Xen-Dom0"
         else
-            virt_type="Xen-DomU"
+            VIRT_TYPE="Xen-DomU"
         fi
     elif [ -f "/sys/hypervisor/type" ] && grep -qi "xen" "/sys/hypervisor/type" 2>/dev/null; then
-        virt_type="Xen"
-    elif echo "$system_manufacturer" | grep -qi "microsoft corporation" 2>/dev/null; then
-        if echo "$system_product_name" | grep -qi "virtual machine" 2>/dev/null; then
-            if echo "$system_version" | grep -qi "7.0" 2>/dev/null || echo "$system_version" | grep -qi "hyper-v" 2>/dev/null; then
-                virt_type="Hyper-V"
+        VIRT_TYPE="Xen"
+    elif echo "$SYSTEM_MANUFACTURER" | grep -qi "microsoft corporation" 2>/dev/null; then
+        if echo "$SYSTEM_PRODUCT_NAME" | grep -qi "virtual machine" 2>/dev/null; then
+            if echo "$SYSTEM_VER" | grep -qi "7.0" 2>/dev/null || echo "$SYSTEM_VER" | grep -qi "hyper-v" 2>/dev/null; then
+                VIRT_TYPE="Hyper-V"
             else
-                virt_type="Microsoft Virtual Machine"
+                VIRT_TYPE="Microsoft Virtual Machine"
             fi
         fi
     else
-        virt_type="Dedicated"
+        VIRT_TYPE="Dedicated"
     fi
 }
 
 # IP双栈检查
 ip_dual_stack() {
-    local ipv4_check ipv6_check
+    local IPV4_CHECK IPV6_CHECK
 
     if ping -4 -c 1 -W 4 1.1.1.1 >/dev/null 2>&1; then
-        ipv4_check="true"
+        IPV4_CHECK="true"
     else
-        ipv4_check=$(curl -sL -m 4 -4 ipinfo.io/ip 2>/dev/null)
+        IPV4_CHECK=$(curl -A "$UA_BROWSER" -fsSL "${CURL_OPTS[@]}" -4 ipinfo.io/ip 2>/dev/null)
     fi
     if ping -6 -c 1 -W 4 2606:4700:4700::1111 >/dev/null 2>&1; then
-        ipv6_check="true"
+        IPV6_CHECK="true"
     else
-        ipv6_check=$(curl -sL -m 4 -6 v6.ipinfo.io/ip 2>/dev/null)
+        IPV6_CHECK=$(curl -A "$UA_BROWSER" -fsSL "${CURL_OPTS[@]}" -6 v6.ipinfo.io/ip 2>/dev/null)
     fi
 
-    if [ -z "$ipv4_check" ] && [ -z "$ipv6_check" ]; then
+    if [ -z "$IPV4_CHECK" ] && [ -z "$IPV6_CHECK" ]; then
         _yellow "Warning: Both IPv4 and IPv6 connectivity were not detected."
     fi
-    if [ -n "$ipv4_check" ]; then
-        online=$(_green "\xe2\x9c\x93 Online")
+    if [ -n "$IPV4_CHECK" ]; then
+        ONLINE=("$(_green "\xe2\x9c\x93 Online")")
     else
-        online=$(_red "\xe2\x9c\x97 Offline")
+        ONLINE=("$(_red "\xe2\x9c\x97 Offline")")
     fi
-    if [ -n "$ipv6_check" ]; then
-        online+=" / $(_green "\xe2\x9c\x93 Online")"
+    if [ -n "$IPV6_CHECK" ]; then
+        ONLINE+=("/ $(_green "\xe2\x9c\x93 Online")")
     else
-        online+=" / $(_red "\xe2\x9c\x97 Offline")"
+        ONLINE+=("/ $(_red "\xe2\x9c\x97 Offline")")
     fi
 }
 
 # 打印系统信息
 print_system_info() {
-    if [ -n "$cpu_model" ]; then
-        echo " CPU Model          : $(_cyan "$cpu_model")"
+    if [ -n "$CPU_MODEL" ]; then
+        echo " CPU Model          : $(_cyan "$CPU_MODEL")"
     else
         echo " CPU Model          : $(_cyan "CPU model not detected")"
     fi
-    if [ -n "$cpu_frequency" ]; then
-        echo " CPU Cores          : $(_cyan "$cpu_cores @ $cpu_frequency MHz")"
+    if [ -n "$CPU_FREQUENCY" ]; then
+        echo " CPU Cores          : $(_cyan "$CPU_CORES @ $CPU_FREQUENCY MHz")"
     else
-        echo " CPU Cores          : $(_cyan "$cpu_cores")"
+        echo " CPU Cores          : $(_cyan "$CPU_CORES")"
     fi
-    if [ -n "$cpu_cache" ]; then
-        echo " CPU Cache          : $(_cyan "$cpu_cache")"
+    if [ -n "$CPU_CACHE" ]; then
+        echo " CPU Cache          : $(_cyan "$CPU_CACHE")"
     fi
-    if [ -n "$cpu_aes" ]; then
+    if [ -n "$CPU_AES" ]; then
         echo " AES-NI             : $(_green "\xe2\x9c\x93 Enabled")"
     else
         echo " AES-NI             : $(_red "\xe2\x9c\x97 Disabled")"
     fi
-    if [ -n "$cpu_virt" ]; then
+    if [ -n "$CPU_VIRT" ]; then
         echo " VM-x/AMD-V         : $(_green "\xe2\x9c\x93 Enabled")"
     else
         echo " VM-x/AMD-V         : $(_red "\xe2\x9c\x97 Disabled")"
     fi
-    echo " Total Disk         : $(_yellow "$disk_total_size") $(_cyan "($disk_used_size Used)")"
-    echo " Total Mem          : $(_yellow "$tram") $(_cyan "($uram Used)")"
-    if [ "$swap" != "0" ]; then
-        echo " Total Swap         : $(_cyan "$swap ($uswap Used)")"
+    echo " Total Disk         : $(_yellow "$DISK_TOTAL_SIZE") $(_cyan "($DISK_USED_SIZE Used)")"
+    echo " Total Mem          : $(_yellow "$TRAM") $(_cyan "($URAM Used)")"
+    if [ "$SWAP" != "0" ]; then
+        echo " Total Swap         : $(_cyan "$SWAP ($USWAP Used)")"
     fi
-    echo " System uptime      : $(_cyan "$uptime_str")"
-    echo " Load average       : $(_cyan "$load_average")"
-    echo " OS                 : $(_cyan "$os_release")"
-    echo " Arch               : $(_cyan "$cpu_architecture ($sys_bits Bit)")"
-    echo " Kernel             : $(_cyan "$kernel_version")"
-    echo " TCP CC             : $(_yellow "$congestion_algorithm $queue_algorithm")"
-    echo " Virtualization     : $(_cyan "$virt_type")"
-    echo " IPv4/IPv6          : $online"
+    echo " System uptime      : $(_cyan "$UPTIME_STR")"
+    echo " Load average       : $(_cyan "$LOAD_AVERAGE")"
+    echo " OS                 : $(_cyan "$OS_RELEASE")"
+    echo " Arch               : $(_cyan "$CPU_ARCHITECTURE ($SYS_BITS Bit)")"
+    echo " Kernel             : $(_cyan "$KERNEL_VER")"
+    echo " TCP CC             : $(_yellow "$CONGESTION_ALGORITHM $QUEUE_ALGORITHM")"
+    echo " Virtualization     : $(_cyan "$VIRT_TYPE")"
+    echo " IPv4/IPv6          : ${ONLINE[*]}"
 }
 
 # 获取当前IP相关信息
 ip_details() {
-    local ipinfo_result ip_org ip_city ip_country ip_region
+    local IPINFO_RESULT IP_ORG IP_CITY IP_COUNTRY IP_REGION
 
-    ipinfo_result=$(curl -fskL -m 10 ipinfo.io)
-    ip_org=$(echo "$ipinfo_result" | awk -F'"' '/"org":/ {print $4}')
-    ip_city=$(echo "$ipinfo_result" | awk -F'"' '/"city":/ {print $4}')
-    ip_country=$(echo "$ipinfo_result" | awk -F'"' '/"country":/ {print $4}')
-    ip_region=$(echo "$ipinfo_result" | awk -F'"' '/"region":/ {print $4}')
+    IPINFO_RESULT=$(curl "${CURL_OPTS[@]}" -fsSL ipinfo.io)
+    IP_ORG=$(echo "$IPINFO_RESULT" | awk -F'"' '/"org":/ {print $4}')
+    IP_CITY=$(echo "$IPINFO_RESULT" | awk -F'"' '/"city":/ {print $4}')
+    IP_COUNTRY=$(echo "$IPINFO_RESULT" | awk -F'"' '/"country":/ {print $4}')
+    IP_REGION=$(echo "$IPINFO_RESULT" | awk -F'"' '/"region":/ {print $4}')
 
-    if [ -n "$ip_org" ]; then
-        echo " Organization       : $(_cyan "$ip_org")"
+    if [ -n "$IP_ORG" ]; then
+        echo " Organization       : $(_cyan "$IP_ORG")"
     fi
-    if [ -n "$ip_city" ] && [ -n "$ip_country" ]; then
-        echo " Location           : $(_cyan "$ip_city / $ip_country")"
+    if [ -n "$IP_CITY" ] && [ -n "$IP_COUNTRY" ]; then
+        echo " Location           : $(_cyan "$IP_CITY / $IP_COUNTRY")"
     fi
-    if [ -n "$ip_region" ]; then
-        echo " Region             : $(_yellow "$ip_region")"
+    if [ -n "$IP_REGION" ]; then
+        echo " Region             : $(_yellow "$IP_REGION")"
     fi
-    if [ -z "$ip_org" ]; then
+    if [ -z "$IP_ORG" ]; then
         echo " Region             : $(_red "No ISP detected")"
     fi
 }
 
 io_test() {
-    local speed
-    local block_count="$1"
+    local SPEED
+    local BLOCK_COUNT="$1"
 
-    speed=$(LANG=C dd if=/dev/zero of="$temp_dir/io_$$" bs=512k count="$block_count" conv=fdatasync 2>&1 | grep -o "[0-9.]\+ [MG]B/s")
-    echo "$speed"
+    SPEED=$(LANG=C dd if=/dev/zero of="$TEMP_DIR/io_$$" bs=512k count="$BLOCK_COUNT" conv=fdatasync 2>&1 | grep -o "[0-9.]\+ [MG]B/s")
+    echo "$SPEED"
 }
 
 # 磁盘IO测试
 print_io_test() {
-    local free_space write_mb io1 io2 io3 speed1 speed2 speed3 ioavg
+    local FREE_SPACE WRITE_MB IO1 IO2 IO3 SPEED1 SPEED2 SPEED3 IOAVG
 
-    free_space=$(df -m . | awk 'NR==2 {print $4}') # 检查可用空间 (MB)
-    write_mb=2048  # 每次写入2GB
+    FREE_SPACE=$(df -m . | awk 'NR==2 {print $4}') # 检查可用空间 (MB)
+    WRITE_MB=2048  # 每次写入2GB
 
     # 检查空间是否足够
-    if [ "$free_space" -gt 1024 ]; then
+    if [ "$FREE_SPACE" -gt 1024 ]; then
         # 运行三次I/O测试
-        io1=$(io_test $write_mb)
-        echo " I/O Speed(1st run) : $(_yellow "$io1")"
-        io2=$(io_test $write_mb)
-        echo " I/O Speed(2nd run) : $(_yellow "$io2")"
-        io3=$(io_test $write_mb)
-        echo " I/O Speed(3rd run) : $(_yellow "$io3")"
+        IO1=$(io_test $WRITE_MB)
+        echo " I/O Speed(1st run) : $(_yellow "$IO1")"
+        IO2=$(io_test $WRITE_MB)
+        echo " I/O Speed(2nd run) : $(_yellow "$IO2")"
+        IO3=$(io_test $WRITE_MB)
+        echo " I/O Speed(3rd run) : $(_yellow "$IO3")"
 
         # 提取数值并转换为MB/s
-        speed1=$(echo "$io1" | awk '{print $1}')           # 取数字
-        [ "$(echo "$io1" | awk '{print $2}')" = "GB/s" ] && speed1=$(echo "$speed1 * 1024" | bc)
-        speed2=$(echo "$io2" | awk '{print $1}')
-        [ "$(echo "$io2" | awk '{print $2}')" = "GB/s" ] && speed2=$(echo "$speed2 * 1024" | bc)
-        speed3=$(echo "$io3" | awk '{print $1}')
-        [ "$(echo "$io3" | awk '{print $2}')" = "GB/s" ] && speed3=$(echo "$speed3 * 1024" | bc)
+        SPEED1=$(echo "$IO1" | awk '{print $1}')           # 取数字
+        [ "$(echo "$IO1" | awk '{print $2}')" = "GB/s" ] && SPEED1=$(echo "$SPEED1 * 1024" | bc)
+        SPEED2=$(echo "$IO2" | awk '{print $1}')
+        [ "$(echo "$IO2" | awk '{print $2}')" = "GB/s" ] && SPEED2=$(echo "$SPEED2 * 1024" | bc)
+        SPEED3=$(echo "$IO3" | awk '{print $1}')
+        [ "$(echo "$IO3" | awk '{print $2}')" = "GB/s" ] && SPEED3=$(echo "$SPEED3 * 1024" | bc)
 
         # 计算平均值
-        ioavg=$(echo "$speed1 $speed2 $speed3" | awk '{print ($1 + $2 + $3) / 3}')
-        echo " I/O Speed(average) : $(_yellow "$ioavg MB/s")"
+        IOAVG=$(echo "$SPEED1 $SPEED2 $SPEED3" | awk '{print ($1 + $2 + $3) / 3}')
+        echo " I/O Speed(average) : $(_yellow "$IOAVG MB/s")"
     else
         echo " $(_red 'Not enough space for I/O Speed test!')"
     fi
 }
 
 install_speedtest() {
-    local speedtest_ver sys_arch
+    local SPEEDTEST_VER SYS_ARCH
 
-    speedtest_ver="1.7.10"
-    mkdir -p "$speedtest_dir"
+    SPEEDTEST_VER=$(curl -A "$UA_BROWSER" "${CURL_OPTS[@]}" -fsSL "https://api.github.com/repos/showwin/speedtest-go/releases/latest" | awk -F '["v]' '/tag_name/{print $5}')
+    SPEEDTEST_VER=${SPEEDTEST_VER:-1.7.10}
+    mkdir -p "$SPEEDTEST_DIR"
 
     case "$(uname -m)" in
-        'i386' | 'i686')
-            sys_arch="i386"
+        i*86)
+            SYS_ARCH="i386"
         ;;
-        'x86_64')
-            sys_arch="x86_64"
+        x86_64|amd64)
+            SYS_ARCH="x86_64"
         ;;
-        'armv6')
-            sys_arch="armv6"
+        armv5*)
+            SYS_ARCH="armv5"
         ;;
-        'armv7' | 'armv7l')
-            sys_arch="armv7"
+        armv6*)
+            SYS_ARCH="armv6"
         ;;
-        'armv8' | 'armv8l' | 'aarch64' | 'arm64')
-            sys_arch="arm64"
+        armv7*)
+            SYS_ARCH="armv7"
+        ;;
+        armv8* | arm64 | aarch64)
+            SYS_ARCH="arm64"
+        ;;
+        s390x)
+            SYS_ARCH="s390x"
         ;;
         *)
-            _err_msg "$(_red "Unsupported system architecture (${sys_arch})")" && exit 1
+            _err_msg "$(_red "Unsupported system architecture: $(uname -m)")" && exit 1
         ;;
     esac
 
-    if ! curl -fskL -o "$speedtest_dir/speedtest.tar.gz" "${github_proxy}https://github.com/showwin/speedtest-go/releases/download/v${speedtest_ver}/speedtest-go_${speedtest_ver}_Linux_${sys_arch}.tar.gz"; then
+    if ! curl -fsSL -o "$SPEEDTEST_DIR/speedtest.tar.gz" "${GITHUB_PROXY}https://github.com/showwin/speedtest-go/releases/download/v${SPEEDTEST_VER}/speedtest-go_${SPEEDTEST_VER}_Linux_${SYS_ARCH}.tar.gz"; then
         _err_msg "$(_red 'Failed to download speedtest-go')" && exit 1
     fi
 
-    tar zxf "$speedtest_dir/speedtest.tar.gz" -C "$speedtest_dir"
+    tar zxf "$SPEEDTEST_DIR/speedtest.tar.gz" -C "$SPEEDTEST_DIR"
 
     printf "%-18s%-18s%-20s%-12s\n" " Node Name" "Upload Speed" "Download Speed" "Latency"
 }
 
 # https://github.com/showwin/speedtest-go
 speedtest() {
-    local upload_speed download_speed latency
-    local nodeName="$2"
+    local UPLOAD_SPEED DOWNLOAD_SPEED LATENCY
+    local NODENAME="$2"
 
     if [ -z "$1" ]; then
-        "$speedtest_dir/speedtest-go" --unix > "$speedtest_dir/speedtest.log" 2>&1 || return
+        "$SPEEDTEST_DIR/speedtest-go" --unix > "$SPEEDTEST_DIR/speedtest.log" 2>&1 || return
     else
-        "$speedtest_dir/speedtest-go" --unix -s "$1" > "$speedtest_dir/speedtest.log" 2>&1 || return
+        "$SPEEDTEST_DIR/speedtest-go" --unix -s "$1" > "$SPEEDTEST_DIR/speedtest.log" 2>&1 || return
     fi
 
-    upload_speed=$(awk -F': ' '/Upload/ {split($2, a, " "); print a[1] " " a[2]; exit}' "$speedtest_dir/speedtest.log")
-    download_speed=$(awk -F': ' '/Download/ {split($2, a, " "); print a[1] " " a[2]; exit}' "$speedtest_dir/speedtest.log")
-    latency=$(awk '/Latency:/ {sub(/ms$/, "", $2); printf "%.2fms", $2; exit}' "$speedtest_dir/speedtest.log")
+    UPLOAD_SPEED=$(awk -F': ' '/Upload/ {split($2, a, " "); print a[1] " " a[2]; exit}' "$SPEEDTEST_DIR/speedtest.log")
+    DOWNLOAD_SPEED=$(awk -F': ' '/Download/ {split($2, a, " "); print a[1] " " a[2]; exit}' "$SPEEDTEST_DIR/speedtest.log")
+    LATENCY=$(awk '/Latency:/ {sub(/ms$/, "", $2); printf "%.2fms", $2; exit}' "$SPEEDTEST_DIR/speedtest.log")
 
-    if [ -n "$download_speed" ] && [ -n "$upload_speed" ] && [ -n "$latency" ]; then
-        printf "${yellow}%-18s${green}%-18s${red}%-20s${cyan}%-12s${white}\n" " $nodeName" "$upload_speed" "$download_speed" "$latency"
+    if [ -n "$DOWNLOAD_SPEED" ] && [ -n "$UPLOAD_SPEED" ] && [ -n "$LATENCY" ]; then
+        printf "${yellow}%-18s${green}%-18s${red}%-20s${cyan}%-12s${white}\n" " $NODENAME" "$UPLOAD_SPEED" "$DOWNLOAD_SPEED" "$LATENCY"
     fi
 }
 
@@ -531,22 +541,22 @@ run_speedtest() {
 }
 
 print_end_msg() {
-    local end_time time_count min sec today total
+    local END_TIME TIME_COUNT MIN SEC TODAY TOTAL
 
-    end_time=$(date +%s)
-    time_count=$(( end_time - start_time ))
+    END_TIME=$(date +%s)
+    TIME_COUNT=$((END_TIME - START_TIME))
 
-    if [ "$time_count" -gt 60 ]; then
-        min=$(( time_count / 60 ))
-        sec=$(( time_count % 60 ))
-        echo " Finished in        : $min min $sec sec"
+    if [ "$TIME_COUNT" -gt 60 ]; then
+        MIN=$((TIME_COUNT / 60))
+        SEC=$((TIME_COUNT % 60))
+        echo " Finished in        : $MIN min $SEC sec"
     else
-        echo " Finished in        : $time_count sec"
+        echo " Finished in        : $TIME_COUNT sec"
     fi
-    if [ -n "$runcount" ]; then
-        today=$(echo "$runcount" | grep '"daily"' | sed 's/.*"daily": *\([0-9]*\).*/\1/')
-        total=$(echo "$runcount" | grep '"total"' | sed 's/.*"total": *\([0-9]*\).*/\1/')
-        echo " Runs (Today/Total) : $today / $total"
+    if [ -n "$RUNCOUNT" ]; then
+        TODAY=$(echo "$RUNCOUNT" | grep '"daily"' | sed 's/.*"daily": *\([0-9]*\).*/\1/')
+        TOTAL=$(echo "$RUNCOUNT" | grep '"total"' | sed 's/.*"total": *\([0-9]*\).*/\1/')
+        echo " Runs (Today/Total) : $TODAY / $TOTAL"
     fi
     echo " Timestamp          : $(date '+%Y-%m-%d %H:%M:%S %Z')"
 }
