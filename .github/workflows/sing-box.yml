@@ -21,17 +21,16 @@ jobs:
 
       - name: 'Fetch Versions and Determine Build'
         run: |
-          SINGBOX_CVER=$(curl -fsSL "https://hub.docker.com/v2/repositories/${{ env.DOCKER_USERNAME }}/sing-box/tags" 2>/dev/null | \
-            jq -r ".results // [] | .[].name" | grep -v '^latest$' | sort -Vr | head -n1 || echo "") && \
-          SINGBOX_LVER=$(curl -fsSL "https://api.github.com/repos/SagerNet/sing-box/releases/latest" | awk -F '["v]' '/tag_name/{print $5}') && \
-          if [[ -z "$SINGBOX_LVER" ]]; then \
-            echo 'Error: Required parameters cannot be empty.' && exit 1; \
-          fi && \
-          echo "SINGBOX_LVER=${SINGBOX_LVER}" >> $GITHUB_ENV && \
-          echo "SINGBOX_CVER=${SINGBOX_CVER}" >> $GITHUB_ENV && \
-          if [[ "$(echo -e "${{ env.SINGBOX_LVER }}\n${{ env.SINGBOX_CVER }}" | sort -V | head -n1)" != "${{ env.SINGBOX_LVER }}" ]] || \
-            [[ -z "${{ env.SINGBOX_CVER }}" ]]; then \
-            echo "IS_RENEW=1" >> $GITHUB_ENV; \
+          SINGBOX_CVER=$(curl -fsSL "https://hub.docker.com/v2/repositories/honeok/sing-box/tags" 2>/dev/null | \
+            jq -r ".results // [] | .[].name" | grep -v '^latest$' | sort -Vr | head -n1 || echo "")
+          SINGBOX_LVER=$(curl -fsSL "https://api.github.com/repos/SagerNet/sing-box/releases/latest" | awk -F '["v]' '/tag_name/{print $5}')
+          if [[ -z "$SINGBOX_LVER" ]]; then
+            echo 'Error: Required parameters cannot be empty.' && exit 1
+          fi
+          echo "SINGBOX_LVER=${SINGBOX_LVER}" >> $GITHUB_ENV
+          echo "SINGBOX_CVER=${SINGBOX_CVER}" >> $GITHUB_ENV
+          if [[ "$(echo -e "$SINGBOX_LVER\n$SINGBOX_CVER" | sort -V | head -n1)" != "$SINGBOX_LVER" || -z "$SINGBOX_CVER" ]]; then
+            echo "IS_RENEW=1" >> $GITHUB_ENV
           fi
 
       - name: 'Set up Docker QEMU'
