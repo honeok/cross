@@ -6,7 +6,7 @@
 # This program is distributed WITHOUT ANY WARRANTY.
 # See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
 
-FROM --platform=$BUILDPLATFORM golang:1-alpine AS builder
+FROM golang:1-alpine AS builder
 
 WORKDIR /go/src
 
@@ -25,7 +25,7 @@ RUN set -ex \
         && cd .. \
         && chmod +x build.sh && ./build.sh
 
-FROM --platform=$BUILDPLATFORM alpine:latest
+FROM alpine:latest
 
 # https://docs.docker.com/build/building/multi-platform/
 ARG TARGETARCH
