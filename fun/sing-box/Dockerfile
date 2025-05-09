@@ -13,6 +13,8 @@
 
 FROM alpine:latest
 
+ARG VERSION
+
 COPY . .
 
 RUN set -ex \
@@ -22,7 +24,7 @@ RUN set -ex \
             curl \
             tzdata \
         && chmod +x docker-entrypoint.sh \
-        && chmod +x build.sh && ./build.sh \
+        && chmod +x build.sh && ./build.sh ${VERSION} \
         && rm -f build.sh \
         && rm -rf /var/cache/apk/* /tmp/* \
         && ln -sf /dev/stdout /var/log/sing-box/access.log
