@@ -8,6 +8,8 @@
 # This program is distributed WITHOUT ANY WARRANTY.
 # See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
 
+# shellcheck disable=SC2009
+
 # https://www.graalvm.org/latest/reference-manual/ruby/UTF8Locale
 export LANG=en_US.UTF-8
 
@@ -30,12 +32,12 @@ clear_screen() {
 }
 
 show_status() {
-    if pgrep -x "3x-ui" >/dev/null 2>&1; then
+    if ps | grep '[3]x-ui' >/dev/null 2>&1; then
         echo " 面板状态: $(_green 'Running')"
     else
         echo " 面板状态: $(_red 'Not Running')"
     fi
-    if pgrep -x "xray-linux" >/dev/null 2>&1; then
+    if ps | grep '[x]ray-linux' >/dev/null 2>&1; then
         echo " Xray状态: $(_green 'Running')"
     else
         echo " Xray状态: $(_red 'Not Running')"
