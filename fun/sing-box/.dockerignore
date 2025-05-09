@@ -1,4 +1,5 @@
 .git/
 .idea/
 .vscode/
-README.md
+*.md
+*.log
