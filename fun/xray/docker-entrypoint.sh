@@ -19,11 +19,11 @@ XRAY_WORKDIR="/etc/xray"
 XRAY_CONFDIR="$XRAY_WORKDIR/conf"
 XRAY_LOGDIR="/var/log/xray"
 XRAY_LOGFILE="$XRAY_LOGDIR/access.log"
+CLOUDFLARE_API="www.qualcomm.cn"
+PUBLIC_IP=$(curl -fsL -m 5 -4 "http://$CLOUDFLARE_API/cdn-cgi/trace" 2>/dev/null | awk -F'=' '/^ip=/ {print $2}' || \
+            curl -fsL -m 5 -6 "http://$CLOUDFLARE_API/cdn-cgi/trace" 2>/dev/null | awk -F'=' '/^ip=/ {print $2}')
 
-PUBLIC_IP=$(curl -fsL -m 5 -4 http://www.qualcomm.cn/cdn-cgi/trace 2>/dev/null | grep -i '^ip=' | cut -d'=' -f2 | xargs || \
-            curl -fsL -m 5 -6 http://www.qualcomm.cn/cdn-cgi/trace 2>/dev/null | grep -i '^ip=' | cut -d'=' -f2 | xargs)
-
-[ ! -s "$XRAY_WORKDIR/config.json" ] && command cp -f "/opt/config.json" "$XRAY_WORKDIR/config.json"
+[ ! -s "$XRAY_WORKDIR/config.json" ] && cat /opt/config.json > "$XRAY_WORKDIR/config.json"
 
 if [ -d "$XRAY_CONFDIR" ] && [ -z "$(ls -A "$XRAY_CONFDIR" 2>/dev/null)" ]; then
     # https://github.com/XTLS/Xray-core/issues/2005
