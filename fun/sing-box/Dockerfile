@@ -15,20 +15,19 @@ FROM alpine:latest
 
 ARG VERSION
 
-COPY . .
+COPY build.sh .
+COPY docker-entrypoint.sh /docker-entrypoint.sh
 
 RUN set -ex \
         && apk update && apk upgrade \
         && apk add --no-cache \
             ca-certificates \
-            curl \
             tzdata \
-        && chmod +x docker-entrypoint.sh \
-        && chmod +x build.sh && ./build.sh ${VERSION} \
-        && rm -f build.sh \
+        && chmod +x /docker-entrypoint.sh build.sh \
+        && ./build.sh ${VERSION} && rm -f build.sh \
         && rm -rf /var/cache/apk/* /tmp/* \
         && ln -sf /dev/stdout /var/log/sing-box/access.log
 
 ENV TZ=Asia/Shanghai
 
-ENTRYPOINT [ "/docker-entrypoint.sh" ]
+CMD [ "/docker-entrypoint.sh" ]
