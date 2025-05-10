@@ -11,7 +11,7 @@
 # See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
 
 # 当前脚本版本号
-readonly VERSION='v0.1.10 (2025.04.21)'
+readonly VERSION='v0.1.11 (2025.05.10)'
 
 red='\033[91m'
 green='\033[92m'
@@ -24,8 +24,12 @@ _green() { echo -e "$green$*$white"; }
 _yellow() { echo -e "$yellow$*$white"; }
 _purple() { echo -e "$purple$*$white"; }
 _cyan() { echo -e "$cyan$*$white"; }
-
 _err_msg() { echo -e "\033[41m\033[1mError$white $*"; }
+
+# https://www.graalvm.org/latest/reference-manual/ruby/UTF8Locale
+if locale -a 2>/dev/null | grep -qiE -m 1 "UTF-8|utf8"; then
+    export LANG=en_US.UTF-8
+fi
 
 # 环境变量用于在debian或ubuntu操作系统中设置非交互式 (noninteractive) 安装模式
 export DEBIAN_FRONTEND=noninteractive
@@ -34,10 +38,10 @@ export DEBIAN_FRONTEND=noninteractive
 separator() { printf "%-70s\n" "-" | sed 's/\s/-/g'; }
 
 # 各变量默认值
-GITHUB_PROXY="https://gh-proxy.com/"
-TEMP_DIR="/tmp/bench"
+GITHUB_PROXY='https://gh-proxy.com/'
+TEMP_DIR='/tmp/bench'
 SPEEDTEST_DIR="$TEMP_DIR/speedtest"
-UA_BROWSER="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
+UA_BROWSER='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'
 
 declare -a CURL_OPTS=(-m 5 --retry 1 --retry-max-time 10)
 declare -a UNINSTALL_PKG=()
@@ -275,7 +279,7 @@ virt_check() {
     PROCESSOR_TYPE=$(awk -F: '/model name/ {name=$2} END {print name}' /proc/cpuinfo | sed 's/^[ \t]*//;s/[ \t]*$//')
 
     if _exists "dmesg" >/dev/null 2>&1; then
-        KERNEL_LOGS=$(dmesg 2>/dev/null)
+        KERNEL_LOGS=$(dmesg)
     fi
 
     if _exists "dmidecode" >/dev/null 2>&1; then
@@ -302,6 +306,12 @@ virt_check() {
         VIRT_TYPE="KVM"
     elif grep -qi "qemu" "/proc/scsi/scsi" 2>/dev/null; then
         VIRT_TYPE="KVM"
+    elif echo "$SYSTEM_MANUFACTURER" | grep -qi "Google" 2>/dev/null && echo "$SYSTEM_PRODUCT_NAME" | grep -qi "Google Compute Engine" 2>/dev/null; then
+        VIRT_TYPE="Google"
+    elif echo "$KERNEL_LOGS" | grep -qi "Google Compute Engine" 2>/dev/null; then
+        VIRT_TYPE="Google"
+    elif curl --connect-timeout 1 -s http://metadata.google.internal >/dev/null 2>&1; then
+        VIRT_TYPE="Google"
     elif echo "$KERNEL_LOGS" | grep -qi "vmware virtual platform" 2>/dev/null; then
         VIRT_TYPE="VMware"
     elif echo "$KERNEL_LOGS" | grep -qi "parallels software international" 2>/dev/null; then
@@ -403,7 +413,7 @@ print_system_info() {
 ip_details() {
     local IPINFO_RESULT IP_ORG IP_CITY IP_COUNTRY IP_REGION
 
-    IPINFO_RESULT=$(curl "${CURL_OPTS[@]}" -fsSL ipinfo.io)
+    IPINFO_RESULT=$(curl "${CURL_OPTS[@]}" -fsL http://ipinfo.io)
     IP_ORG=$(echo "$IPINFO_RESULT" | awk -F'"' '/"org":/ {print $4}')
     IP_CITY=$(echo "$IPINFO_RESULT" | awk -F'"' '/"city":/ {print $4}')
     IP_COUNTRY=$(echo "$IPINFO_RESULT" | awk -F'"' '/"country":/ {print $4}')
