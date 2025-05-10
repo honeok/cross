@@ -20,21 +20,21 @@ It can be found at [Docker Hub][3].
 
 ## Start a container
 
-First, you must create a configuration file at  `/etc/sing-box/config.json` on the host:
+First, you must create a configuration file on your localhost:
 
 This file can be empty.
 
 ```shell
-mkdir -p /etc/sing-box && touch /etc/sing-box/config.json
+touch "$PWD/config.json"
 ```
 
-Next, to start a container that listens on port `30000`, create a `docker-compose.yml` file in the `/etc/sing-box` directory using the following command:
+Next, start a container with a listening port of `30000`, first create `docker-compose.yml`.
 
 ```shell
 vim docker-compose.yml
 ```
 
-Add the following content to the `docker-compose.yml`  file:
+Add the following content to the `docker-compose.yml`  file.
 
 ```yaml
 services:
@@ -43,19 +43,21 @@ services:
     container_name: sing-box
     restart: unless-stopped
     volumes:
-      - /etc/sing-box/config.json:/etc/sing-box/config.json
-      - /etc/sing-box/conf:/etc/sing-box/conf
+      - $PWD/config.json:/etc/sing-box/config.json
+      - $PWD/conf:/etc/sing-box/conf
     network_mode: host
-    cap_add:
-      - NET_ADMIN
-    devices:
-      - /dev/net/tun
 ```
 
-Finally, run the following command to start the container:
+Finally, run the following command to start the container.
 
 ```shell
 docker compose up -d
+```
+
+Get the randomly generated `REALITY` configuration by viewing the container log.
+
+```shell
+docker logs -f sing-box
 ```
 
 For reference, you can check the [Configuration][4] for Sing-box.
