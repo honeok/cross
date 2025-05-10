@@ -78,7 +78,7 @@
   "inbounds": [
     {
       "tag": "api",
-      "port": 51999,
+      "port": 62789,
       "listen": "127.0.0.1",
       "protocol": "dokodemo-door",
       "settings": {
