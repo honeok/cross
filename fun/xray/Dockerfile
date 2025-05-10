@@ -41,4 +41,4 @@ RUN set -ex \
 
 ENV TZ=Asia/Shanghai
 
-ENTRYPOINT [ "/docker-entrypoint.sh" ]
+CMD [ "/docker-entrypoint.sh" ]
