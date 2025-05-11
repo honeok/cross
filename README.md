@@ -7,7 +7,7 @@
 
 # cross
 
-Life is vast and unpredictable, yet ultimately insignificant.
+Across the Great Wall, we can reach every corner in the world.
 
 ## bench.sh
 
@@ -16,11 +16,11 @@ Description: A script for automated testing of I/O performance, upload & downloa
 Acknowledgment: teddysun
 
 ```shell
-bash <(curl -sL https://github.com/honeok/cross/raw/master/bench.sh)
+bash <(curl -sL https://gitlab.com/honeok/cross/raw/master/bench.sh)
 ```
 or
 ```shell
-bash <(curl -sL https://gitlab.com/honeok/cross/raw/master/bench.sh)
+bash <(curl -sL https://github.com/honeok/cross/raw/master/bench.sh)
 ```
 
 ## bestTrace.sh
@@ -28,11 +28,11 @@ bash <(curl -sL https://gitlab.com/honeok/cross/raw/master/bench.sh)
 Description: This script is designed for measuring network speed and performing routing trace across three networks.
 
 ```shell
-bash <(curl -sL https://github.com/honeok/cross/raw/master/bestTrace.sh)
+bash <(curl -sL https://gitlab.com/honeok/cross/raw/master/bestTrace.sh)
 ```
 or
 ```shell
-bash <(curl -sL https://gitlab.com/honeok/cross/raw/master/bestTrace.sh)
+bash <(curl -sL https://github.com/honeok/cross/raw/master/bestTrace.sh)
 ```
 
 ## backTrace.sh
@@ -41,9 +41,9 @@ Description: This script is used for testing the routing path across three netwo
 It is based on the optimization of the one-click installation script from https://github.com/oneclickvirt/backtrace.
 
 ```shell
-bash <(curl -sL https://github.com/honeok/cross/raw/master/backTrace.sh)
+bash <(curl -sL https://gitlab.com/honeok/cross/raw/master/backTrace.sh)
 ```
 or
 ```shell
-bash <(curl -sL https://gitlab.com/honeok/cross/raw/master/backTrace.sh)
+bash <(curl -sL https://github.com/honeok/cross/raw/master/backTrace.sh)
 ```
