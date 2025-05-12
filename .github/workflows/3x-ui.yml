@@ -1,4 +1,4 @@
-name: 'Build and publish 3x-ui'
+name: 'Build and Publish 3x-ui'
 
 on:
   schedule:
@@ -6,8 +6,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  build_x-ui:
-    name: 'Build and publish 3x-ui'
+  build:
+    name: 'Build and Publish 3x-ui'
     runs-on: ubuntu-latest
     env:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
