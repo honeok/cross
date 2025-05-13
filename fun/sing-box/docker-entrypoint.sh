@@ -44,14 +44,10 @@ if [ ! -s "$SINGBOX_WORKDIR/config.json" ]; then
     "timestamp": true
   },
   "dns": {},
-  "ntp": {
-    "enabled": true,
-    "server": "time.apple.com"
-  },
   "outbounds": [
     {
-      "type": "direct",
-      "tag": "direct"
+      "tag": "direct",
+      "type": "direct"
     }
   ]
 }
