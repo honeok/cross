@@ -18,7 +18,8 @@ XRAY_WORKDIR="/etc/xray"
 XRAY_BINDIR="$XRAY_WORKDIR/bin"
 XRAY_CONFDIR="$XRAY_WORKDIR/conf"
 XRAY_LOGDIR="/var/log/xray"
-XRAY_LOGFILE="$XRAY_LOGDIR/access.log"
+XRAY_ACCESS_LOG="$XRAY_LOGDIR/access.log"
+XRAY_ERROR_LOG="$XRAY_LOGDIR/error.log"
 
 command -v curl >/dev/null 2>&1 || apk add --no-cache curl
 
@@ -71,7 +72,8 @@ build_xray() {
 
 pre_config() {
     mkdir -p "$XRAY_WORKDIR" "$XRAY_BINDIR" "$XRAY_CONFDIR" "$XRAY_LOGDIR" >/dev/null 2>&1
-    touch "$XRAY_LOGFILE" >/dev/null 2>&1
+    touch "$XRAY_ACCESS_LOG" >/dev/null 2>&1
+    touch "$XRAY_ERROR_LOG" >/dev/null 2>&1
     ln -sf "$XRAY_BINDIR/xray" /usr/local/bin/xray
 }
 
