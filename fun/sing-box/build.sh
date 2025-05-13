@@ -8,10 +8,7 @@
 # This program is distributed WITHOUT ANY WARRANTY.
 # See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
 
-set \
-    -o errexit \
-    -o nounset \
-    -o xtrace
+set -eux
 
 # Run default path
 SINGBOX_WORKDIR="/etc/sing-box"
@@ -24,10 +21,13 @@ command -v curl >/dev/null 2>&1 || apk add --no-cache curl
 
 case "$1" in
     stable)
-        VERSION=$(curl -fsL "https://api.github.com/repos/SagerNet/sing-box/releases/latest" | awk -F '["v]' '/tag_name/{print $5}')
+        VERSION=$(curl -fsL --retry 5 "https://api.github.com/repos/SagerNet/sing-box/releases/latest" | awk -F '["v]' '/tag_name/{print $5}')
     ;;
     beta)
-        VERSION=$(curl -fsL "https://api.github.com/repos/SagerNet/sing-box/releases" | awk -F '["v]' '/tag_name.*-.*/{print $5;exit}')
+        VERSION=$(curl -fsL --retry 5 "https://api.github.com/repos/SagerNet/sing-box/releases" | awk -F '"' '/tag_name/ && /-beta/ {sub(/^v/, "", $4); print $4}' | sort -Vr | head -n1)
+    ;;
+    alpha)
+        VERSION=$(curl -fsL --retry 5 "https://api.github.com/repos/SagerNet/sing-box/releases" | awk -F '"' '/tag_name/ && /-alpha/ {sub(/^v/, "", $4); print $4}' | sort -Vr | head -n1)
     ;;
     *)
         printf 'Error: Unable to determine Sing-box version!\n' >&2; exit 1;
