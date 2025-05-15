@@ -1,5 +1,7 @@
 #!/usr/bin/env sh
 #
+# Description: This script is used to configure sing-box during container initialization.
+#
 # Copyright (c) 2025 honeok <honeok@duck.com>
 #
 # References:
@@ -22,8 +24,8 @@ SINGBOX_CONFDIR="$SINGBOX_WORKDIR/conf"
 SINGBOX_LOGDIR="/var/log/sing-box"
 SINGBOX_LOGFILE="$SINGBOX_LOGDIR/access.log"
 CLOUDFLARE_API="www.qualcomm.cn"
-PUBLIC_IP=$(curl -fsL -m 5 -4 "http://$CLOUDFLARE_API/cdn-cgi/trace" 2>/dev/null | awk -F'=' '/^ip=/ {print $2}' || \
-            curl -fsL -m 5 -6 "http://$CLOUDFLARE_API/cdn-cgi/trace" 2>/dev/null | awk -F'=' '/^ip=/ {print $2}')
+PUBLIC_IP=$(curl -fsL -m 5 -4 "http://$CLOUDFLARE_API/cdn-cgi/trace" 2>/dev/null | grep -i '^ip=' | cut -d'=' -f2 | grep . || \
+            curl -fsL -m 5 -6 "http://$CLOUDFLARE_API/cdn-cgi/trace" 2>/dev/null | grep -i '^ip=' | cut -d'=' -f2 | grep .)
 
 if [ ! -s "$SINGBOX_BINDIR/tls.key" ] || [ ! -s "$SINGBOX_BINDIR/tls.cer" ]; then
     # tls generation

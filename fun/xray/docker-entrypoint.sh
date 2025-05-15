@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 #
-# Description: This script to configure Xray proxy in a container.
+# Description: This script is used to configure xray during container initialization.
 #
 # Copyright (c) 2025 honeok <honeok@duck.com>
 #
@@ -20,8 +20,8 @@ XRAY_CONFDIR="$XRAY_WORKDIR/conf"
 XRAY_LOGDIR="/var/log/xray"
 XRAY_LOGFILE="$XRAY_LOGDIR/access.log"
 CLOUDFLARE_API="www.qualcomm.cn"
-PUBLIC_IP=$(curl -fsL -m 5 -4 "http://$CLOUDFLARE_API/cdn-cgi/trace" 2>/dev/null | awk -F'=' '/^ip=/ {print $2}' || \
-            curl -fsL -m 5 -6 "http://$CLOUDFLARE_API/cdn-cgi/trace" 2>/dev/null | awk -F'=' '/^ip=/ {print $2}')
+PUBLIC_IP=$(curl -fsL -m 5 -4 "http://$CLOUDFLARE_API/cdn-cgi/trace" 2>/dev/null | grep -i '^ip=' | cut -d'=' -f2 | grep . || \
+            curl -fsL -m 5 -6 "http://$CLOUDFLARE_API/cdn-cgi/trace" 2>/dev/null | grep -i '^ip=' | cut -d'=' -f2 | grep .)
 
 [ ! -s "$XRAY_WORKDIR/config.json" ] && cat /opt/config.json > "$XRAY_WORKDIR/config.json"
 
