@@ -21,8 +21,8 @@ jobs:
 
       - name: 'Fetch Versions and Determine Build'
         run: |
-          XUI_LVER=$(curl -fsL "https://api.github.com/repos/MHSanaei/3x-ui/releases/latest" | awk -F '["v]' '/tag_name/{print $5}')
-          XUI_CVER=$(curl -fsL "https://hub.docker.com/v2/repositories/honeok/3x-ui/tags" 2>/dev/null | \
+          XUI_LVER=$(curl -fsL --retry 5 "https://api.github.com/repos/MHSanaei/3x-ui/releases/latest" | awk -F '["v]' '/tag_name/{print $5}')
+          XUI_CVER=$(curl -fsL --retry 5 "https://hub.docker.com/v2/repositories/honeok/3x-ui/tags" 2>/dev/null | \
             jq -r ".results // [] | .[].name" | grep -v "^latest$" | sort -Vr | head -n1 | cut -d'-' -f1 || echo "")
           if [[ -z "$XUI_LVER" ]]; then
             echo 'Error: Required parameters cannot be empty.' && exit 1
