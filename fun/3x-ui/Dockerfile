@@ -19,7 +19,7 @@ RUN set -ex \
             gcc \
             git \
         && chmod +x build.sh && ./build.sh \
-        && TAG=$(curl -fsL https://api.github.com/repos/MHSanaei/3x-ui/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/') \
+        && TAG=$(curl -fsL --retry 5 "https://api.github.com/repos/MHSanaei/3x-ui/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/') \
         && git clone --depth=1 --branch "$TAG" https://github.com/MHSanaei/3x-ui.git \
         && cd 3x-ui \
         && CGO_ENABLED=1 GOOS=$TARGETOS CGO_CFLAGS="-D_LARGEFILE64_SOURCE" GO111MODULE=on \
