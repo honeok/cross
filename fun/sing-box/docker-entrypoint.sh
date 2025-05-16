@@ -37,7 +37,7 @@ _is_exists() {
 # generate random port
 random_port() {
     _use_port() {
-        if [ ! "$IS_USED_PORT" ]; then
+        if [ -z "${IS_USED_PORT+x}" ]; then
             if _is_exists netstat; then IS_USED_PORT="$(netstat -tunlp | sed -n 's/.*:\([0-9]\+\).*/\1/p' | sort -nu)";
             elif _is_exists ss; then IS_USED_PORT="$(ss -tunlp | sed -n 's/.*:\([0-9]\+\).*/\1/p' | sort -nu)";
             else printf 'Error: The netstat and ss commands are unavailable.\n'; exit 1
