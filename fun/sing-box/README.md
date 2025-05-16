@@ -28,7 +28,7 @@ This file can be empty.
 touch "$PWD/config.json"
 ```
 
-Next, start a container with a listening port of `30000`, first create `docker-compose.yml`.
+Next, create `docker-compose.yml`.
 
 ```shell
 vim docker-compose.yml
