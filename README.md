@@ -23,17 +23,17 @@ or
 bash <(curl -sL https://github.com/honeok/cross/raw/master/bench.sh)
 ```
 
-## MediaUnlock.sh
+## mediaUnlock.sh
 
-Description: This script is used to quickly install a streaming media detection program based on golang reconstruction.<br>
+Description: This script is used to quickly install a streaming media detection program based on go reconstruction.<br>
 Based on Project https://github.com/HsukqiLee/MediaUnlockTest.
 
 ```shell
-bash <(curl -sL https://gitlab.com/honeok/cross/raw/master/MediaUnlock.sh)
+bash <(curl -sL https://gitlab.com/honeok/cross/raw/master/mediaUnlock.sh)
 ```
 or
 ```shell
-bash <(curl -sL https://github.com/honeok/cross/raw/master/MediaUnlock.sh)
+bash <(curl -sL https://github.com/honeok/cross/raw/master/mediaUnlock.sh)
 ```
 
 ## bestTrace.sh
