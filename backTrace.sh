@@ -20,7 +20,7 @@ _err_msg() { printf "\033[41m\033[1mError\033[0m %s\n" "$*"; }
 _suc_msg() { printf "\033[42m\033[1mSuccess\033[0m %s\n" "$*"; }
 
 # 各变量默认值
-GITHUB_PROXY='https://gh-proxy.com/'
+GITHUB_PROXY='https://files.m.daocloud.io/'
 UA_BROWSER='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36'
 
 # 用于检查命令是否存在
@@ -84,7 +84,7 @@ backtrace_install() {
         ;;
     esac
 
-    curl -fsL "${GITHUB_PROXY}https://github.com/oneclickvirt/backtrace/releases/download/output/backtrace-${OS_TYPE}-${OS_ARCH}" -o /usr/local/bin/backtrace
+    curl -L "${GITHUB_PROXY}github.com/oneclickvirt/backtrace/releases/download/output/backtrace-${OS_TYPE}-${OS_ARCH}" -o /usr/local/bin/backtrace
     chmod +x /usr/local/bin/backtrace
     if _is_exists "backtrace"; then
         _suc_msg "$(_green "Backtrace Installed Successfully!")"

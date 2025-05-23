@@ -22,7 +22,7 @@ _suc_msg() { printf "\033[42m\033[1mSuccess\033[0m %s\n" "$*"; }
 _info_msg() { printf "\033[43m\033[1mInfo\033[0m %s\n" "$*"; }
 
 # 各变量默认值
-GITHUB_PROXY='https://gh-proxy.com/'
+GITHUB_PROXY='https://files.m.daocloud.io/'
 UA_BROWSER='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36'
 
 # 用于检查命令是否存在
@@ -103,7 +103,7 @@ mediaunlock_install() {
     esac
 
     _info_msg "$(_yellow "Downloading MediaUnlockTest Please wait.")"
-    curl -fsL "${GITHUB_PROXY}https://github.com/HsukqiLee/MediaUnlockTest/releases/download/v${VERSION}/unlock-test_${OS_TYPE}_${OS_ARCH}" -o /usr/local/bin/unlock-test
+    curl -L "${GITHUB_PROXY}github.com/HsukqiLee/MediaUnlockTest/releases/download/v${VERSION}/unlock-test_${OS_TYPE}_${OS_ARCH}" -o /usr/local/bin/unlock-test
     chmod +x /usr/local/bin/unlock-test
     if unlock-test -v >/dev/null 2>&1; then
         _suc_msg "$(_green "MediaUnlockTest Installed Successfully!")"
