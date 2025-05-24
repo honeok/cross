@@ -11,20 +11,14 @@
 # See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
 
 # 当前脚本版本号
-readonly VERSION='v0.1.11 (2025.05.10)'
+readonly VERSION='v0.2.1 (2025.05.24)'
 
-red='\033[91m'
-green='\033[92m'
-yellow='\033[93m'
-purple='\033[95m'
-cyan='\033[96m'
-white='\033[0m'
-_red() { echo -e "$red$*$white"; }
-_green() { echo -e "$green$*$white"; }
-_yellow() { echo -e "$yellow$*$white"; }
-_purple() { echo -e "$purple$*$white"; }
-_cyan() { echo -e "$cyan$*$white"; }
-_err_msg() { echo -e "\033[41m\033[1mError$white $*"; }
+_red() { printf "\033[91m%b\033[0m\n" "$*"; }
+_green() { printf "\033[92m%b\033[0m\n" "$*"; }
+_yellow() { printf "\033[93m%b\033[0m\n" "$*"; }
+_purple() { printf "\033[95m%b\033[0m\n" "$*"; }
+_cyan() { printf "\033[96m%b\033[0m\n" "$*"; }
+_err_msg() { printf "\033[41m\033[1mError\033[0m %b\n" "$*"; }
 
 # https://www.graalvm.org/latest/reference-manual/ruby/UTF8Locale
 if locale -a 2>/dev/null | grep -qiE -m 1 "UTF-8|utf8"; then
@@ -41,7 +35,7 @@ separator() { printf "%-70s\n" "-" | sed 's/\s/-/g'; }
 GITHUB_PROXY='https://gh-proxy.com/'
 TEMP_DIR='/tmp/bench'
 SPEEDTEST_DIR="$TEMP_DIR/speedtest"
-UA_BROWSER='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'
+UA_BROWSER='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36'
 
 declare -a CURL_OPTS=(-m 5 --retry 1 --retry-max-time 10)
 declare -a UNINSTALL_PKG=()
@@ -69,12 +63,10 @@ print_title() {
 
 _exists() {
     local _CMD="$1"
-    if type "$_CMD" >/dev/null 2>&1; then
-        return 0
-    elif command -v "$_CMD" >/dev/null 2>&1; then
-        return 0
-    else
-        return 1
+    if type "$_CMD" >/dev/null 2>&1; then return 0;
+    elif command -v "$_CMD" >/dev/null 2>&1; then return 0;
+    elif which "$_CMD" >/dev/null 2>&1; then return 0;
+    else return 1;
     fi
 }
 
@@ -100,7 +92,7 @@ pkg_install() {
         elif _exists pkg; then
             pkg install -y "$pkg"
         else
-            _err_msg "$(_red 'The package manager is not supported.')" && exit 1
+            _err_msg "$(_red 'The package manager is not supported.')"; exit 1
         fi
     done
 }
@@ -125,13 +117,16 @@ pkg_uninstall() {
             opkg remove "$pkg"
         elif _exists pkg; then
             pkg delete -y "$pkg"
+        else
+            _err_msg "$(_red 'The package manager is not supported.')"; exit 1
         fi
     done
 }
 
 # 运行前校验
 pre_check() {
-    local INSTALL_PKG
+    local CLOUDFLARE_API
+    local -a INSTALL_PKG
     INSTALL_PKG=("tar" "bc")
 
     # 备用 www.prologis.cn
@@ -153,11 +148,11 @@ pre_check() {
         fi
     done
     # 境外服务器仅ipv4访问测试通过后取消github代理
-    if [ "$(curl -A "$UA_BROWSER" -fsSL "${CURL_OPTS[@]}" -4 "https://$CLOUDFLARE_API/cdn-cgi/trace" | grep -i '^loc=' | cut -d'=' -f2 | xargs)" != "CN" ]; then
+    if [ "$(curl --user-agent "$UA_BROWSER" -fsL "${CURL_OPTS[@]}" -4 "http://$CLOUDFLARE_API/cdn-cgi/trace" | grep -i '^loc=' | cut -d'=' -f2 | grep .)" != "CN" ]; then
         unset GITHUB_PROXY
     fi
     # 脚本当天及累计运行次数统计
-    RUNCOUNT=$(curl -fsSL "${CURL_OPTS[@]}" -k "https://hits.honeok.com/bench?action=hit")
+    RUNCOUNT=$(curl -fsL "${CURL_OPTS[@]}" -k "https://hits.honeok.com/bench?action=hit")
 
     START_TIME=$(date +%s)
 }
@@ -346,12 +341,12 @@ ip_dual_stack() {
     if ping -4 -c 1 -W 4 1.1.1.1 >/dev/null 2>&1; then
         IPV4_CHECK="true"
     else
-        IPV4_CHECK=$(curl -A "$UA_BROWSER" -fsSL "${CURL_OPTS[@]}" -4 ipinfo.io/ip 2>/dev/null)
+        IPV4_CHECK=$(curl --user-agent "$UA_BROWSER" -fsL "${CURL_OPTS[@]}" -4 ipinfo.io/ip 2>/dev/null)
     fi
     if ping -6 -c 1 -W 4 2606:4700:4700::1111 >/dev/null 2>&1; then
         IPV6_CHECK="true"
     else
-        IPV6_CHECK=$(curl -A "$UA_BROWSER" -fsSL "${CURL_OPTS[@]}" -6 v6.ipinfo.io/ip 2>/dev/null)
+        IPV6_CHECK=$(curl --user-agent "$UA_BROWSER" -fsL "${CURL_OPTS[@]}" -6 v6.ipinfo.io/ip 2>/dev/null)
     fi
 
     if [ -z "$IPV4_CHECK" ] && [ -z "$IPV6_CHECK" ]; then
@@ -475,12 +470,9 @@ print_io_test() {
 }
 
 install_speedtest() {
-    local SPEEDTEST_VER SYS_ARCH
+    local SYS_ARCH
 
-    SPEEDTEST_VER=$(curl -A "$UA_BROWSER" "${CURL_OPTS[@]}" -fsSL "https://api.github.com/repos/showwin/speedtest-go/releases/latest" | awk -F '["v]' '/tag_name/{print $5}')
-    SPEEDTEST_VER=${SPEEDTEST_VER:-1.7.10}
-    mkdir -p "$SPEEDTEST_DIR"
-
+    mkdir -p "$SPEEDTEST_DIR" >/dev/null 2>&1
     case "$(uname -m)" in
         i*86)
             SYS_ARCH="i386"
@@ -488,64 +480,53 @@ install_speedtest() {
         x86_64|amd64)
             SYS_ARCH="x86_64"
         ;;
-        armv5*)
-            SYS_ARCH="armv5"
-        ;;
         armv6*)
-            SYS_ARCH="armv6"
+            SYS_ARCH="armel"
         ;;
         armv7*)
-            SYS_ARCH="armv7"
+            SYS_ARCH="armhf"
         ;;
         armv8* | arm64 | aarch64)
-            SYS_ARCH="arm64"
-        ;;
-        s390x)
-            SYS_ARCH="s390x"
+            SYS_ARCH="aarch64"
         ;;
         *)
             _err_msg "$(_red "Unsupported system architecture: $(uname -m)")" && exit 1
         ;;
     esac
-
-    if ! curl -fsSL -o "$SPEEDTEST_DIR/speedtest.tar.gz" "${GITHUB_PROXY}https://github.com/showwin/speedtest-go/releases/download/v${SPEEDTEST_VER}/speedtest-go_${SPEEDTEST_VER}_Linux_${SYS_ARCH}.tar.gz"; then
-        _err_msg "$(_red 'Failed to download speedtest-go')" && exit 1
+    if ! curl -fsL -o "$SPEEDTEST_DIR/speedtest.tgz" "${GITHUB_PROXY}https://github.com/i-abc/Speedtest/raw/asset/speedtest-cli/ookla-speedtest-1.2.0-linux-${SYS_ARCH}.tgz"; then
+        _err_msg "$(_red 'Failed to download speedtest.')"; exit 1
     fi
-
-    tar zxf "$SPEEDTEST_DIR/speedtest.tar.gz" -C "$SPEEDTEST_DIR"
-
+    tar zxf "$SPEEDTEST_DIR/speedtest.tgz" -C "$SPEEDTEST_DIR"
     printf "%-18s%-18s%-20s%-12s\n" " Node Name" "Upload Speed" "Download Speed" "Latency"
 }
 
-# https://github.com/showwin/speedtest-go
 speedtest() {
     local UPLOAD_SPEED DOWNLOAD_SPEED LATENCY
     local NODENAME="$2"
 
     if [ -z "$1" ]; then
-        "$SPEEDTEST_DIR/speedtest-go" --unix > "$SPEEDTEST_DIR/speedtest.log" 2>&1 || return
+        "$SPEEDTEST_DIR/speedtest" --progress=no --accept-license --accept-gdpr > "$SPEEDTEST_DIR/speedtest.log" 2>&1 || return
     else
-        "$SPEEDTEST_DIR/speedtest-go" --unix -s "$1" > "$SPEEDTEST_DIR/speedtest.log" 2>&1 || return
+        "$SPEEDTEST_DIR/speedtest" --progress=no --server-id="$1" --accept-license --accept-gdpr > "$SPEEDTEST_DIR/speedtest.log" 2>&1 || return
     fi
-
-    UPLOAD_SPEED=$(awk -F': ' '/Upload/ {split($2, a, " "); print a[1] " " a[2]; exit}' "$SPEEDTEST_DIR/speedtest.log")
-    DOWNLOAD_SPEED=$(awk -F': ' '/Download/ {split($2, a, " "); print a[1] " " a[2]; exit}' "$SPEEDTEST_DIR/speedtest.log")
-    LATENCY=$(awk '/Latency:/ {sub(/ms$/, "", $2); printf "%.2fms", $2; exit}' "$SPEEDTEST_DIR/speedtest.log")
-
+    UPLOAD_SPEED=$(awk '/Upload/{print $3" "$4}' "$SPEEDTEST_DIR/speedtest.log")
+    DOWNLOAD_SPEED=$(awk '/Download/{print $3" "$4}' "$SPEEDTEST_DIR/speedtest.log")
+    LATENCY=$(awk '/Latency/{print $3" "$4}' "$SPEEDTEST_DIR/speedtest.log")
     if [ -n "$DOWNLOAD_SPEED" ] && [ -n "$UPLOAD_SPEED" ] && [ -n "$LATENCY" ]; then
-        printf "${yellow}%-18s${green}%-18s${red}%-20s${cyan}%-12s${white}\n" " $NODENAME" "$UPLOAD_SPEED" "$DOWNLOAD_SPEED" "$LATENCY"
+        printf "\033[93m%-18s\033[92m%-18s\033[91m%-20s\033[96m%-12s\033[0m\n" " $NODENAME" "$UPLOAD_SPEED" "$DOWNLOAD_SPEED" "$LATENCY"
     fi
 }
 
 run_speedtest() {
     speedtest '' 'Speedtest.net'
-    speedtest '65463' 'Hong Kong, HK'
+    speedtest '32155' 'Hong Kong, HK'
     speedtest '50406' 'Singapore, SG'
     speedtest '62217' 'Tokyo, JP'
     speedtest '67564' 'Seoul, KR'
     speedtest '13516' 'Los Angeles, US'
     speedtest '31120' 'Frankfurt, DE'
     speedtest '57725' 'Warsaw, PL'
+    speedtest '60572' 'Guangzhou, CN'
     speedtest '54312' 'ZheJiang, CN'
     speedtest '5396' 'JiangSu, CN'
 }
