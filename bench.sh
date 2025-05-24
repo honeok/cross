@@ -11,7 +11,7 @@
 # See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
 
 # 当前脚本版本号
-readonly VERSION='v0.2.1 (2025.05.24)'
+readonly VERSION='v0.2.2 (2025.05.24)'
 
 _red() { printf "\033[91m%b\033[0m\n" "$*"; }
 _green() { printf "\033[92m%b\033[0m\n" "$*"; }
@@ -32,7 +32,6 @@ export DEBIAN_FRONTEND=noninteractive
 separator() { printf "%-70s\n" "-" | sed 's/\s/-/g'; }
 
 # 各变量默认值
-GITHUB_PROXY='https://gh-proxy.com/'
 TEMP_DIR='/tmp/bench'
 SPEEDTEST_DIR="$TEMP_DIR/speedtest"
 UA_BROWSER='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36'
@@ -125,16 +124,10 @@ pkg_uninstall() {
 
 # 运行前校验
 pre_check() {
-    local CLOUDFLARE_API
     local -a INSTALL_PKG
     INSTALL_PKG=("tar" "bc")
 
-    # 备用 www.prologis.cn
-    # 备用 www.autodesk.com.cn
-    # 备用 www.keysight.com.cn
-    CLOUDFLARE_API="www.qualcomm.cn"
-
-    if [ "$(id -ru)" -ne 0 ] || [ "$EUID" -ne 0 ]; then
+    if [ "$EUID" -ne 0 ] || [ "$(id -ru)" -ne 0 ]; then
         _err_msg "$(_red 'This script must be run as root!')" && exit 1
     fi
     if [ "$(ps -p $$ -o comm=)" != "bash" ] || readlink /proc/$$/exe | grep -q "dash"; then
@@ -147,14 +140,24 @@ pre_check() {
             pkg_install "$pkg"
         fi
     done
-    # 境外服务器仅ipv4访问测试通过后取消github代理
-    if [ "$(curl --user-agent "$UA_BROWSER" -fsL "${CURL_OPTS[@]}" -4 "http://$CLOUDFLARE_API/cdn-cgi/trace" | grep -i '^loc=' | cut -d'=' -f2 | grep .)" != "CN" ]; then
-        unset GITHUB_PROXY
-    fi
     # 脚本当天及累计运行次数统计
     RUNCOUNT=$(curl -fsL "${CURL_OPTS[@]}" -k "https://hits.honeok.com/bench?action=hit")
-
     START_TIME=$(date +%s)
+}
+
+cdn_check() {
+    local LOC_COUNTRY CLOUDFLARE_API
+    # 备用 www.prologis.cn www.autodesk.com.cn www.keysight.com.cn
+    CLOUDFLARE_API="www.qualcomm.cn"
+
+    LOC_COUNTRY="$(curl --user-agent "$UA_BROWSER" -fsL "${CURL_OPTS[@]}" -4 "http://$CLOUDFLARE_API/cdn-cgi/trace" | grep -i '^loc=' | cut -d'=' -f2 | grep .)"
+    if [ "$LOC_COUNTRY" != "CN" ]; then
+        GITHUB_PROXY=""
+    elif [ "$LOC_COUNTRY" = "CN" ]; then
+        curl -sL --retry 2 --connect-timeout 5 -w "%{http_code}" "https://files.m.daocloud.io/github.com/honeok/honeok/raw/master/README.md" -o /dev/null 2>/dev/null | grep -q "^200$" && GITHUB_PROXY='https://files.m.daocloud.io/' || GITHUB_PROXY='https://gh-proxy.com/'
+    else
+        GITHUB_PROXY='https://gh-proxy.com/'
+    fi
 }
 
 to_kibyte() {
@@ -493,7 +496,7 @@ install_speedtest() {
             _err_msg "$(_red "Unsupported system architecture: $(uname -m)")" && exit 1
         ;;
     esac
-    if ! curl -fsL -o "$SPEEDTEST_DIR/speedtest.tgz" "${GITHUB_PROXY}https://github.com/i-abc/Speedtest/raw/asset/speedtest-cli/ookla-speedtest-1.2.0-linux-${SYS_ARCH}.tgz"; then
+    if ! curl -fsL -o "$SPEEDTEST_DIR/speedtest.tgz" "${GITHUB_PROXY}github.com/i-abc/Speedtest/raw/asset/speedtest-cli/ookla-speedtest-1.2.0-linux-${SYS_ARCH}.tgz"; then
         _err_msg "$(_red 'Failed to download speedtest.')"; exit 1
     fi
     tar zxf "$SPEEDTEST_DIR/speedtest.tgz" -C "$SPEEDTEST_DIR"
@@ -517,9 +520,10 @@ speedtest() {
     fi
 }
 
+# https://github.com/spiritLHLS/speedtest.net-CN-ID
 run_speedtest() {
     speedtest '' 'Speedtest.net'
-    speedtest '32155' 'Hong Kong, HK'
+    speedtest '33414' 'Hong Kong, HK'
     speedtest '50406' 'Singapore, SG'
     speedtest '62217' 'Tokyo, JP'
     speedtest '67564' 'Seoul, KR'
@@ -527,7 +531,7 @@ run_speedtest() {
     speedtest '31120' 'Frankfurt, DE'
     speedtest '57725' 'Warsaw, PL'
     speedtest '60572' 'Guangzhou, CN'
-    speedtest '54312' 'ZheJiang, CN'
+    speedtest '4575' 'Chengdu, CN'
     speedtest '5396' 'JiangSu, CN'
 }
 
@@ -554,6 +558,7 @@ print_end_msg() {
 
 bench() {
     pre_check
+    cdn_check
     obtain_system_info
     virt_check
     ip_dual_stack
