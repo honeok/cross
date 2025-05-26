@@ -1,4 +1,4 @@
-# Description: build a lightweight xray image on alpine linux.
+# Description: This dockerfile is used to build the xray docker image.
 #
 # Copyright (c) 2025 honeok <honeok@duck.com>
 #
@@ -42,4 +42,4 @@ RUN set -ex \
 
 ENV TZ=Asia/Shanghai
 
-CMD [ "/docker-entrypoint.sh" ]
+ENTRYPOINT [ "/docker-entrypoint.sh" ]
