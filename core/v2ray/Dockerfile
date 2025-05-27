@@ -7,7 +7,7 @@
 # See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
 
 FROM golang:1-alpine AS builder
-LABEL maintainer="honeok <honeok@duck.com"
+LABEL maintainer="honeok <honeok@duck.com>"
 WORKDIR /go/src
 ARG TARGETOS TARGETARCH
 ARG GOPROXY=""
@@ -22,7 +22,7 @@ RUN set -ex \
     && rm -rf /var/cache/apk/*
 
 FROM alpine:latest
-LABEL maintainer="honeok <honeok@duck.com"
+LABEL maintainer="honeok <honeok@duck.com>"
 COPY --from=builder /go/bin/v2ray /usr/bin/v2ray
 COPY config.json /etc/v2ray/config.json
 RUN set -ex \
