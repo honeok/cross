@@ -22,14 +22,12 @@ jobs:
 
       - name: 'Fetch Versions and Determine Build'
         run: |
-          XRAY_LVER=$(curl -fsL --retry 5 "https://api.github.com/repos/XTLS/Xray-core/releases/latest" | awk -F '["v]' '/tag_name/{print $5}')
-          XRAY_CVER=$(curl -fsL --retry 5 "https://hub.docker.com/v2/repositories/honeok/xray/tags" 2>/dev/null | \
-            jq -r ".results // [] | .[].name" | grep -v "^latest$" | sort -Vr | head -n1 | cut -d'-' -f1 || echo "")
-          if [[ -z "$XRAY_LVER" ]]; then
-            echo 'Error: Required parameters cannot be empty.' && exit 1
-          fi
-          echo "XRAY_LVER=${XRAY_LVER}" >> $GITHUB_ENV
-          echo "XRAY_CVER=${XRAY_CVER}" >> $GITHUB_ENV
+          XRAY_LVER="$(wget -qO- --tries=5 "https://api.github.com/repos/XTLS/Xray-core/releases/latest" | awk -F '["v]' '/tag_name/{print $5}')"
+          XRAY_CVER="$(wget -qO- --tries=5 "https://hub.docker.com/v2/repositories/honeok/xray/tags" 2>/dev/null | \
+            jq -r ".results // [] | .[].name" | grep -v "^latest$" | sort -Vr | head -n1 | cut -d'-' -f1 || echo "")"
+          [ -z "$XRAY_LVER" ] && { echo 'Error: Required parameters cannot be empty.'; exit 1; }
+          echo "XRAY_LVER=$XRAY_LVER" >> $GITHUB_ENV
+          echo "XRAY_CVER=$XRAY_CVER" >> $GITHUB_ENV
           if [[ "$(echo -e "$XRAY_LVER\n$XRAY_CVER" | sort -V | head -n1)" != "$XRAY_LVER" || -z "$XRAY_CVER" ]]; then
             echo "IS_RENEW=1" >> "$GITHUB_ENV"
           fi
@@ -53,10 +51,10 @@ jobs:
         if: env.IS_RENEW == 1 || github.event_name == 'workflow_dispatch'
         uses: docker/build-push-action@v6.18.0
         with:
-          context: "{{ defaultContext }}:core/xray"
-          file: Dockerfile
-          push: true
+          context: ${{ github.workspace }}/core/xray
+          file: ${{ github.workspace }}/core/xray/Dockerfile
+          platforms: linux/386, linux/amd64, linux/arm/v6, linux/arm/v7, linux/arm64/v8, linux/ppc64le, linux/riscv64, linux/s390x
           tags: |
             "${{ env.DOCKER_USERNAME }}/xray:${{ env.XRAY_LVER }}"
             "${{ env.DOCKER_USERNAME }}/xray:latest"
-          platforms: linux/386, linux/amd64, linux/arm/v6, linux/arm/v7, linux/arm64/v8, linux/ppc64le, linux/riscv64, linux/s390x
+          push: true
