@@ -7,7 +7,7 @@
 
 # cross
 
-Across the Great Wall, we can reach every corner in the world.
+Across the great wall, we can reach every corner in the world.
 
 ## bench.sh
 
