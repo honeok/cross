@@ -1,28 +1,22 @@
 # Description: This dockerfile is used to build the v2ray container image.
 #
-# Copyright (c) 2025 honeok <honeok@duck.com>
+# Copyright (c) 2025 honeok <honeok@disroot.org>
 #
-# Licensed under the GNU General Public License, version 2 only.
-# This program is distributed WITHOUT ANY WARRANTY.
-# See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
+# SPDX-License-Identifier: GPL-2.0-only
 
 FROM golang:1-alpine AS builder
-LABEL maintainer="honeok <honeok@duck.com>"
-WORKDIR /go/src
-ARG TARGETOS TARGETARCH
-ARG GOPROXY=""
-ARG VERSION
+LABEL maintainer="honeok <honeok@disroot.org>"
+WORKDIR /go/src/github.com/v2fly/v2ray-core
+ARG V2RAY_LTAG
 ENV CGO_ENABLED=0
-ENV GOOS=$TARGETOS
-ENV GOARCH=$TARGETARCH
 COPY build.sh .
 RUN set -ex \
     && apk add --no-cache build-base git \
-    && chmod +x build.sh && ./build.sh ${VERSION} \
+    && chmod +x build.sh && ./build.sh "$V2RAY_LTAG" \
     && rm -rf /var/cache/apk/*
 
-FROM alpine:latest
-LABEL maintainer="honeok <honeok@duck.com>"
+FROM alpine:latest AS dist
+LABEL maintainer="honeok <honeok@disroot.org>"
 COPY --from=builder /go/bin/v2ray /usr/bin/v2ray
 COPY config.json /etc/v2ray/config.json
 RUN set -ex \
