@@ -1,3 +1,4 @@
+---
 name: 'Build and Publish 3x-ui'
 
 on:
@@ -21,10 +22,16 @@ jobs:
 
       - name: 'Fetch Versions and Determine Build'
         run: |
-          XUI_LVER="$(wget -qO- --tries=5 "https://api.github.com/repos/MHSanaei/3x-ui/releases/latest" | awk -F '["v]' '/tag_name/{print $5}')"
+          XRAY_LVER="$(wget -qO- --tries=5 "https://api.github.com/repos/XTLS/Xray-core/releases" | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p' | sort -Vr | head -n1)"
+          XUI_LTAG="$(wget -qO- --tries=5 "https://api.github.com/repos/MHSanaei/3x-ui/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')"
+          XUI_LVER="${XUI_LTAG#v}"
           XUI_CVER="$(wget -qO- --tries=5 "https://hub.docker.com/v2/repositories/honeok/3x-ui/tags" 2>/dev/null | \
             jq -r ".results // [] | .[].name" | grep -v "^latest$" | sort -Vr | head -n1 | cut -d'-' -f1 || echo "")"
-          [ -z "$XUI_LVER" ] && { echo 'Error: Required parameters cannot be empty.'; exit 1; }
+          if [[ -z "$XRAY_LVER" || -z "$XUI_LTAG" || -z "$XUI_LVER" ]]; then
+            echo 'Error: Required parameters cannot be empty.'; exit 1
+          fi
+          echo "XRAY_LVER=$XRAY_LVER" >> $GITHUB_ENV
+          echo "XUI_LTAG=$XUI_LTAG" >> $GITHUB_ENV
           echo "XUI_LVER=$XUI_LVER" >> $GITHUB_ENV
           echo "XUI_CVER=$XUI_CVER" >> $GITHUB_ENV
           if [[ "$(echo -e "$XUI_LVER\n$XUI_CVER" | sort -V | head -n1)" != "$XUI_LVER" || -z "$XUI_CVER" ]]; then
@@ -53,7 +60,10 @@ jobs:
           context: ${{ github.workspace }}/core/3x-ui
           file: ${{ github.workspace }}/core/3x-ui/Dockerfile
           platforms: linux/386, linux/amd64, linux/arm/v6, linux/arm/v7, linux/arm64/v8, linux/ppc64le, linux/riscv64, linux/s390x
+          build-args: |
+            XRAY_LVER=${{ env.XRAY_LVER }}
+            XUI_LTAG=${{ env.XUI_LTAG }}
           tags: |
-            "${{ env.DOCKER_USERNAME }}/3x-ui:${{ env.XUI_LVER }}"
-            "${{ env.DOCKER_USERNAME }}/3x-ui:latest"
+            ${{ env.DOCKER_USERNAME }}/3x-ui:${{ env.XUI_LVER }}
+            ${{ env.DOCKER_USERNAME }}/3x-ui:latest
           push: true

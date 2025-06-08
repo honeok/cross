@@ -2,17 +2,15 @@
 #
 # Description: This script is used to build the v2ray docker image and configure the basic operating environment.
 #
-# Copyright (c) 2025 honeok <honeok@duck.com>
+# Copyright (c) 2025 honeok <honeok@disroot.org>
 #
-# Licensed under the GNU General Public License, version 2 only.
-# This program is distributed WITHOUT ANY WARRANTY.
-# See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
+# SPDX-License-Identifier: GPL-2.0-only
 
 set -ex
 
-VERSION="$1"
+V2RAY_LTAG="$1"
 
-if ! git clone --depth=1 --branch "$VERSION" https://github.com/v2fly/v2ray-core.git v2ray; then
+if ! git clone --depth=1 --branch "$V2RAY_LTAG" https://github.com/v2fly/v2ray-core.git v2ray; then
     printf 'Error: Failed to clone the project branch.\n' >&2; exit 1
 fi
 
