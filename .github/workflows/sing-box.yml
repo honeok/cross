@@ -12,7 +12,7 @@ env:
 
 jobs:
   build_stable:
-    name: 'Build Stable Sing-box'
+    name: 'Build and Publish Stable Sing-box'
     runs-on: ubuntu-latest
 
     steps:
@@ -25,7 +25,7 @@ jobs:
         run: |
           SINGBOX_STABLE_LVER="$(wget -qO- --tries=5 "https://api.github.com/repos/SagerNet/sing-box/releases/latest" | awk -F '["v]' '/tag_name/{print $5}')"
           SINGBOX_STABLE_CVER="$(wget -qO- --tries=5 "https://hub.docker.com/v2/repositories/honeok/sing-box/tags" 2>/dev/null | \
-            jq -r ".results // [] | .[].name" | grep -v '^latest$' | grep -Ev 'beta|rc|alpha|pre' | sort -Vr | head -n1 || echo "")"
+            jq -r ".results // [] | .[].name" | grep -v '^latest$' | grep -Ev 'beta|alpha' | sort -Vr | head -n1 || echo "")"
           [ -z "$SINGBOX_STABLE_LVER" ] && { echo 'Error: Required parameters cannot be empty.'; exit 1; }
           echo "SINGBOX_STABLE_LVER=$SINGBOX_STABLE_LVER" >> $GITHUB_ENV
           echo "SINGBOX_STABLE_CVER=$SINGBOX_STABLE_CVER" >> $GITHUB_ENV
@@ -55,14 +55,14 @@ jobs:
           context: ${{ github.workspace }}/core/sing-box
           file: ${{ github.workspace }}/core/sing-box/Dockerfile
           platforms: linux/386, linux/amd64, linux/arm/v6, linux/arm/v7, linux/arm64/v8, linux/ppc64le, linux/riscv64, linux/s390x
-          build-args: VERSION=stable
+          build-args: SINGBOX_LVER=${{ env.SINGBOX_STABLE_LVER }}
           tags: |
-            "${{ env.DOCKER_USERNAME }}/sing-box:${{ env.SINGBOX_STABLE_LVER }}"
-            "${{ env.DOCKER_USERNAME }}/sing-box:latest"
+            ${{ env.DOCKER_USERNAME }}/sing-box:${{ env.SINGBOX_STABLE_LVER }}
+            ${{ env.DOCKER_USERNAME }}/sing-box:latest
           push: true
 
   build_beta:
-    name: 'Build Beta Sing-box'
+    name: 'Build and Publish Beta Sing-box'
     runs-on: ubuntu-latest
 
     steps:
@@ -73,7 +73,7 @@ jobs:
 
       - name: 'Fetch Versions and Determine Build'
         run: |
-          SINGBOX_BETA_LVER="$(wget -qO- --tries=5 "https://api.github.com/repos/SagerNet/sing-box/releases" | awk -F '"' '/tag_name/ && /-beta/ {sub(/^v/, "", $4); print $4}' | sort -Vr | head -n1)"
+          SINGBOX_BETA_LVER="$(wget -qO- --tries=5 "https://api.github.com/repos/SagerNet/sing-box/releases" | awk -F '"' '/tag_name/ && /beta/ {sub(/^v/, "", $4); print $4}' | sort -Vr | head -n1)"
           SINGBOX_BETA_CVER="$(wget -qO- --tries=5 "https://hub.docker.com/v2/repositories/honeok/sing-box/tags" 2>/dev/null | \
             jq -r ".results // [] | .[].name" | grep -v '^latest$' | grep -i 'beta' | sort -Vr | head -n1 || echo "")"
           [ -z "$SINGBOX_BETA_LVER" ] && { echo 'Error: Required parameters cannot be empty.'; exit 1; }
@@ -105,12 +105,12 @@ jobs:
           context: ${{ github.workspace }}/core/sing-box
           file: ${{ github.workspace }}/core/sing-box/Dockerfile
           platforms: linux/386, linux/amd64, linux/arm/v6, linux/arm/v7, linux/arm64/v8, linux/ppc64le, linux/riscv64, linux/s390x
-          build-args: VERSION=beta
-          tags: "${{ env.DOCKER_USERNAME }}/sing-box:${{ env.SINGBOX_BETA_LVER }}"
+          build-args: SINGBOX_LVER=${{ env.SINGBOX_BETA_LVER }}
+          tags: ${{ env.DOCKER_USERNAME }}/sing-box:${{ env.SINGBOX_BETA_LVER }}
           push: true
 
   build_alpha:
-    name: 'Build Alpha Sing-box'
+    name: 'Build and Publish Alpha Sing-box'
     runs-on: ubuntu-latest
 
     steps:
@@ -121,8 +121,8 @@ jobs:
 
       - name: 'Fetch Versions and Determine Build'
         run: |
-          SINGBOX_ALPHA_LVER="$(wget -qO- --tries=5 "https://api.github.com/repos/SagerNet/sing-box/releases" | awk -F '"' '/tag_name/ && /-alpha/ {sub(/^v/, "", $4); print $4}' | sort -Vr | head -n1)"
-          SINGBOX_ALPHA_CVER="$(wget -qO- --tries=5 "https://hub.docker.com/v2/repositories/honeok/sing-box/tags" 2>/dev/null | \
+          SINGBOX_ALPHA_LVER="$(wget -qO- --tries=5 "https://api.github.com/repos/SagerNet/sing-box/releases" | awk -F '"' '/tag_name/ && /alpha/ {sub(/^v/, "", $4); print $4}' | sort -Vr | head -n1)"
+          SINGBOX_ALPHA_CVER="$(wget -qO- --tries=5 "https://hub.docker.com/v2/repositories/honeok/sing-box/tags?page_size=100" 2>/dev/null | \
             jq -r ".results // [] | .[].name" | grep -v '^latest$' | grep -i 'alpha' | sort -Vr | head -n1 || echo "")"
           [ -z "$SINGBOX_ALPHA_LVER" ] && { echo 'Error: Required parameters cannot be empty.'; exit 1; }
           echo "SINGBOX_ALPHA_LVER=$SINGBOX_ALPHA_LVER" >> $GITHUB_ENV
@@ -153,6 +153,6 @@ jobs:
           context: ${{ github.workspace }}/core/sing-box
           file: ${{ github.workspace }}/core/sing-box/Dockerfile
           platforms: linux/386, linux/amd64, linux/arm/v6, linux/arm/v7, linux/arm64/v8, linux/ppc64le, linux/riscv64, linux/s390x
-          build-args: VERSION=alpha
-          tags: "${{ env.DOCKER_USERNAME }}/sing-box:${{ env.SINGBOX_ALPHA_LVER }}"
+          build-args: SINGBOX_LVER=${{ env.SINGBOX_ALPHA_LVER }}
+          tags: ${{ env.DOCKER_USERNAME }}/sing-box:${{ env.SINGBOX_ALPHA_LVER }}
           push: true
