@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="https://github.com/honeok/cross/actions/workflows/shellcheck.yml/badge.svg" alt="Build Status" />
-  <img src="https://img.shields.io/github/license/honeok/cross.svg?style=flat" alt="License" />
-  <img src="https://img.shields.io/github/last-commit/honeok/cross" alt="Commit" />
-  <img src="https://img.shields.io/github/commit-activity/m/honeok/cross.svg" alt="Commit Activity" />
+<img src="https://github.com/honeok/cross/actions/workflows/shellcheck.yml/badge.svg" alt="Build Status" />
+<img src="https://img.shields.io/github/license/honeok/cross.svg?style=flat" alt="License" />
+<img src="https://img.shields.io/github/last-commit/honeok/cross.svg?style=flat" alt="Commit" />
+<img src="https://img.shields.io/github/commit-activity/m/honeok/cross.svg?style=flat" alt="Commit Activity" />
 </p>
 
 # cross
