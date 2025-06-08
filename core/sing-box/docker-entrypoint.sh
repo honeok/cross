@@ -2,7 +2,7 @@
 #
 # Description: This script is used to configure sing-box during container initialization.
 #
-# Copyright (c) 2025 honeok <honeok@duck.com>
+# Copyright (c) 2025 honeok <honeok@disroot.org>
 #
 # References:
 # https://sing-box.sagernet.org/zh/configuration
@@ -10,9 +10,7 @@
 # https://github.com/fscarmen/sing-box
 # https://github.com/RayWangQvQ/sing-box-installer
 #
-# Licensed under the GNU General Public License, version 2 only.
-# This program is distributed WITHOUT ANY WARRANTY.
-# See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
+# SPDX-License-Identifier: GPL-2.0-only
 
 set -eu
 
