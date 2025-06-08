@@ -1,5 +1,3 @@
-.git/
-.idea/
-.vscode/
+*.yml
 *.md
 *.log
