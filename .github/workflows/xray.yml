@@ -22,7 +22,7 @@ jobs:
 
       - name: 'Fetch Versions and Determine Build'
         run: |
-          XRAY_LVER="$(wget -qO- --tries=5 "https://api.github.com/repos/XTLS/Xray-core/releases/latest" | awk -F '["v]' '/tag_name/{print $5}')"
+          XRAY_LVER="$(wget -qO- --tries=5 "https://api.github.com/repos/XTLS/Xray-core/releases" | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p' | sort -Vr | head -n1)"
           XRAY_CVER="$(wget -qO- --tries=5 "https://hub.docker.com/v2/repositories/honeok/xray/tags" 2>/dev/null | \
             jq -r ".results // [] | .[].name" | grep -v "^latest$" | sort -Vr | head -n1 | cut -d'-' -f1 || echo "")"
           [ -z "$XRAY_LVER" ] && { echo 'Error: Required parameters cannot be empty.'; exit 1; }
@@ -54,7 +54,8 @@ jobs:
           context: ${{ github.workspace }}/core/xray
           file: ${{ github.workspace }}/core/xray/Dockerfile
           platforms: linux/386, linux/amd64, linux/arm/v6, linux/arm/v7, linux/arm64/v8, linux/ppc64le, linux/riscv64, linux/s390x
+          build-args: XRAY_LVER=${{ env.XRAY_LVER }}
           tags: |
-            "${{ env.DOCKER_USERNAME }}/xray:${{ env.XRAY_LVER }}"
-            "${{ env.DOCKER_USERNAME }}/xray:latest"
+            ${{ env.DOCKER_USERNAME }}/xray:${{ env.XRAY_LVER }}
+            ${{ env.DOCKER_USERNAME }}/xray:latest
           push: true
