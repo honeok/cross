@@ -2,14 +2,12 @@
 #
 # Description: This script is used to configure xray during container initialization.
 #
-# Copyright (c) 2025 honeok <honeok@duck.com>
+# Copyright (c) 2025 honeok <honeok@disroot.org>
 #
 # References:
 # https://github.com/233boy/Xray
 #
-# Licensed under the GNU General Public License, version 2 only.
-# This program is distributed WITHOUT ANY WARRANTY.
-# See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
+# SPDX-License-Identifier: GPL-2.0-only
 
 set -eu
 
