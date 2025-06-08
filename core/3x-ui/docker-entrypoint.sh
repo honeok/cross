@@ -1,12 +1,10 @@
 #!/usr/bin/env bash
 #
-# Description: entrypoint script to perform parameter checks and start the x-ui service.
+# Description: This script is used to configure the 3x-ui basic operating environment as the container startup entry.
 #
-# Copyright (c) 2025 honeok <honeok@duck.com>
+# Copyright (c) 2025 honeok <honeok@disroot.org>
 #
-# Licensed under the GNU General Public License, version 2 only.
-# This program is distributed WITHOUT ANY WARRANTY.
-# See <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
+# SPDX-License-Identifier: GPL-2.0-only
 
 WORKDIR="/usr/local/bin"
 
@@ -45,8 +43,8 @@ generate_port() {
 
 ip_address() {
     # 获取一个登录IP即返回
-    IPV4_ADDRESS=$(curl -fsSL -m 5 -4 http://www.qualcomm.cn/cdn-cgi/trace 2>/dev/null | grep -i '^ip=' | cut -d'=' -f2 | grep .)
-    IPV6_ADDRESS=$(curl -fsSL -m 5 -6 http://www.qualcomm.cn/cdn-cgi/trace 2>/dev/null | grep -i '^ip=' | cut -d'=' -f2 | grep .)
+    IPV4_ADDRESS=$(curl -fsL -m 5 -4 http://www.qualcomm.cn/cdn-cgi/trace 2>/dev/null | grep -i '^ip=' | cut -d'=' -f2 | grep .)
+    IPV6_ADDRESS=$(curl -fsL -m 5 -6 http://www.qualcomm.cn/cdn-cgi/trace 2>/dev/null | grep -i '^ip=' | cut -d'=' -f2 | grep .)
     if [ -n "$IPV4_ADDRESS" ]; then
         printf "%s\n" "$IPV4_ADDRESS" && return
     fi
@@ -54,7 +52,7 @@ ip_address() {
         printf "%s\n" "[$IPV6_ADDRESS]" && return
     fi
     if [ -z "$IPV4_ADDRESS" ] && [ -z "$IPV6_ADDRESS" ]; then
-        printf "Error: Could not retrieve public IP.\n" >&2 && exit 1
+        printf "Error: Could not retrieve public IP.\n" >&2; exit 1
     fi
 }
 
@@ -89,13 +87,13 @@ check_config() {
         separator
         echo
     fi
-    3x-ui migrate >/dev/null 2>&1
+    /usr/local/bin/3x-ui migrate >/dev/null 2>&1
 }
 
 check_config
 
 if [ "$#" -eq 0 ]; then
-    exec "3x-ui"
+    exec 3x-ui
 else
     exec "$@"
 fi
