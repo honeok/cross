@@ -38,7 +38,7 @@ random_port() {
         if [ -z "${IS_USED_PORT+x}" ]; then
             if _is_exists netstat; then IS_USED_PORT="$(netstat -tunlp | sed -n 's/.*:\([0-9]\+\).*/\1/p' | sort -nu)";
             elif _is_exists ss; then IS_USED_PORT="$(ss -tunlp | sed -n 's/.*:\([0-9]\+\).*/\1/p' | sort -nu)";
-            else printf 'Error: The netstat and ss commands are unavailable.\n'; exit 1
+            else printf "Error: The netstat and ss commands are unavailable.\n"; exit 1
             fi
         fi
         printf "%s" "$IS_USED_PORT" | sed 's/ /\n/g' | grep -w "$1"
@@ -50,7 +50,7 @@ random_port() {
         if [ ! "$(_use_port "$TEMP_PORT")" ]; then
             REALITY_PORT="$TEMP_PORT" && break
         fi
-        [ "$PORT" -eq 5 ] && { printf 'Error: No free port found after 5 attempts.\n'; exit 1; }
+        [ "$PORT" -eq 5 ] && { printf "Error: No free port found after 5 attempts.\n"; exit 1; }
         PORT=$((PORT + 1))
     done
 }
@@ -135,7 +135,7 @@ if [ -d "$SINGBOX_CONFDIR" ] && [ -z "$(ls -A "$SINGBOX_CONFDIR" 2>/dev/null)" ]
   ]
 }
 EOF
-    [ -z "$PUBLIC_IP" ] && { printf 'Error: Failed to retrieve IP address, configuration generation aborted!\n'; exit 1; }
+    [ -z "$PUBLIC_IP" ] && { printf "Error: Failed to retrieve IP address, configuration generation aborted!\n"; exit 1; }
     {
         echo "-------------------- URL --------------------"
         echo "vless://${GENERATE_UUID}@${PUBLIC_IP}:${REALITY_PORT}?encryption=none&security=reality&flow=xtls-rprx-vision&type=tcp&sni=${TLS_SERVER}&pbk=${PUBLIC_KEY}&fp=chrome#REALITY-${PUBLIC_IP}"
