@@ -12,11 +12,13 @@
 FROM alpine:latest AS dist
 LABEL maintainer="honeok <honeok@disroot.org>"
 ARG SINGBOX_LVER
+# https://docs.docker.com/build/building/multi-platform
+ARG TARGETOS TARGETARCH
 COPY build.sh .
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN set -ex \
     && apk update && apk upgrade \
-    && apk add --no-cache ca-certificates tzdata \
+    && apk add --no-cache ca-certificates curl tzdata \
     && chmod +x /docker-entrypoint.sh build.sh \
     && ./build.sh "$SINGBOX_LVER" && rm -f build.sh \
     && rm -rf /var/cache/apk/* \

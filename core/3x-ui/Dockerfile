@@ -2,13 +2,17 @@
 #
 # Copyright (c) 2025 honeok <honeok@disroot.org>
 #
+# References:
+# https://docs.docker.com/build/building/multi-platform
+#
 # SPDX-License-Identifier: GPL-2.0-only
 
 FROM golang:1-alpine AS builder
 LABEL maintainer="honeok <honeok@disroot.org>"
+WORKDIR /go/src/github.com/MHSanaei/3x-ui
 ARG XRAY_LVER
 ARG XUI_LTAG
-WORKDIR /go/src/github.com/MHSanaei/3x-ui
+ARG TARGETOS TARGETARCH
 ENV CGO_ENABLED=1
 COPY build.sh .
 RUN set -ex \
@@ -23,9 +27,8 @@ RUN set -ex \
 
 FROM alpine:latest AS dist
 LABEL maintainer="honeok <honeok@disroot.org>"
-# https://docs.docker.com/build/building/multi-platform/
-ARG TARGETARCH
 WORKDIR /usr/local/bin
+ARG TARGETARCH
 COPY --from=builder /go/bin/3x-ui /usr/local/bin/3x-ui
 COPY --from=builder /tmp/xray/xray /usr/local/bin/bin/xray-linux-${TARGETARCH}
 COPY docker-entrypoint.sh /docker-entrypoint.sh

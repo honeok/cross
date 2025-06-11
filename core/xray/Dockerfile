@@ -11,10 +11,13 @@
 FROM alpine:latest AS builder
 LABEL maintainer="honeok <honeok@disroot.org>"
 ARG XRAY_LVER
+# https://docs.docker.com/build/building/multi-platform
+ARG TARGETOS TARGETARCH
 COPY build.sh .
 RUN set -ex \
     && apk update \
-    && chmod +x build.sh && ./build.sh build "$XRAY_LVER" \
+    && apk add --no-cache curl \
+    && chmod +x build.sh && ./build.sh --build "$XRAY_LVER" \
     && rm -f build.sh \
     && rm -rf /var/cache/apk/*
 
@@ -26,10 +29,9 @@ COPY build.sh .
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN set -ex \
     && apk update && apk upgrade \
-    && apk add --no-cache ca-certificates tzdata \
-    && chmod +x docker-entrypoint.sh \
-    && chmod +x build.sh && ./build.sh before \
-    && rm -f build.sh \
+    && apk add --no-cache ca-certificates curl tzdata \
+    && chmod +x /docker-entrypoint.sh build.sh \
+    && ./build.sh --before && rm -f build.sh \
     && curl -fsL -o /etc/xray/bin/geoip.dat "https://github.com/v2fly/geoip/releases/latest/download/geoip.dat" \
     && curl -fsL -o /etc/xray/bin/geosite.dat "https://github.com/v2fly/domain-list-community/releases/latest/download/dlc.dat" \
     && rm -rf /var/cache/apk/* \
