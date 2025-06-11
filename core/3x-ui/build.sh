@@ -10,46 +10,32 @@ set -eux
 
 XRAY_LVER="$1"
 if [ -z "$XRAY_LVER" ]; then
-    printf "Error: Unable to obtain xray version!\n" >&2
+    echo >&2 "Error: Unable to obtain xray version!"; exit 1
 fi
 
-# map system architecture to framework variable
-case "$(uname -m)" in
-    i*86)
-        XRAY_FRAMEWORK="32"
-    ;;
-    x86_64 | amd64)
-        XRAY_FRAMEWORK="64"
-    ;;
-    armv6*)
-        XRAY_FRAMEWORK="arm32-v6"
-    ;;
-    armv7*)
-        XRAY_FRAMEWORK="arm32-v7a"
-    ;;
-    armv8* | arm64 | aarch64)
-        XRAY_FRAMEWORK="arm64-v8a"
-    ;;
-    ppc64le)
-        XRAY_FRAMEWORK="ppc64le"
-    ;;
-    riscv64)
-        XRAY_FRAMEWORK="riscv64"
-    ;;
-    s390x)
-        XRAY_FRAMEWORK="s390x"
-    ;;
-    *)
-        printf "Error: unsupported architecture: %s\n" "$(uname -m)" >&2; exit 1
-    ;;
+# Determine system arch based
+case "$TARGETOS/$TARGETARCH" in
+    linux/386 ) OS_ARCH="32";;
+    linux/amd64 ) OS_ARCH="64" ;;
+    linux/arm64 | linux/arm64/v8 ) OS_ARCH="arm64-v8a" ;;
+    linux/arm* )
+        case "$(uname -m)" in
+            armv6* ) OS_ARCH="arm32-v6" ;;
+            armv7* ) OS_ARCH="arm32-v7a" ;;
+            * ) echo >&2 "Error: unsupported arm architecture: $(uname -m)"; exit 1 ;;
+        esac ;;
+    linux/ppc64le ) OS_ARCH="ppc64le" ;;
+    linux/riscv64 ) OS_ARCH="riscv64" ;;
+    linux/s390x ) OS_ARCH="s390x" ;;
+    * ) echo >&2 "Error: unsupported architecture: $TARGETARCH"; exit 1 ;;
 esac
 
-cd /tmp || { printf "Error: permission denied or directory does not exist\n" >&2; exit 1; }
-if ! wget --tries=5 -q "https://github.com/XTLS/Xray-core/releases/download/v${XRAY_LVER}/Xray-linux-${XRAY_FRAMEWORK}.zip"; then
-    printf "Error: download xray failed, please check the network!\n" >&2; exit 1
-fi
+cd /tmp || { echo >&2 "Error: permission denied."; exit 1; }
+wget --tries=5 -q "https://github.com/XTLS/Xray-core/releases/download/v${XRAY_LVER}/Xray-${TARGETOS}-${OS_ARCH}.zip" || {
+    echo >&2 "Error: download xray failed, please check the network!"; exit 1;
+}
 # Unzip xray and add execute permissions
-unzip -q "Xray-linux-$XRAY_FRAMEWORK.zip" -d ./xray
+unzip -q "Xray-${TARGETOS}-${OS_ARCH}.zip" -d ./xray
 if [ ! -x xray/xray ]; then
     chmod +x xray/xray
 fi

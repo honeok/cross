@@ -6,11 +6,9 @@
 #
 # SPDX-License-Identifier: GPL-2.0-only
 
-set -ex
+set -eux
 
-XRAY_LVER="$2"
-
-# Run default path
+# Default value
 XRAY_WORKDIR="/etc/xray"
 XRAY_BINDIR="$XRAY_WORKDIR/bin"
 XRAY_CONFDIR="$XRAY_WORKDIR/conf"
@@ -18,64 +16,63 @@ XRAY_LOGDIR="/var/log/xray"
 XRAY_ACCESS_LOG="$XRAY_LOGDIR/access.log"
 XRAY_ERROR_LOG="$XRAY_LOGDIR/error.log"
 
-command -v curl >/dev/null 2>&1 || apk add --no-cache curl
+if [ "$#" -eq 0 ]; then
+    echo "Usage: $0 [--build <version>] [--before]"
+    exit 0
+fi
 
 build_xray() {
     if [ -z "$XRAY_LVER" ]; then
-        printf "Error: Unable to obtain xray version!\n" >&2; exit 1
+        echo >&2 "Error: Missing version. Use --build <version>"; exit 1
     fi
-
-    # map system architecture to framework variable
-    case "$(uname -m)" in
-        i*86)
-            XRAY_FRAMEWORK="32"
-        ;;
-        x86_64 | amd64)
-            XRAY_FRAMEWORK="64"
-        ;;
-        armv6*)
-            XRAY_FRAMEWORK="arm32-v6"
-        ;;
-        armv7*)
-            XRAY_FRAMEWORK="arm32-v7a"
-        ;;
-        armv8* | arm64 | aarch64)
-            XRAY_FRAMEWORK="arm64-v8a"
-        ;;
-        ppc64le)
-            XRAY_FRAMEWORK="ppc64le"
-        ;;
-        riscv64)
-            XRAY_FRAMEWORK="riscv64"
-        ;;
-        s390x)
-            XRAY_FRAMEWORK="s390x"
-        ;;
-        *)
-            printf "Error: unsupported architecture: %s\n" "$(uname -m)" >&2; exit 1
-        ;;
+    # Determine system arch based
+    case "$TARGETOS/$TARGETARCH" in
+        linux/386 ) OS_ARCH="32";;
+        linux/amd64 ) OS_ARCH="64" ;;
+        linux/arm64 | linux/arm64/v8 ) OS_ARCH="arm64-v8a" ;;
+        linux/arm* )
+            case "$(uname -m)" in
+                armv6* ) OS_ARCH="arm32-v6" ;;
+                armv7* ) OS_ARCH="arm32-v7a" ;;
+                * ) echo >&2 "Error: unsupported arm architecture: $(uname -m)"; exit 1 ;;
+            esac ;;
+        linux/ppc64le ) OS_ARCH="ppc64le" ;;
+        linux/riscv64 ) OS_ARCH="riscv64" ;;
+        linux/s390x ) OS_ARCH="s390x" ;;
+        * ) echo >&2 "Error: unsupported architecture: $TARGETARCH"; exit 1 ;;
     esac
-
-    cd /tmp || { printf "Error: permission denied or directory does not exist\n" >&2; exit 1; }
-    if ! curl -fsL -O "https://github.com/XTLS/Xray-core/releases/download/v${XRAY_LVER}/Xray-linux-${XRAY_FRAMEWORK}.zip"; then
-        printf "Error: download xray failed, please check the network!\n" >&2; exit 1
-    fi
-    # Unzip xray and add execute permissions
-    unzip -q "Xray-linux-$XRAY_FRAMEWORK.zip" -d ./xray
+    cd /tmp || { echo >&2 "Error: permission denied."; exit 1; }
+    # Extract and install xray-core
+    curl -fsL -O "https://github.com/XTLS/Xray-core/releases/download/v${XRAY_LVER}/Xray-${TARGETOS}-${OS_ARCH}.zip" || {
+        echo >&2 "Error: download xray failed, please check the network!"; exit 1;
+    }
+    unzip -q "Xray-${TARGETOS}-${OS_ARCH}.zip" -d ./xray
     if [ ! -x xray/xray ]; then
         chmod +x xray/xray
     fi
 }
 
 before_script() {
+    # Create necessary directories
     mkdir -p "$XRAY_WORKDIR" "$XRAY_BINDIR" "$XRAY_CONFDIR" "$XRAY_LOGDIR" >/dev/null 2>&1
-    touch "$XRAY_ACCESS_LOG" >/dev/null 2>&1
-    touch "$XRAY_ERROR_LOG" >/dev/null 2>&1
+    touch "$XRAY_ACCESS_LOG" "$XRAY_ERROR_LOG" >/dev/null 2>&1
     ln -sf "$XRAY_BINDIR/xray" /usr/local/bin/xray
 }
 
-case "$1" in
-    build) build_xray ;;
-    before) before_script ;;
-    *) printf "Error: Invalid parameter or no parameter!\n" >&2; exit 1; ;;
-esac
+while [ "$#" -ge 1 ]; do
+    case "$1" in
+        --build )
+            shift
+            XRAY_LVER="$1"
+            build_xray
+            shift
+        ;;
+        --before )
+            before_script
+            shift
+        ;;
+        * )
+            echo >&2 "Error: Unknown parameter: $1"; exit 1
+        ;;
+    esac
+done
