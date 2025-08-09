@@ -22,12 +22,11 @@ jobs:
 
       - name: 'Fetch Versions and Determine Build'
         run: |
-          V2RAY_LTAG="$(wget -qO- --tries=5 "https://api.github.com/repos/v2fly/v2ray-core/releases" | sed -n 's/.*"tag_name": *"\(v[^"]*\)".*/\1/p' | sort -Vr | head -n1)"
+          V2RAY_LTAG="$(wget -qO- --tries=50 --header="Authorization: token ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/v2fly/v2ray-core/releases | sed -n 's/.*"tag_name": *"\(v[^"]*\)".*/\1/p' | sort -Vr | head -n1)"
           V2RAY_LVER="${V2RAY_LTAG#v}"
-          V2RAY_CVER="$(wget -qO- --tries=5 "https://hub.docker.com/v2/repositories/honeok/v2ray/tags" 2>/dev/null | \
-            jq -r ".results // [] | .[].name" | grep -v '^latest$' | sort -Vr | head -n1 | cut -d'-' -f1 || echo "")"
+          V2RAY_CVER="$(wget -qO- --tries=50 https://hub.docker.com/v2/repositories/honeok/v2ray/tags 2>/dev/null | jq -r ".results // [] | .[].name" | grep -v '^latest$' | sort -Vr | head -n1 | cut -d'-' -f1 || echo "")"
           if [[ -z "$V2RAY_LTAG" || -z "$V2RAY_LVER" ]]; then
-            echo 'Error: Required parameters cannot be empty.'; exit 1
+            echo "Error: Required parameters cannot be empty."; exit 1
           fi
           echo "V2RAY_LTAG=$V2RAY_LTAG" >> $GITHUB_ENV
           echo "V2RAY_LVER=$V2RAY_LVER" >> $GITHUB_ENV
@@ -46,7 +45,7 @@ jobs:
 
       - name: 'Login to DockerHub'
         if: env.IS_RENEW == 1 || github.event_name == 'workflow_dispatch'
-        uses: docker/login-action@v3.4.0
+        uses: docker/login-action@v3.5.0
         with:
           username: ${{ env.DOCKER_USERNAME }}
           password: ${{ env.DOCKER_PASSWORD }}

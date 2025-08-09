@@ -22,10 +22,9 @@ jobs:
 
       - name: 'Fetch Versions and Determine Build'
         run: |
-          XRAY_LVER="$(wget -qO- --tries=5 "https://api.github.com/repos/XTLS/Xray-core/releases" | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p' | sort -Vr | head -n1)"
-          XRAY_CVER="$(wget -qO- --tries=5 "https://hub.docker.com/v2/repositories/honeok/xray/tags" 2>/dev/null | \
-            jq -r ".results // [] | .[].name" | grep -v "^latest$" | sort -Vr | head -n1 | cut -d'-' -f1 || echo "")"
-          [ -z "$XRAY_LVER" ] && { echo 'Error: Required parameters cannot be empty.'; exit 1; }
+          XRAY_LVER="$(wget -qO- --tries=50 --header="Authorization: token ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/XTLS/Xray-core/releases | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p' | sort -Vr | head -n1)"
+          XRAY_CVER="$(wget -qO- --tries=50 https://hub.docker.com/v2/repositories/honeok/xray/tags 2>/dev/null | jq -r ".results // [] | .[].name" | grep -v "^latest$" | sort -Vr | head -n1 | cut -d'-' -f1 || echo "")"
+          [ -z "$XRAY_LVER" ] && { echo "Error: Required parameters cannot be empty."; exit 1; }
           echo "XRAY_LVER=$XRAY_LVER" >> $GITHUB_ENV
           echo "XRAY_CVER=$XRAY_CVER" >> $GITHUB_ENV
           if [[ "$(echo -e "$XRAY_LVER\n$XRAY_CVER" | sort -V | head -n1)" != "$XRAY_LVER" || -z "$XRAY_CVER" ]]; then
@@ -42,7 +41,7 @@ jobs:
 
       - name: 'Login to DockerHub'
         if: env.IS_RENEW == 1 || github.event_name == 'workflow_dispatch'
-        uses: docker/login-action@v3.4.0
+        uses: docker/login-action@v3.5.0
         with:
           username: ${{ env.DOCKER_USERNAME }}
           password: ${{ env.DOCKER_PASSWORD }}
