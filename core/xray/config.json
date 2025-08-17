@@ -4,32 +4,22 @@
     "error": "/var/log/xray/error.log",
     "loglevel": "warning"
   },
-  "dns": {},
-  "api": {
-    "tag": "api",
-    "services": [
-      "HandlerService",
-      "LoggerService",
-      "StatsService"
-    ]
-  },
-  "stats": {},
   "policy": {
     "levels": {
       "0": {
-        "handshake": 6,
-        "connIdle": 519,
-        "uplinkOnly": 10,
-        "downlinkOnly": 12,
-        "statsUserUplink": true,
-        "statsUserDownlink": true
+        "handshake": 5,
+        "connIdle": 300,
+        "uplinkOnly": 2,
+        "downlinkOnly": 5,
+        "statsUserUplink": false,
+        "statsUserDownlink": false
       }
     },
     "system": {
-      "statsInboundUplink": true,
-      "statsInboundDownlink": true,
-      "statsOutboundUplink": true,
-      "statsOutboundDownlink": true
+      "statsInboundUplink": false,
+      "statsInboundDownlink": false,
+      "statsOutboundUplink": false,
+      "statsOutboundDownlink": false
     }
   },
   "routing": {
@@ -37,34 +27,10 @@
     "rules": [
       {
         "type": "field",
-        "inboundTag": [
-          "api"
-        ],
-        "outboundTag": "api"
-      },
-      {
-        "type": "field",
         "protocol": [
           "bittorrent"
         ],
-        "marktag": "ban_bt",
         "outboundTag": "block"
-      },
-      {
-        "type": "field",
-        "ip": [
-          "geoip:cn"
-        ],
-        "marktag": "ban_geoip_cn",
-        "outboundTag": "block"
-      },
-      {
-        "type": "field",
-        "domain": [
-          "geosite:openai"
-        ],
-        "marktag": "fix_openai",
-        "outboundTag": "direct"
       },
       {
         "type": "field",
@@ -72,20 +38,16 @@
           "geoip:private"
         ],
         "outboundTag": "block"
+      },
+      {
+        "type": "field",
+        "ip": [
+          "geoip:cn"
+        ],
+        "outboundTag": "block"
       }
     ]
   },
-  "inbounds": [
-    {
-      "tag": "api",
-      "port": 62789,
-      "listen": "127.0.0.1",
-      "protocol": "dokodemo-door",
-      "settings": {
-        "address": "127.0.0.1"
-      }
-    }
-  ],
   "outbounds": [
     {
       "tag": "direct",
