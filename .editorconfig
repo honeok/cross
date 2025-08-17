@@ -12,6 +12,9 @@ insert_final_newline = true
 [*.{sh,bash}]
 indent_size = 4
 
+[*.json]
+indent_size = 2
+
 [*.{yml,yaml}]
 indent_size = 2
 
