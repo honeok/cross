@@ -4,9 +4,7 @@ name: 'Shellcheck'
 on:
   push:
     branches:
-      - master
-      - release
-      - dev
+      - '**'
     paths:
         - '**/*.sh'
   pull_request:
