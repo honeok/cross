@@ -1,9 +1,9 @@
-<p align="center">
-<img src="https://github.com/honeok/cross/actions/workflows/shellcheck.yml/badge.svg" alt="Build Status" />
-<img src="https://img.shields.io/github/license/honeok/cross.svg?style=flat" alt="License" />
-<img src="https://img.shields.io/github/last-commit/honeok/cross.svg?style=flat" alt="Commit" />
-<img src="https://img.shields.io/github/commit-activity/m/honeok/cross.svg?style=flat" alt="Commit Activity" />
-</p>
+<div align="center">
+  <img src="https://img.shields.io/github/actions/workflow/status/honeok/cross/shellcheck.yml?branch=master&label=shellcheck&logo=github&style=flat-square" alt="Shellcheck Status" />
+  <img src="https://img.shields.io/github/license/honeok/cross.svg?style=flat-square" alt="License" />
+  <img src="https://img.shields.io/github/last-commit/honeok/cross.svg?style=flat-square" alt="Commit" />
+  <img src="https://img.shields.io/github/commit-activity/m/honeok/cross.svg?style=flat-square" alt="Commit Activity" />
+</div>
 
 # cross
 
@@ -16,11 +16,7 @@ Description: A script for automated testing of I/O performance, upload & downloa
 Acknowledgment: teddysun
 
 ```shell
-bash <(curl -sL https://gitlab.com/honeok/cross/raw/master/bench.sh)
-```
-or
-```shell
-bash <(curl -sL https://github.com/honeok/cross/raw/master/bench.sh)
+bash <(curl -Ls https://github.com/honeok/cross/raw/master/bench.sh)
 ```
 
 ## mediaUnlock.sh
@@ -29,11 +25,7 @@ Description: This script is used to quickly install a streaming media detection 
 Based on Project https://github.com/HsukqiLee/MediaUnlockTest.
 
 ```shell
-bash <(curl -sL https://gitlab.com/honeok/cross/raw/master/mediaUnlock.sh)
-```
-or
-```shell
-bash <(curl -sL https://github.com/honeok/cross/raw/master/mediaUnlock.sh)
+bash <(curl -Ls https://github.com/honeok/cross/raw/master/mediaUnlock.sh)
 ```
 
 ## bestTrace.sh
@@ -41,11 +33,7 @@ bash <(curl -sL https://github.com/honeok/cross/raw/master/mediaUnlock.sh)
 Description: This script is designed for measuring network speed and performing routing trace across three networks.
 
 ```shell
-bash <(curl -sL https://gitlab.com/honeok/cross/raw/master/bestTrace.sh)
-```
-or
-```shell
-bash <(curl -sL https://github.com/honeok/cross/raw/master/bestTrace.sh)
+bash <(curl -Ls https://github.com/honeok/cross/raw/master/bestTrace.sh)
 ```
 
 ## backTrace.sh
@@ -54,9 +42,5 @@ Description: This script is used for testing the routing path across three netwo
 It is based on the optimization of the one-click installation script from https://github.com/oneclickvirt/backtrace.
 
 ```shell
-bash <(curl -sL https://gitlab.com/honeok/cross/raw/master/backTrace.sh)
-```
-or
-```shell
-bash <(curl -sL https://github.com/honeok/cross/raw/master/backTrace.sh)
+bash <(curl -Ls https://github.com/honeok/cross/raw/master/backTrace.sh)
 ```
