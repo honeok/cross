@@ -7,7 +7,7 @@
 # Thanks:
 # https://github.com/Loyalsoldier/v2ray-rules-dat
 #
-# SPDX-License-Identifier: GPL-2.0-only
+# SPDX-License-Identifier: GPL-2.0
 
 set -eE
 
@@ -15,8 +15,7 @@ set -eE
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
 
 # 各变量默认值
-RANDOM_CHAR="$(head /dev/urandom | tr -dc 'A-Za-z0-9' | head -c 5)"
-TEMP_DIR="/tmp/geodat_$RANDOM_CHAR"
+TEMP_DIR="$(mktemp -d)"
 XRAY_WORKDIR="/etc/xray"
 XRAY_BINDIR="$XRAY_WORKDIR/bin"
 
@@ -34,7 +33,6 @@ _exit() {
 trap '_exit' SIGINT SIGQUIT SIGTERM EXIT
 
 # 临时工作目录
-mkdir -p "$TEMP_DIR" >/dev/null 2>&1
 cd "$TEMP_DIR" >/dev/null 2>&1
 
 # 下载数据文件和校验文件
