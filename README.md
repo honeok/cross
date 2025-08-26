@@ -19,15 +19,6 @@ Acknowledgment: teddysun
 bash <(curl -Ls https://github.com/honeok/cross/raw/master/bench.sh)
 ```
 
-## mediaUnlock.sh
-
-Description: This script is used to quickly install a streaming media detection program based on go reconstruction.<br>
-Based on Project https://github.com/HsukqiLee/MediaUnlockTest.
-
-```shell
-bash <(curl -Ls https://github.com/honeok/cross/raw/master/mediaUnlock.sh)
-```
-
 ## bestTrace.sh
 
 Description: This script is designed for measuring network speed and performing routing trace across three networks.
