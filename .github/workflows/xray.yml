@@ -53,7 +53,7 @@ jobs:
           context: ${{ github.workspace }}/core/xray
           file: ${{ github.workspace }}/core/xray/Dockerfile
           platforms: linux/386, linux/amd64, linux/arm/v6, linux/arm/v7, linux/arm64/v8, linux/ppc64le, linux/riscv64, linux/s390x
-          build-args: XRAY_LVER=${{ env.XRAY_LVER }}
+          build-args: XRAY_VERSION=${{ env.XRAY_LVER }}
           tags: |
             ${{ env.DOCKER_USERNAME }}/xray:${{ env.XRAY_LVER }}
             ${{ env.DOCKER_USERNAME }}/xray:latest
