@@ -1,9 +1,0 @@
-services:
-  xray:
-    image: honeok/xray
-    container_name: xray
-    restart: unless-stopped
-    volumes:
-      - $PWD/config.json:/etc/xray/config.json
-      - $PWD/conf:/etc/xray/conf
-    network_mode: host
