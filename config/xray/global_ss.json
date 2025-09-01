@@ -35,13 +35,7 @@
       {
         "type": "field",
         "ip": [
-          "geoip:private"
-        ],
-        "outboundTag": "block"
-      },
-      {
-        "type": "field",
-        "ip": [
+          "geoip:private",
           "geoip:cn"
         ],
         "outboundTag": "block"
