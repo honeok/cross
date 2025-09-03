@@ -133,7 +133,7 @@ proxy-providers:
     health-check: # 节点自动检测延时
       enable: true
       interval: 300
-      url: "http://connectivitycheck.platform.hicloud.com/generate_204"
+      url: "http://connectivitycheck.gstatic.com/generate_204"
       expected-status: 204 # 当健康检查返回状态码与期望值不符时, 认为节点不可用
     override: # 覆写节点加载时的一些配置项
       skip-cert-verify: true
@@ -150,11 +150,11 @@ proxy-groups:
   #------------------------基础分组------------------------#
   - {name: 🚀 默认代理, type: select, proxies: [♻️ 自动选择, 🔯 故障转移, 🔮 负载均衡, 🇸🇬 链式代理, 🇭🇰 香港节点, 🇲🇴 澳门节点, 🇹🇼 台湾节点, 🇸🇬 狮城节点, 🇯🇵 日本节点, 🇰🇷 韩国节点, 🇲🇾 马来节点, 🇺🇲 美国节点, 🇬🇧 英国节点, 🇳🇱 荷兰节点, 🇩🇪 德国节点, 🟢 直连]}
   # url-test将按照url测试结果使用延迟最低节点
-  - {name: ♻️ 自动选择, type: url-test, include-all-providers: true, tolerance: 100, url: "http://connectivitycheck.platform.hicloud.com/generate_204", interval: 300}
+  - {name: ♻️ 自动选择, type: url-test, include-all-providers: true, tolerance: 100, url: "http://connectivitycheck.gstatic.com/generate_204", interval: 300}
   # fallback将按照url测试结果按照节点顺序选择
-  - {name: 🔯 故障转移, type: fallback, include-all-providers: true, url: "http://connectivitycheck.platform.hicloud.com/generate_204", interval: 300}
+  - {name: 🔯 故障转移, type: fallback, include-all-providers: true, url: "http://connectivitycheck.gstatic.com/generate_204", interval: 300}
   # load-balance将按照算法随机选择节点
-  - {name: 🔮 负载均衡, type: load-balance, include-all-providers: true, url: "http://connectivitycheck.platform.hicloud.com/generate_204", interval: 300, strategy: consistent-hashing}
+  - {name: 🔮 负载均衡, type: load-balance, include-all-providers: true, url: "http://connectivitycheck.gstatic.com/generate_204", interval: 300, strategy: consistent-hashing}
 
   #------------------------场景分组------------------------#
   - {name: 📹 YouTube, <<: *main}
@@ -175,17 +175,18 @@ proxy-groups:
   - {name: 🍎 Apple, <<: *main}
 
   #------------------------地区分组------------------------#
-  - {name: 🇭🇰 香港节点, type: url-test, include-all-providers: true, tolerance: 100, filter: "(?i)港|hk|hongkong|hong kong", url: "http://connectivitycheck.platform.hicloud.com/generate_204", interval: 300}
-  - {name: 🇲🇴 澳门节点, type: url-test, include-all-providers: true, tolerance: 100, filter: "(?i)澳|澳门|mo|macau|macao", url: "http://connectivitycheck.platform.hicloud.com/generate_204", interval: 300}
-  - {name: 🇹🇼 台湾节点, type: url-test, include-all-providers: true, tolerance: 100, filter: "(?i)台|tw|taiwan|taipei", url: "http://connectivitycheck.platform.hicloud.com/generate_204", interval: 300}
-  - {name: 🇸🇬 狮城节点, type: url-test, include-all-providers: true, tolerance: 100, filter: "(?i)新加坡|坡|狮城|SG|Singapore", url: "http://connectivitycheck.platform.hicloud.com/generate_204", interval: 300}
-  - {name: 🇯🇵 日本节点, type: url-test, include-all-providers: true, tolerance: 100, filter: "(?i)日本|jp|japan|tokyo|osaka", url: "http://connectivitycheck.platform.hicloud.com/generate_204", interval: 300}
-  - {name: 🇰🇷 韩国节点, type: url-test, include-all-providers: true, tolerance: 100, filter: "(?i)韩|kr|korea|seoul", url: "http://connectivitycheck.platform.hicloud.com/generate_204", interval: 300}
-  - {name: 🇲🇾 马来节点, type: url-test, include-all-providers: true, tolerance: 100, filter: "(?i)马来|马来西亚|my|mys|malay|malaysia", url: "http://connectivitycheck.platform.hicloud.com/generate_204", interval: 300}
-  - {name: 🇺🇲 美国节点, type: url-test, include-all-providers: true, tolerance: 100, filter: "(?i)美|us|united states|america|los angeles|san jose|silicon valley", url: "http://connectivitycheck.platform.hicloud.com/generate_204", interval: 300}
-  - {name: 🇬🇧 英国节点, type: url-test, include-all-providers: true, tolerance: 100, filter: "(?i)英|uk|united kingdom|london", url: "http://connectivitycheck.platform.hicloud.com/generate_204", interval: 300}
-  - {name: 🇳🇱 荷兰节点, type: url-test, include-all-providers: true, tolerance: 100, filter: "(?i)荷兰|nl|netherlands", url: "http://connectivitycheck.platform.hicloud.com/generate_204", interval: 300}
-  - {name: 🇩🇪 德国节点, type: url-test, include-all-providers: true, tolerance: 100, filter: "(?i)德|de|germany|frankfurt", url: "http://connectivitycheck.platform.hicloud.com/generate_204", interval: 300}
+  ## 测速地址: https://ybfl.net/sites/58.html
+  - {name: 🇭🇰 香港节点, type: url-test, include-all-providers: true, tolerance: 100, filter: "(?i)港|hk|hongkong|hong kong", url: "http://connectivitycheck.gstatic.com/generate_204", interval: 300}
+  - {name: 🇲🇴 澳门节点, type: url-test, include-all-providers: true, tolerance: 100, filter: "(?i)澳|澳门|mo|macau|macao", url: "http://connectivitycheck.gstatic.com/generate_204", interval: 300}
+  - {name: 🇹🇼 台湾节点, type: url-test, include-all-providers: true, tolerance: 100, filter: "(?i)台|tw|taiwan|taipei", url: "http://connectivitycheck.gstatic.com/generate_204", interval: 300}
+  - {name: 🇸🇬 狮城节点, type: url-test, include-all-providers: true, tolerance: 100, filter: "(?i)新加坡|坡|狮城|SG|Singapore", url: "http://connectivitycheck.gstatic.com/generate_204", interval: 300}
+  - {name: 🇯🇵 日本节点, type: url-test, include-all-providers: true, tolerance: 100, filter: "(?i)日本|jp|japan|tokyo|osaka", url: "http://connectivitycheck.gstatic.com/generate_204", interval: 300}
+  - {name: 🇰🇷 韩国节点, type: url-test, include-all-providers: true, tolerance: 100, filter: "(?i)韩|kr|korea|seoul", url: "http://connectivitycheck.gstatic.com/generate_204", interval: 300}
+  - {name: 🇲🇾 马来节点, type: url-test, include-all-providers: true, tolerance: 100, filter: "(?i)马来|马来西亚|my|mys|malay|malaysia", url: "http://connectivitycheck.gstatic.com/generate_204", interval: 300}
+  - {name: 🇺🇲 美国节点, type: url-test, include-all-providers: true, tolerance: 100, filter: "(?i)美|us|united states|america|los angeles|san jose|silicon valley", url: "http://connectivitycheck.gstatic.com/generate_204", interval: 300}
+  - {name: 🇬🇧 英国节点, type: url-test, include-all-providers: true, tolerance: 100, filter: "(?i)英|uk|united kingdom|london", url: "http://connectivitycheck.gstatic.com/generate_204", interval: 300}
+  - {name: 🇳🇱 荷兰节点, type: url-test, include-all-providers: true, tolerance: 100, filter: "(?i)荷兰|nl|netherlands", url: "http://connectivitycheck.gstatic.com/generate_204", interval: 300}
+  - {name: 🇩🇪 德国节点, type: url-test, include-all-providers: true, tolerance: 100, filter: "(?i)德|de|germany|frankfurt", url: "http://connectivitycheck.gstatic.com/generate_204", interval: 300}
 
   #------------------------特殊分组------------------------#
   - {name: 🎯 全球直连, type: select, proxies: [🟢 直连, 🚀 默认代理]}
@@ -242,9 +243,9 @@ rule-providers:
   proxylite: { <<: *class, url: "https://raw.githubusercontent.com/qichiyuhub/rule/main/proxy.list"}
 
   private_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/private.mrs"}
-  ai_domain: { <<: *domain, url: "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/category-ai-!cn.mrs" }
+  ai_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-ai-!cn.mrs" }
   apple_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/apple-cn.mrs"}
-  bilibili_domain: { <<: *domain, url: "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/bilibili.mrs" }
+  bilibili_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/bilibili.mrs" }
   docker_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/docker.mrs"}
   gfw_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/gfw.mrs"}
   github_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/github.mrs"}
