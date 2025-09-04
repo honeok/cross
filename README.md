@@ -18,20 +18,3 @@ Acknowledgment: teddysun
 ```shell
 bash <(curl -Ls https://github.com/honeok/cross/raw/master/bench.sh)
 ```
-
-## bestTrace.sh
-
-Description: This script is designed for measuring network speed and performing routing trace across three networks.
-
-```shell
-bash <(curl -Ls https://github.com/honeok/cross/raw/master/bestTrace.sh)
-```
-
-## backTrace.sh
-
-Description: This script is used for testing the routing path across three networks.<br>
-It is based on the optimization of the one-click installation script from https://github.com/oneclickvirt/backtrace.
-
-```shell
-bash <(curl -Ls https://github.com/honeok/cross/raw/master/backTrace.sh)
-```
