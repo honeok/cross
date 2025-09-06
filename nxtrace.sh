@@ -102,7 +102,7 @@ ntrace_down() {
 
     _info_msg "获取最新NextTrace发行版文件信息"
 
-    NTRACE_VERSION="$(curl -Ls https://api.github.com/repos/nxtrace/NTrace-V1/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')"
+    NTRACE_VERSION="$(curl -Ls ${GITHUB_PROXY}https://api.github.com/repos/nxtrace/NTrace-V1/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')"
     [ -n "$NTRACE_VERSION" ] || die "获取版本信息失败, 请检查您的网络是否正常"
 
     if ! curl -Lso nexttrace "${GITHUB_PROXY}https://github.com/nxtrace/NTrace-V1/releases/download/${NTRACE_VERSION}/nexttrace_${SYSTEM}_${ARCH}"; then
