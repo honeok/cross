@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Description: This script installs or updates the latest NextTrace version, overcoming the official script's restriction to only stable versions.
+# Description: This script installs or updates the latest nexttrace version, overcoming the official script's restriction to only stable versions.
 #
 # Copyright (c) 2025 honeok <i@honeok.com>
 # Modified from the project: https://github.com/nxtrace/NTrace-V1
@@ -13,6 +13,8 @@
 # For more details about NextTrace, visit: https://github.com/nxtrace
 #
 # SPDX-License-Identifier: GPL-3.0
+
+set -eE
 
 _red() { printf "\033[31m%b\033[0m\n" "$*"; }
 _err_msg() { printf "\033[41m\033[1mError\033[0m %b\n" "$*"; }
@@ -58,7 +60,9 @@ clrScr() {
 }
 
 check_root() {
-    [ "$EUID" -ne 0 ] || [ "$(id -ru)" -ne 0 ] && die "此脚本必须以root身份运行"
+    if [ "$EUID" -ne 0 ] || [ "$(id -ru)" -ne 0 ]; then
+        die "此脚本必须以root身份运行"
+    fi
 }
 
 check_cdn() {
