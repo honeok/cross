@@ -66,7 +66,9 @@ check_root() {
 }
 
 check_cdn() {
-    [[ -n "$GITHUB_PROXY" && "$(curl -Ls http://www.qualcomm.cn/cdn-cgi/trace | grep '^loc=' | cut -d= -f2 | grep .)" != "CN" ]] && unset GITHUB_PROXY
+    if [[ -n "$GITHUB_PROXY" && "$(curl -Ls http://www.qualcomm.cn/cdn-cgi/trace | grep '^loc=' | cut -d= -f2 | grep .)" != "CN" ]]; then
+        unset GITHUB_PROXY
+    fi
 }
 
 check_sys() {
