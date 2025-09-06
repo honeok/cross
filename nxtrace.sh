@@ -5,6 +5,9 @@
 # Copyright (c) 2025 honeok <i@honeok.com>
 # Modified from the project: https://github.com/nxtrace/NTrace-V1
 #
+# References:
+# https://github.com/bin456789/reinstall
+#
 # This script utilizes NextTrace, a powerful network diagnostic tool.
 # NextTrace is copyrighted and developed by the NextTrace project team.
 # For more details about NextTrace, visit: https://github.com/nxtrace
@@ -18,13 +21,33 @@ _info_msg() { printf "\033[43m\033[1mInfo\033[0m %b\n" "$*"; }
 
 # 各变量默认值
 TEMP_DIR="$(mktemp -d)"
-GITHUB_PROXY='https://hub.glowp.xyz/'
+GITHUB_PROXY='https://gh-proxy.com/'
 
 trap 'rm -rf "${TEMP_DIR:?}" >/dev/null 2>&1' INT TERM EXIT
 
 # 打印错误信息并退出
 die() {
     _err_msg >&2 "$(_red "$@")"; exit 1
+}
+
+curl() {
+    local RET
+    # 添加 --fail 不然404退出码也为0
+    # 32位Cygwin已停止更新, 证书可能有问题, 添加 --insecure
+    # Centos7 curl 不支持 --retry-connrefused --retry-all-errors 因此手动 retry
+    for i in {1..5}; do
+        command curl --insecure --connect-timeout 10 --fail "$@"
+        RET=$?
+        if [ "$RET" -eq 0 ]; then
+            return
+        else
+            # 403 404 错误或达到重试次数
+            if [ "$RET" -eq 22 ] || [ "$i" -eq 5 ]; then
+                return "$RET"
+            fi
+            sleep 1
+        fi
+    done
 }
 
 # 临时工作目录
@@ -39,7 +62,7 @@ check_root() {
 }
 
 check_cdn() {
-    [[ -n "$GITHUB_PROXY" && "$(curl -kLs http://www.qualcomm.cn/cdn-cgi/trace | grep '^loc=' | cut -d= -f2 | grep .)" != "CN" ]] && unset GITHUB_PROXY
+    [[ -n "$GITHUB_PROXY" && "$(curl -Ls http://www.qualcomm.cn/cdn-cgi/trace | grep '^loc=' | cut -d= -f2 | grep .)" != "CN" ]] && unset GITHUB_PROXY
 }
 
 check_sys() {
@@ -73,10 +96,10 @@ ntrace_down() {
 
     _info_msg "获取最新NextTrace发行版文件信息"
 
-    NTRACE_VERSION="$(curl --retry 2 -Ls https://api.github.com/repos/nxtrace/NTrace-V1/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')"
+    NTRACE_VERSION="$(curl -Ls https://api.github.com/repos/nxtrace/NTrace-V1/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')"
     [ -n "$NTRACE_VERSION" ] || die "获取版本信息失败, 请检查您的网络是否正常"
 
-    if ! curl --retry 2 -Lso nexttrace "${GITHUB_PROXY}https://github.com/nxtrace/NTrace-V1/releases/download/${NTRACE_VERSION}/nexttrace_${SYSTEM}_${ARCH}"; then
+    if ! curl -Lso nexttrace "${GITHUB_PROXY}https://github.com/nxtrace/NTrace-V1/releases/download/${NTRACE_VERSION}/nexttrace_${SYSTEM}_${ARCH}"; then
         die "NextTrace下载失败, 请检查您的网络是否正常"
     fi
 
