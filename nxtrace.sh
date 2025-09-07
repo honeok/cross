@@ -32,6 +32,9 @@ die() {
     _err_msg >&2 "$(_red "$@")"; exit 1
 }
 
+# 临时工作目录
+cd "$TEMP_DIR" >/dev/null 2>&1 || die "无法进入工作路径"
+
 curl() {
     local RET
     # 添加 --fail 不然404退出码也为0
@@ -51,9 +54,6 @@ curl() {
         fi
     done
 }
-
-# 临时工作目录
-cd "$TEMP_DIR" >/dev/null 2>&1 || die "无法进入工作路径"
 
 clrScr() {
     [ -t 1 ] && tput clear 2>/dev/null || echo -e "\033[2J\033[H" || clear
