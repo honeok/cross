@@ -35,10 +35,9 @@ ARG TARGETARCH
 COPY --from=builder /go/bin/3x-ui /usr/local/bin/3x-ui
 COPY --from=builder /tmp/xray/xray /usr/local/bin/bin/xray-linux-${TARGETARCH}
 COPY docker-entrypoint.sh /docker-entrypoint.sh
-COPY x-ui.sh /usr/local/bin/x-ui
 RUN set -ex \
     && apk add --update --no-cache bash ca-certificates curl tzdata \
-    && chmod +x /docker-entrypoint.sh /usr/local/bin/x-ui \
+    && chmod +x /docker-entrypoint.sh \
     && curl -Lso /usr/local/bin/bin/geoip.dat https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat \
     && curl -Lso /usr/local/bin/bin/geosite.dat https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat \
     && curl -Lso /usr/local/bin/bin/geoip_IR.dat https://github.com/chocolate4u/Iran-v2ray-rules/releases/latest/download/geoip.dat \
