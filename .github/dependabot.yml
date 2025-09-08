@@ -11,3 +11,14 @@ updates:
     open-pull-requests-limit: 10
     commit-message:
       prefix: "chore"
+
+  - package-ecosystem: "docker"
+    directory: "/core/3x-ui"
+    schedule:
+      interval: "weekly"
+      day: "saturday"
+      time: "16:00"
+    target-branch: "release"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "chore"
