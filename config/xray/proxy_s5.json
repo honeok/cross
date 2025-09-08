@@ -35,13 +35,7 @@
       {
         "type": "field",
         "ip": [
-          "geoip:private"
-        ],
-        "outboundTag": "block"
-      },
-      {
-        "type": "field",
-        "ip": [
+          "geoip:private",
           "geoip:cn"
         ],
         "outboundTag": "block"
@@ -71,7 +65,10 @@
   "outbounds": [
     {
       "tag": "direct",
-      "protocol": "freedom"
+      "protocol": "freedom",
+      "settings": {
+        "domainStrategy": "UseIPv4v6"
+      }
     },
     {
       "tag": "block",
@@ -87,8 +84,8 @@
             "port": 10086,
             "users": [
               {
-                "user": "aBcD4eFgH1iJkLmnOpQr",
-                "pass": "3zY8xWvUvR7tSxA#9cF1$"
+                "user": "admin",
+                "pass": "admin"
               }
             ]
           }

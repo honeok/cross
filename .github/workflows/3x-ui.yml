@@ -6,17 +6,21 @@ on:
     - cron: '0 16 * * *'
   workflow_dispatch:
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   build:
     name: 'Build and Publish 3x-ui'
     runs-on: ubuntu-latest
     env:
-      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_USERNAME: ${{ github.repository_owner }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 
     steps:
       - name: 'Check out repository'
-        uses: actions/checkout@v5.0.0
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -25,43 +29,40 @@ jobs:
           XRAY_LVER="$(wget -qO- --tries=50 --header="Authorization: token ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/XTLS/Xray-core/releases | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p' | sort -Vr | head -n1)"
           XUI_LTAG="$(wget -qO- --tries=50 --header="Authorization: token ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/MHSanaei/3x-ui/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')"
           XUI_LVER="${XUI_LTAG#v}"
-          XUI_CVER="$(wget -qO- --tries=50 https://hub.docker.com/v2/repositories/honeok/3x-ui/tags 2>/dev/null | jq -r ".results // [] | .[].name" | grep -v "^latest$" | sort -Vr | head -n1 | cut -d'-' -f1 || echo "")"
-          if [[ -z "$XRAY_LVER" || -z "$XUI_LTAG" || -z "$XUI_LVER" ]]; then
-            echo "Error: Required parameters cannot be empty."; exit 1
-          fi
+          XUI_CVER="$(wget -qO- --tries=50 https://hub.docker.com/v2/repositories/honeok/3x-ui/tags 2>/dev/null | jq -r ".results // [] | .[].name" | grep -v "^latest$" | sort -Vr | head -n1 | cut -d'-' -f1 || true)"
           echo "XRAY_LVER=$XRAY_LVER" >> $GITHUB_ENV
           echo "XUI_LTAG=$XUI_LTAG" >> $GITHUB_ENV
           echo "XUI_LVER=$XUI_LVER" >> $GITHUB_ENV
           echo "XUI_CVER=$XUI_CVER" >> $GITHUB_ENV
-          if [[ "$(echo -e "$XUI_LVER\n$XUI_CVER" | sort -V | head -n1)" != "$XUI_LVER" || -z "$XUI_CVER" ]]; then
+          if [[ "$(echo -e "$XUI_LVER\n$XUI_CVER" | sort -V | head -n1)" != "$XUI_LVER" || (-z "$XUI_CVER" && -n "$XRAY_LVER" && -n "$XUI_LVER") ]]; then
             echo "IS_RENEW=1" >> "$GITHUB_ENV"
           fi
 
       - name: 'Set up Docker QEMU'
         if: env.IS_RENEW == 1 || github.event_name == 'workflow_dispatch'
-        uses: docker/setup-qemu-action@v3.6.0
+        uses: docker/setup-qemu-action@v3
 
       - name: 'Set up Docker Buildx'
         if: env.IS_RENEW == 1 || github.event_name == 'workflow_dispatch'
-        uses: docker/setup-buildx-action@v3.11.1
+        uses: docker/setup-buildx-action@v3
 
       - name: 'Login to DockerHub'
         if: env.IS_RENEW == 1 || github.event_name == 'workflow_dispatch'
-        uses: docker/login-action@v3.5.0
+        uses: docker/login-action@v3
         with:
           username: ${{ env.DOCKER_USERNAME }}
           password: ${{ env.DOCKER_PASSWORD }}
 
       - name: 'Build and push 3x-ui image'
         if: env.IS_RENEW == 1 || github.event_name == 'workflow_dispatch'
-        uses: docker/build-push-action@v6.18.0
+        uses: docker/build-push-action@v6
         with:
           context: ${{ github.workspace }}/core/3x-ui
           file: ${{ github.workspace }}/core/3x-ui/Dockerfile
-          platforms: linux/386, linux/amd64, linux/arm/v6, linux/arm/v7, linux/arm64/v8, linux/ppc64le, linux/riscv64, linux/s390x
+          platforms: linux/amd64, linux/arm64/v8
           build-args: |
-            XRAY_LVER=${{ env.XRAY_LVER }}
-            XUI_LTAG=${{ env.XUI_LTAG }}
+            XRAY_VERSION=${{ env.XRAY_LVER }}
+            XUI_TAG=${{ env.XUI_LTAG }}
           tags: |
             ${{ env.DOCKER_USERNAME }}/3x-ui:${{ env.XUI_LVER }}
             ${{ env.DOCKER_USERNAME }}/3x-ui:latest

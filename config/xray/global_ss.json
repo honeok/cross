@@ -35,27 +35,55 @@
       {
         "type": "field",
         "ip": [
-          "geoip:private"
+          "geoip:private",
+          "geoip:cn"
         ],
         "outboundTag": "block"
       },
       {
         "type": "field",
         "ip": [
-          "geoip:cn"
+          "0.0.0.0/0",
+          "::/0"
         ],
-        "outboundTag": "block"
+        "outboundTag": "proxy"
       }
     ]
   },
   "outbounds": [
     {
       "tag": "direct",
-      "protocol": "freedom"
+      "protocol": "freedom",
+      "settings": {
+        "domainStrategy": "UseIPv4v6"
+      }
     },
     {
       "tag": "block",
       "protocol": "blackhole"
+    },
+    {
+      "tag": "proxy",
+      "protocol": "shadowsocks",
+      "settings": {
+        "servers": [
+          {
+            "address": "8.8.8.8",
+            "port": 8388,
+            "password": "admin",
+            "method": "aes-128-gcm"
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "raw",
+        "security": "none",
+        "tcpSettings": {
+          "header": {
+            "type": "none"
+          }
+        }
+      }
     }
   ]
 }

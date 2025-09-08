@@ -1,4 +1,4 @@
-# Xray-core
+# Xray
 
 [Project X][1] originates from XTLS protocol, providing a set of network tools such as [Xray-core][2] and [REALITY][3].
 
@@ -15,13 +15,13 @@ This script is used to fetches and updates the latest geo data file automaticall
 Manual update.
 
 ```shell
-bash <(curl -Ls https://github.com/honeok/cross/raw/master/config/xray-core/geodat.sh)
+bash <(curl -Ls https://github.com/honeok/cross/raw/master/config/xray/geodat.sh)
 ```
 
 Automatic update.
 
 ```shell
-(crontab -l 2>/dev/null; echo "0 7 * * * /bin/bash -c 'bash <(curl -Ls https://github.com/honeok/cross/raw/master/config/xray-core/geodat.sh)'") | crontab -
+(crontab -l 2>/dev/null; echo "0 7 * * * /bin/bash -c 'bash <(curl -Ls https://github.com/honeok/cross/raw/master/config/xray/geodat.sh)'") | crontab -
 ```
 
 [1]: https://github.com/XTLS
