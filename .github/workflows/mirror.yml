@@ -19,7 +19,7 @@ jobs:
           fetch-depth: 0
 
       - name: 'Mirror to gitlab'
-        uses: fscarmen/repository-mirroring-action@v1
+        uses: fscarmen/repository-mirroring-action@v1.0.0
         with:
           target_repo_url:
             git@gitlab.com:${{ github.repository }}.git
@@ -37,7 +37,7 @@ jobs:
           fetch-depth: 0
 
       - name: 'Mirror to framagit'
-        uses: fscarmen/repository-mirroring-action@v1
+        uses: fscarmen/repository-mirroring-action@v1.0.0
         with:
           target_repo_url:
             git@framagit.org:${{ github.repository }}.git
