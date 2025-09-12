@@ -14,12 +14,12 @@ jobs:
 
     steps:
       - name: 'checkout repository'
-        uses: actions/checkout@v5.0.0
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: 'Mirror to gitlab'
-        uses: fscarmen/repository-mirroring-action@v1.0.0
+        uses: fscarmen/repository-mirroring-action@v1
         with:
           target_repo_url:
             git@gitlab.com:${{ github.repository }}.git
@@ -32,12 +32,12 @@ jobs:
 
     steps:
       - name: 'checkout repository'
-        uses: actions/checkout@v5.0.0
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: 'Mirror to framagit'
-        uses: fscarmen/repository-mirroring-action@v1.0.0
+        uses: fscarmen/repository-mirroring-action@v1
         with:
           target_repo_url:
             git@framagit.org:${{ github.repository }}.git
