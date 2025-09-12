@@ -58,9 +58,9 @@ if [ -d "$XRAY_CONFDIR" ] && [ -z "$(ls -A "$XRAY_CONFDIR" 2>/dev/null)" ]; then
     random_port
     GENERATE_UUID="$(xray uuid 2>/dev/null || cat /proc/sys/kernel/random/uuid)"
     GENERATE_KEYS="$(xray x25519 2>/dev/null)"
-    PRIVATE_KEY="$(printf "%s" "$GENERATE_KEYS" | sed -n 's/^Private key: *\(.*\)$/\1/p')"
-    PUBLIC_KEY="$(printf "%s" "$GENERATE_KEYS" | sed -n 's/^Public key: *\(.*\)$/\1/p')"
-    TLS_SERVER="$(printf "%s" "$TLS_SERVERS" | tr " " "\n" | shuf -n 1)"
+    PRIVATE_KEY="$(printf "%s" "$GENERATE_KEYS" | sed -n '1{s/.*: *//;s/^ *//;s/ *$//;p}')"
+    PUBLIC_KEY="$(printf "%s" "$GENERATE_KEYS" | sed -n '2{s/.*: *//;s/^ *//;s/ *$//;p}')"
+    TLS_SERVER="$(printf "%s" "$TLS_SERVERS" | tr " " "\n" | shuf -n1)"
     cat > "$XRAY_CONFDIR/VLESS-REALITY-$REALITY_PORT.json" <<EOF
 {
   "inbounds": [
