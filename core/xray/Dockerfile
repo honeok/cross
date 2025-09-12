@@ -27,7 +27,7 @@ COPY config.json /opt/config.json
 COPY build.sh .
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN set -ex \
-    && apk add --update --no-cache ca-certificates curl tzdata \
+    && apk add --update --no-cache bash ca-certificates curl openssl tzdata \
     && chmod +x /docker-entrypoint.sh build.sh \
     && ./build.sh before && rm -f build.sh \
     && curl -Lso /etc/xray/bin/geoip.dat https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat \
