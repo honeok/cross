@@ -27,6 +27,10 @@ GITHUB_PROXY='https://gh-proxy.com/'
 
 trap 'rm -rf "${TEMP_DIR:?}" >/dev/null 2>&1' INT TERM EXIT
 
+clrScr() {
+    [ -t 1 ] && tput clear 2>/dev/null || echo -e "\033[2J\033[H" || clear
+}
+
 # 打印错误信息并退出
 die() {
     _err_msg >&2 "$(_red "$@")"; exit 1
@@ -38,10 +42,10 @@ cd "$TEMP_DIR" >/dev/null 2>&1 || die "无法进入工作路径"
 curl() {
     local RET
     # 添加 --fail 不然404退出码也为0
-    # 32位Cygwin已停止更新, 证书可能有问题, 添加 --insecure
-    # Centos7 curl 不支持 --retry-connrefused --retry-all-errors 因此手动 retry
-    for i in {1..5}; do
-        command curl --insecure --connect-timeout 10 --fail "$@"
+    # 32位cygwin已停止更新, 证书可能有问题, 添加 --insecure
+    # centos7 curl 不支持 --retry-connrefused --retry-all-errors 因此手动 retry
+    for ((i=1; i<=5; i++)); do
+        command curl --connect-timeout 10 --fail --insecure "$@"
         RET=$?
         if [ "$RET" -eq 0 ]; then
             return
@@ -55,41 +59,37 @@ curl() {
     done
 }
 
-clrScr() {
-    [ -t 1 ] && tput clear 2>/dev/null || echo -e "\033[2J\033[H" || clear
-}
-
-check_root() {
+checkRoot() {
     if [ "$EUID" -ne 0 ] || [ "$(id -ru)" -ne 0 ]; then
         die "此脚本必须以root身份运行"
     fi
 }
 
-check_cdn() {
+checkCdn() {
     if [[ -n "$GITHUB_PROXY" && "$(curl -Ls http://www.qualcomm.cn/cdn-cgi/trace | grep '^loc=' | cut -d= -f2 | grep .)" != "CN" ]]; then
         unset GITHUB_PROXY
     fi
 }
 
-check_sys() {
-    case "$(uname -s | awk '{print tolower($0)}')" in
-        linux) SYSTEM="linux" ;;
+checkSys() {
+    case "$(uname -s 2>/dev/null | sed 's/.*/\L&/')" in
+        linux) OS_NAME="linux" ;;
         *) die "系统不被支持" ;;
     esac
 }
 
-check_arch() {
-    case "$(uname -m)" in
-        i386|i686) ARCH="386" ;;
-        x86_64) ARCH="amd64" ;;
-        aarch64) ARCH="arm64" ;;
-        armv7l*) ARCH="armv7" ;;
-        mips) ARCH="mips" ;;
+checkArch() {
+    case "$(uname -m 2>/dev/null)" in
+        i386|i686) OS_ARCH="386" ;;
+        x86_64) OS_ARCH="amd64" ;;
+        aarch64) OS_ARCH="arm64" ;;
+        armv7l*) OS_ARCH="armv7" ;;
+        mips) OS_ARCH="mips" ;;
         *) die "架构不被支持" ;;
     esac
 }
 
-work_dir() {
+workDir() {
     if [ -w "/usr/local/bin" ]; then
         BIN_WORKDIR="/usr/local/bin/nexttrace"
     else
@@ -97,15 +97,15 @@ work_dir() {
     fi
 }
 
-ntrace_down() {
-    local NTRACE_VERSION
+ntraceDown() {
+    local NTRACE_VER
 
     _info_msg "获取最新NextTrace发行版文件信息"
 
-    NTRACE_VERSION="$(curl -Ls ${GITHUB_PROXY}https://api.github.com/repos/nxtrace/NTrace-V1/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')"
-    [ -n "$NTRACE_VERSION" ] || die "获取版本信息失败, 请检查您的网络是否正常"
+    NTRACE_VER="$(curl -Ls ${GITHUB_PROXY}https://api.github.com/repos/nxtrace/NTrace-V1/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')"
+    [ -n "$NTRACE_VER" ] || die "获取版本信息失败, 请检查您的网络是否正常"
 
-    if ! curl -Lso nexttrace "${GITHUB_PROXY}https://github.com/nxtrace/NTrace-V1/releases/download/${NTRACE_VERSION}/nexttrace_${SYSTEM}_${ARCH}"; then
+    if ! curl -Lso nexttrace "${GITHUB_PROXY}https://github.com/nxtrace/NTrace-V1/releases/download/$NTRACE_VER/nexttrace_${OS_NAME}_${OS_ARCH}"; then
         die "NextTrace下载失败, 请检查您的网络是否正常"
     fi
 
@@ -115,7 +115,7 @@ ntrace_down() {
     _suc_msg "NextTrace现在已经在您的系统中可用"
 }
 
-ntrace_info() {
+ntraceInfo() {
     if [ -e "$BIN_WORKDIR" ]; then
         "$BIN_WORKDIR" --version
         _suc_msg "一切准备就绪! 使用命令 nexttrace 1.1.1.1 开始您的第一次路由测试吧, 更多进阶命令玩法可以用 nexttrace -h 查看"
@@ -124,10 +124,10 @@ ntrace_info() {
 }
 
 clrScr
-check_root
-check_cdn
-check_sys
-check_arch
-work_dir
-ntrace_down
-ntrace_info
+checkRoot
+checkCdn
+checkSys
+checkArch
+workDir
+ntraceDown
+ntraceInfo
