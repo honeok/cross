@@ -105,7 +105,7 @@ bumpVer() {
 
     REMOTE_VER="$(curl -Ls https://api.github.com/repos/XTLS/Xray-core/releases | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p' | sort -Vr | head -n1)"
     LOCAL_VER="$("$XRAY_CORE" version | head -n1 | sed -n 's/^Xray \([0-9.]\+\).*/\1/p')"
-    OS_NAME="$(uname -s | sed 's/.*/\L&/' 2>/dev/null)"
+    OS_NAME="$(uname -s 2>/dev/null | sed 's/.*/\L&/')"
 
     if [[ "$(printf '%s\n%s\n' "$REMOTE_VER" "$LOCAL_VER" | sort -V | head -n1)" == "$REMOTE_VER" ]]; then
         return
