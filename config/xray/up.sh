@@ -27,12 +27,16 @@ XRAY_CORE="$XRAY_BINDIR/xray"
 # 终止信号捕获
 trap 'rm -rf "${TEMP_DIR:?}" >/dev/null 2>&1' SIGINT SIGTERM EXIT
 
-# 临时工作目录
-cd "$TEMP_DIR" >/dev/null 2>&1
+clrscr() {
+    [ -t 1 ] && tput clear 2>/dev/null || echo -e "\033[2J\033[H" || clear
+}
 
 die() {
     echo >&2 "Error: $*"; exit 1 
 }
+
+# 临时工作目录
+cd "$TEMP_DIR" >/dev/null 2>&1 || die "Unable to enter the work path."
 
 _exists() {
     local _CMD="$1"
@@ -41,23 +45,6 @@ _exists() {
     elif which "$_CMD" >/dev/null 2>&1; then return;
     else return 1;
     fi
-}
-
-pkg_install() {
-    for pkg in "$@"; do
-        if _exists dnf; then
-            dnf install -y "$pkg"
-        elif _exists yum; then
-            yum install -y "$pkg"
-        elif _exists apt-get; then
-            apt-get update
-            apt-get install -y -q "$pkg"
-        elif _exists pacman; then
-            pacman -S --noconfirm --needed "$pkg"
-        else
-            die "The package manager is not supported."
-        fi
-    done
 }
 
 curl() {
@@ -80,14 +67,33 @@ curl() {
     done
 }
 
-checkRoot() {
+pkg_install() {
+    for pkg in "$@"; do
+        if _exists dnf; then
+            dnf install -y "$pkg"
+        elif _exists yum; then
+            yum install -y "$pkg"
+        elif _exists apt-get; then
+            apt-get update
+            apt-get install -y -q "$pkg"
+        elif _exists apk; then
+            apk add --no-cache "$pkg"
+        elif _exists pacman; then
+            pacman -S --noconfirm --needed "$pkg"
+        else
+            die "The package manager is not supported."
+        fi
+    done
+}
+
+check_root() {
     if [ "$EUID" -ne 0 ] || [ "$(id -ru)" -ne 0 ]; then
         die "This script must be run as root."
     fi
 }
 
 # 安装必要的软件包
-checkCmd() {
+check_cmd() {
     local -a INSTALL_PKG
     INSTALL_PKG=("curl" "unzip")
 
@@ -99,7 +105,7 @@ checkCmd() {
 }
 
 # 更新内核
-bumpVer() {
+bump_ver() {
     local -a CORE_FILES
     local REMOTE_VER LOCAL_VER OS_NAME OS_ARCH
 
@@ -138,7 +144,7 @@ bumpVer() {
 }
 
 # 更新geofile
-geoFile() {
+geo_file() {
     local -a GEO_FILES
     # 定义下载文件列表
     GEO_FILES=("geoip" "geosite")
@@ -153,10 +159,12 @@ geoFile() {
     [ -d "$XRAY_BINDIR" ] && mv -f ./*.dat "$XRAY_BINDIR"/ >/dev/null 2>&1
 }
 
-restXray() {
+res_xray() {
     for ((k=1; k<=3; k++)); do
-        if systemctl restart xray.service --quiet; then
-            return
+        if [ -f /etc/alpine-release ]; then
+            rc-service xray restart >/dev/null 2>&1 && return
+        else
+            systemctl restart xray.service --quiet && return
         fi
         sleep 1
     done
@@ -164,11 +172,12 @@ restXray() {
 }
 
 main() {
-    checkRoot
-    checkCmd
-    bumpVer
-    geoFile
-    restXray
+    clrscr
+    check_root
+    check_cmd
+    bump_ver
+    geo_file
+    res_xray
 }
 
 main
