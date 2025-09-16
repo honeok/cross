@@ -59,26 +59,26 @@ curl() {
     done
 }
 
-checkRoot() {
+check_root() {
     if [ "$EUID" -ne 0 ] || [ "$(id -ru)" -ne 0 ]; then
         die "此脚本必须以root身份运行"
     fi
 }
 
-checkCdn() {
+check_cdn() {
     if [[ -n "$GITHUB_PROXY" && "$(curl -Ls http://www.qualcomm.cn/cdn-cgi/trace | grep '^loc=' | cut -d= -f2 | grep .)" != "CN" ]]; then
         unset GITHUB_PROXY
     fi
 }
 
-checkSys() {
+check_sys() {
     case "$(uname -s 2>/dev/null | sed 's/.*/\L&/')" in
         linux) OS_NAME="linux" ;;
         *) die "系统不被支持" ;;
     esac
 }
 
-checkArch() {
+check_arch() {
     case "$(uname -m 2>/dev/null)" in
         i386|i686) OS_ARCH="386" ;;
         x86_64) OS_ARCH="amd64" ;;
@@ -89,7 +89,7 @@ checkArch() {
     esac
 }
 
-workDir() {
+work_dir() {
     if [ -w "/usr/local/bin" ]; then
         BIN_WORKDIR="/usr/local/bin/nexttrace"
     else
@@ -97,7 +97,7 @@ workDir() {
     fi
 }
 
-ntraceDown() {
+ntrace_down() {
     local NTRACE_VER
 
     _info_msg "获取最新NextTrace发行版文件信息"
@@ -115,7 +115,7 @@ ntraceDown() {
     _suc_msg "NextTrace现在已经在您的系统中可用"
 }
 
-ntraceInfo() {
+ntrace_info() {
     if [ -e "$BIN_WORKDIR" ]; then
         "$BIN_WORKDIR" --version
         _suc_msg "一切准备就绪! 使用命令 nexttrace 1.1.1.1 开始您的第一次路由测试吧, 更多进阶命令玩法可以用 nexttrace -h 查看"
@@ -124,10 +124,10 @@ ntraceInfo() {
 }
 
 clrScr
-checkRoot
-checkCdn
-checkSys
-checkArch
-workDir
-ntraceDown
-ntraceInfo
+check_root
+check_cdn
+check_sys
+check_arch
+work_dir
+ntrace_down
+ntrace_info
