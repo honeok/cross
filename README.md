@@ -8,10 +8,10 @@
 </div>
 
 <div align="center">
-  <img src="https://img.shields.io/github/actions/workflow/status/honeok/cross/shellcheck.yml?style=flat-square&branch=master&label=shellcheck&logo=github&color=brightgreen" alt="Shellcheck Status" />
-  <img src="https://img.shields.io/github/license/honeok/cross.svg?style=flat-square&logo=github&color=orange" alt="License" />
-  <img src="https://img.shields.io/github/last-commit/honeok/cross.svg?style=flat-square&logo=github&color=blue" alt="Commit" />
-  <img src="https://img.shields.io/github/commit-activity/m/honeok/cross.svg?style=flat-square&logo=github&color=blue" alt="Commit Activity" />
+  <img src="https://img.shields.io/github/actions/workflow/status/honeok/cross/shellcheck.yml?style=flat-square&branch=master&label=shellcheck&logo=github" alt="Shellcheck Status" />
+  <img src="https://img.shields.io/github/license/honeok/cross.svg?style=flat-square&logo=github" alt="License" />
+  <img src="https://img.shields.io/github/last-commit/honeok/cross.svg?style=flat-square&logo=github" alt="Commit" />
+  <img src="https://img.shields.io/github/commit-activity/m/honeok/cross.svg?style=flat-square&logo=github" alt="Commit Activity" />
 </div>
 
 ## bench.sh
