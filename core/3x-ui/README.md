@@ -1,5 +1,10 @@
 # 3x-ui
 
+[![GitHub Release](https://img.shields.io/github/v/tag/MHSanaei/3x-ui?style=flat-square&label=release&logo=github&color=blue)](https://github.com/MHSanaei/3x-ui/releases)
+[![Docker Pulls](https://img.shields.io/docker/pulls/honeok/3x-ui.svg?style=flat-square&logo=docker&color=blue)](https://hub.docker.com/r/honeok/3x-ui)
+[![Docker Image Size](https://img.shields.io/docker/image-size/honeok/3x-ui.svg?style=flat-square&logo=docker&color=blue)](https://hub.docker.com/r/honeok/3x-ui)
+[![Docker Image Version](https://img.shields.io/docker/v/honeok/3x-ui.svg?style=flat-square&logo=docker&color=blue)](https://hub.docker.com/r/honeok/3x-ui)
+
 [3x-ui][1] advanced, open-source web-based control panel designed for managing Xray-core server. It offers a user-friendly interface for configuring and monitoring various VPN and proxy protocols.
 
 As an enhanced fork of the original X-UI project, 3X-UI provides improved stability, broader protocol support, and additional features.
@@ -20,13 +25,13 @@ If you need to install docker by yourself, follow the [official][2] installation
 
 ## Pull the image
 
-```shell
-docker pull honeok/3x-ui
-```
-
 This pulls the latest release of 3x-ui.
 
 It can be found at [Docker Hub][3].
+
+```shell
+docker pull honeok/3x-ui
+```
 
 ## Start a container
 
@@ -44,10 +49,10 @@ services:
       - $PWD/cert/:/root/cert
     environment:
       TZ: Asia/Shanghai
-    #   USER_NAME: admin
-    #   USER_PASSWORD: admin
-    #   BASE_PATH: admin
-    #   PANEL_PORT: 54321
+    #  USER_NAME: admin
+    #  USER_PASSWORD: admin
+    #  BASE_PATH: admin
+    #  PANEL_PORT: 54321
     network_mode: host
 EOF
 ```
@@ -64,7 +69,7 @@ Get your login information.
 docker logs -f 3x-ui
 ```
 
-**Warning**: The port number must be same as configuration and opened in firewall.
+**Note**: The port you configured must be opened in the firewall.
 
 [1]: https://github.com/MHSanaei/3x-ui
 [2]: https://docs.docker.com/install
