@@ -20,6 +20,7 @@ ARG TARGETARCH
 ENV CGO_ENABLED=1
 ENV CGO_CFLAGS="-D_LARGEFILE64_SOURCE"
 ENV GO111MODULE=on
+
 COPY build.sh .
 
 RUN set -ex \
@@ -56,8 +57,8 @@ RUN set -ex \
     && curl -Ls https://github.com/runetfreedom/russia-v2ray-rules-dat/releases/latest/download/geosite.dat -o /usr/local/bin/bin/geosite_RU.dat \
     && rm -rf /var/cache/apk/*
 
-VOLUME [ "/etc/x-ui" ]
+VOLUME ["/etc/x-ui"]
 
 ENV TZ=Asia/Shanghai
 
-ENTRYPOINT [ "/docker-entrypoint.sh" ]
+ENTRYPOINT ["/docker-entrypoint.sh"]
