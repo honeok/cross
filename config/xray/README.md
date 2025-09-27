@@ -1,5 +1,8 @@
 # Xray
 
+[![GitHub Release](https://img.shields.io/github/v/tag/XTLS/Xray-core?style=flat-square&label=release&logo=github&color=blue)](https://github.com/XTLS/Xray-core/releases)
+[![GitHub Releases Stats](https://img.shields.io/github/downloads/XTLS/Xray-core/total.svg?style=flat-square&label=downloads&logo=github&color=blue)](https://somsubhra.github.io/github-release-stats/?username=XTLS&repository=Xray-core)
+
 [Project X][1] originates from XTLS protocol, providing a set of network tools such as [Xray-core][2] and [REALITY][3].
 
 <img src="https://raw2.seadn.io/ethereum/0x5ee362866001613093361eb8569d59c4141b76d1/7fa9ce900fb39b44226348db330e32/8b7fa9ce900fb39b44226348db330e32.svg" alt="Project X NFT" width="150"/>

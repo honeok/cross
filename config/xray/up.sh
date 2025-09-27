@@ -3,20 +3,19 @@
 # Description: This script is used to automatically update xray-core and the latest geoip/geosite data.
 #
 # Copyright (c) 2025 honeok <i@honeok.com>
+# SPDX-License-Identifier: GPL-2.0
 #
 # Thanks:
 # https://github.com/XTLS/Xray-core
 # https://github.com/bin456789/reinstall
 # https://github.com/Loyalsoldier/v2ray-rules-dat
-#
-# SPDX-License-Identifier: GPL-2.0
 
 set -eE
 
-# 环境变量用于在debian或ubuntu操作系统中设置非交互式 (noninteractive) 安装模式
-export DEBIAN_FRONTEND=noninteractive
 # 设置PATH环境变量
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
+# 环境变量用于在debian或ubuntu操作系统中设置非交互式 (noninteractive) 安装模式
+export DEBIAN_FRONTEND=noninteractive
 
 # 各变量默认值
 TEMP_DIR="$(mktemp -d)"
@@ -27,12 +26,12 @@ XRAY_CORE="$XRAY_BINDIR/xray"
 # 终止信号捕获
 trap 'rm -rf "${TEMP_DIR:?}" >/dev/null 2>&1' SIGINT SIGTERM EXIT
 
-clrscr() {
-    [ -t 1 ] && tput clear 2>/dev/null || echo -e "\033[2J\033[H" || clear
+clear() {
+    [ -t 1 ] && tput clear 2>/dev/null || printf "\033[2J\033[H" || command clear
 }
 
 die() {
-    echo >&2 "Error: $*"; exit 1 
+    echo >&2 "Error: $*"; exit 1
 }
 
 # 临时工作目录
@@ -54,7 +53,7 @@ curl() {
     # centos7 curl 不支持 --retry-connrefused --retry-all-errors 因此手动 retry
     for ((i=1; i<=5; i++)); do
         command curl --connect-timeout 10 --fail --insecure "$@"
-        RET=$?
+        RET="$?"
         if [ "$RET" -eq 0 ]; then
             return
         else
@@ -105,15 +104,15 @@ check_cmd() {
 }
 
 # 更新内核
-bump_ver() {
+bump_version() {
+    local XRAY_LVER XRAY_CVER OS_NAME OS_ARCH
     local -a CORE_FILES
-    local REMOTE_VER LOCAL_VER OS_NAME OS_ARCH
 
-    REMOTE_VER="$(curl -Ls https://api.github.com/repos/XTLS/Xray-core/releases | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p' | sort -Vr | head -n1)"
-    LOCAL_VER="$("$XRAY_CORE" version | head -n1 | sed -n 's/^Xray \([0-9.]\+\).*/\1/p')"
+    XRAY_LVER="$(curl -Ls https://api.github.com/repos/XTLS/Xray-core/releases | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p' | sort -Vr | head -n1)"
+    XRAY_CVER="$("$XRAY_CORE" version 2>/dev/null | head -n1 | sed -n 's/^Xray \([0-9.]\+\).*/\1/p')"
     OS_NAME="$(uname -s 2>/dev/null | sed 's/.*/\L&/')"
 
-    if [[ "$(printf '%s\n%s\n' "$REMOTE_VER" "$LOCAL_VER" | sort -V | head -n1)" == "$REMOTE_VER" ]]; then
+    if [[ "$(printf '%s\n%s\n' "$XRAY_LVER" "$XRAY_CVER" | sort -V | head -n1)" == "$XRAY_LVER" ]]; then
         return
     fi
 
@@ -128,7 +127,7 @@ bump_ver() {
 
     # 拼接下载链接
     for CORE_FILE in "${CORE_FILES[@]}"; do
-        if ! curl -LsO "https://github.com/XTLS/Xray-core/releases/download/v$REMOTE_VER/$CORE_FILE"; then
+        if ! curl -LsO "https://github.com/XTLS/Xray-core/releases/download/v$XRAY_LVER/$CORE_FILE"; then
             die "download failed, please check the network."
         fi
     done
@@ -139,8 +138,12 @@ bump_ver() {
     fi
 
     unzip -q "Xray-$OS_NAME-$OS_ARCH.zip"
-    [ ! -x ./xray ] && chmod +x xray
-    [ -x "$XRAY_CORE" ] && mv -f ./xray "$XRAY_CORE" >/dev/null 2>&1
+    if [ ! -x ./xray ]; then
+        chmod +x ./xray >/dev/null 2>&1
+    fi
+    if [ -x "$XRAY_CORE" ]; then
+        mv -f ./xray "$XRAY_CORE" >/dev/null 2>&1
+    fi
 }
 
 # 更新geofile
@@ -156,28 +159,34 @@ geo_file() {
         sha256sum -c "$GEO_FILE.dat.sha256sum" >/dev/null 2>&1
     done
 
-    [ -d "$XRAY_BINDIR" ] && mv -f ./*.dat "$XRAY_BINDIR"/ >/dev/null 2>&1
+    if [ -d "$XRAY_BINDIR" ]; then
+        mv -f ./*.dat "$XRAY_BINDIR"/ >/dev/null 2>&1
+    fi
 }
 
-res_xray() {
-    for ((k=1; k<=3; k++)); do
-        if [ -f /etc/alpine-release ]; then
-            rc-service xray restart >/dev/null 2>&1 && return
-        else
-            systemctl restart xray.service --quiet && return
+restart_xray() {
+    local RESTART_CMD
+
+    if [ -f /etc/alpine-release ]; then
+        RESTART_CMD="rc-service xray restart"
+    else
+        RESTART_CMD="systemctl restart xray.service --quiet"
+    fi
+
+    for ((i=1; i<=3; i++)); do
+        if eval "$RESTART_CMD" >/dev/null 2>&1; then
+            return
         fi
-        sleep 1
+        if [ "$i" -lt 3 ]; then
+            sleep 1
+        fi
     done
-    return 1
+    die "Failed to restart xray service."
 }
 
-main() {
-    clrscr
-    check_root
-    check_cmd
-    bump_ver
-    geo_file
-    res_xray
-}
-
-main
+clear
+check_root
+check_cmd
+bump_version
+geo_file
+restart_xray

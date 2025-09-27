@@ -1,22 +1,28 @@
 # Description: This dockerfile is used to build the 3x-ui image in container.
 #
 # Copyright (c) 2025 honeok <i@honeok.com>
+# SPDX-License-Identifier: GPL-2.0
 #
 # References:
 # https://docs.docker.com/build/building/multi-platform
-#
-# SPDX-License-Identifier: GPL-2.0
 
 FROM golang:1.25-alpine AS builder
+
 LABEL maintainer="honeok <i@honeok.com>"
+
 WORKDIR /go/src/github.com/MHSanaei/3x-ui
+
 ARG XRAY_VERSION
 ARG XUI_TAG
-ARG TARGETOS TARGETARCH
+ARG TARGETOS
+ARG TARGETARCH
+
 ENV CGO_ENABLED=1
 ENV CGO_CFLAGS="-D_LARGEFILE64_SOURCE"
 ENV GO111MODULE=on
+
 COPY build.sh .
+
 RUN set -ex \
     && apk add --update --no-cache build-base curl gcc git \
     && chmod +x build.sh && ./build.sh "$XRAY_VERSION" \
@@ -29,22 +35,30 @@ RUN set -ex \
     && rm -rf /var/cache/apk/*
 
 FROM alpine:latest AS dist
+
 LABEL maintainer="honeok <i@honeok.com>"
+
 WORKDIR /usr/local/bin
+
 ARG TARGETARCH
+
 COPY --from=builder /go/bin/3x-ui /usr/local/bin/3x-ui
 COPY --from=builder /tmp/xray/xray /usr/local/bin/bin/xray-linux-${TARGETARCH}
 COPY docker-entrypoint.sh /docker-entrypoint.sh
+
 RUN set -ex \
     && apk add --update --no-cache bash ca-certificates curl tzdata \
     && chmod +x /docker-entrypoint.sh \
-    && curl -Lso /usr/local/bin/bin/geoip.dat https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat \
-    && curl -Lso /usr/local/bin/bin/geosite.dat https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat \
-    && curl -Lso /usr/local/bin/bin/geoip_IR.dat https://github.com/chocolate4u/Iran-v2ray-rules/releases/latest/download/geoip.dat \
-    && curl -Lso /usr/local/bin/bin/geosite_IR.dat https://github.com/chocolate4u/Iran-v2ray-rules/releases/latest/download/geosite.dat \
-    && curl -Lso /usr/local/bin/bin/geoip_RU.dat https://github.com/runetfreedom/russia-v2ray-rules-dat/releases/latest/download/geoip.dat \
-    && curl -Lso /usr/local/bin/bin/geosite_RU.dat https://github.com/runetfreedom/russia-v2ray-rules-dat/releases/latest/download/geosite.dat \
+    && curl -Ls https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat -o /usr/local/bin/bin/geoip.dat \
+    && curl -Ls https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat -o /usr/local/bin/bin/geosite.dat \
+    && curl -Ls https://github.com/chocolate4u/Iran-v2ray-rules/releases/latest/download/geoip.dat -o /usr/local/bin/bin/geoip_IR.dat \
+    && curl -Ls https://github.com/chocolate4u/Iran-v2ray-rules/releases/latest/download/geosite.dat -o /usr/local/bin/bin/geosite_IR.dat \
+    && curl -Ls https://github.com/runetfreedom/russia-v2ray-rules-dat/releases/latest/download/geoip.dat -o /usr/local/bin/bin/geoip_RU.dat \
+    && curl -Ls https://github.com/runetfreedom/russia-v2ray-rules-dat/releases/latest/download/geosite.dat -o /usr/local/bin/bin/geosite_RU.dat \
     && rm -rf /var/cache/apk/*
-VOLUME [ "/etc/x-ui" ]
+
+VOLUME ["/etc/x-ui"]
+
 ENV TZ=Asia/Shanghai
-ENTRYPOINT [ "/docker-entrypoint.sh" ]
+
+ENTRYPOINT ["/docker-entrypoint.sh"]

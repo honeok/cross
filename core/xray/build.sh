@@ -3,7 +3,6 @@
 # Description: This script builds Xray binaries for multiple architectures and prepares the Xray container runtime environment.
 #
 # Copyright (c) 2025 honeok <i@honeok.com>
-#
 # SPDX-License-Identifier: GPL-2.0
 
 set -eux
@@ -41,7 +40,7 @@ build_xray() {
         linux/s390x) OS_ARCH="s390x" ;;
         *) echo >&2 "Error: unsupported architecture: $TARGETARCH"; exit 1 ;;
     esac
-    cd /tmp || exit
+    cd /tmp || exit 1
     # Extract and install xray-core
     curl -LsO "https://github.com/XTLS/Xray-core/releases/download/v${XRAY_VERSION}/Xray-${TARGETOS}-${OS_ARCH}.zip" || {
         echo >&2 "Error: download xray failed, please check the network!"; exit 1;

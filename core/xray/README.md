@@ -1,5 +1,10 @@
 # Xray
 
+[![GitHub Release](https://img.shields.io/github/v/tag/XTLS/Xray-core?style=flat-square&label=release&logo=github&color=blue)](https://github.com/XTLS/Xray-core/releases)
+[![Docker Pulls](https://img.shields.io/docker/pulls/honeok/xray.svg?style=flat-square&logo=docker&color=blue)](https://hub.docker.com/r/honeok/xray)
+[![Docker Image Size](https://img.shields.io/docker/image-size/honeok/xray.svg?style=flat-square&logo=docker&color=blue)](https://hub.docker.com/r/honeok/xray)
+[![Docker Image Version](https://img.shields.io/docker/v/honeok/xray.svg?style=flat-square&logo=docker&color=blue)](https://hub.docker.com/r/honeok/xray)
+
 [Project X][1] originates from XTLS protocol, providing a set of network tools such as [Xray-core][2] and [REALITY][3].
 
 As the project's core, it functions as a high-performance superset of v2fly-core while retaining full backward compatibility.
@@ -12,13 +17,13 @@ If you need to install docker by yourself, follow the [official][4] installation
 
 ## Pull the image
 
-```shell
-docker pull honeok/xray
-```
-
 This pulls the latest release of Xray-core.
 
 It can be found at [Docker Hub][5].
+
+```shell
+docker pull honeok/xray
+```
 
 ## Start a container
 
@@ -62,7 +67,7 @@ docker logs -f xray
 
 For reference, you can check the [Configuration][6] for Xray-core.
 
-**Warning**: The port number must be same as configuration and opened in firewall.
+**Note**: The port you configured must be opened in the firewall.
 
 [1]: https://github.com/XTLS
 [2]: https://github.com/XTLS/Xray-core

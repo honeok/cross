@@ -3,18 +3,40 @@
 # Description: This script is used to configure the 3x-ui basic operating environment as the container startup entry.
 #
 # Copyright (c) 2025 honeok <i@honeok.com>
-#
 # SPDX-License-Identifier: GPL-2.0
 
 separator() { printf "%-50s\n" "-" | sed 's/\s/-/g'; }
 
-# 各变量默认值
 WORKDIR="/usr/local/bin"
 
-cd "$WORKDIR" || { echo >&2 "Error: Failed to enter the 3x-ui work directory!"; exit 1; }
+die() {
+    echo >&2 "Error: $*"; exit 1
+}
+
+cd "$WORKDIR" >/dev/null 2>&1 || die "Failed to enter the 3x-ui work directory."
+
+curl() {
+    local RET
+    # 添加 --fail 不然404退出码也为0
+    # 32位cygwin已停止更新, 证书可能有问题, 添加 --insecure
+    # centos7 curl 不支持 --retry-connrefused --retry-all-errors 因此手动 retry
+    for ((i=1; i<=5; i++)); do
+        command curl --connect-timeout 10 --fail --insecure "$@"
+        RET="$?"
+        if [ "$RET" -eq 0 ]; then
+            return
+        else
+            # 403 404 错误或达到重试次数
+            if [ "$RET" -eq 22 ] || [ "$i" -eq 5 ]; then
+                return "$RET"
+            fi
+            sleep 1
+        fi
+    done
+}
 
 # 生成随机字符
-randomChar() {
+random_char() {
     local LENGTH="$1"
 
     RANDOM_STRING="$(LC_ALL=C tr -dc 'a-zA-Z0-9' </dev/urandom | fold -w "$LENGTH" | head -n1)"
@@ -22,55 +44,53 @@ randomChar() {
 }
 
 # 生成随机端口
-randomPort() {
-    local IS_USED_PORT=""
-    local IS_COUNT TEMP_PORT
+random_port() {
+    local USED_PORT TEMP_PORT
 
-    isPort() {
-        [ ! "$IS_USED_PORT" ] && IS_USED_PORT="$(netstat -tunlp | sed -n 's/.*:\([0-9]\+\).*/\1/p' | sort -nu)"
-        echo "$IS_USED_PORT" | sed 's/ /\n/g' | grep ^"${1}"$
+    is_port() {
+        [ ! "$USED_PORT" ] && USED_PORT="$(netstat -tunlp | sed -n 's/.*:\([0-9]\+\).*/\1/p' | sort -nu)"
+        echo "$USED_PORT" | sed 's/ /\n/g' | grep ^"${1}"$
         return
     }
 
-    for ((IS_COUNT=1; IS_COUNT<=5; IS_COUNT++)); do
+    for ((i=1; i<=5; i++)); do
         TEMP_PORT="$(shuf -i 10000-65535 -n1)"
-        if [ ! "$(isPort "$TEMP_PORT")" ]; then
-            WEB_PORT="$TEMP_PORT" && break
+        if [ ! "$(is_port "$TEMP_PORT")" ]; then
+            WEB_PORT="$TEMP_PORT"
+            break
         fi
-        if [ "$IS_COUNT" -eq 5 ]; then
-            echo >&2 "Error: no free port found after 5 attempts." && exit 1
-        fi
+        [ "$i" -eq 5 ] && die "no free port found after 5 attempts."
     done
 }
 
-ipAddr() {
-    # 获取一个登录IP即返回
-    IPV4_ADDRESS="$(curl -kLs -m3 -4 http://www.qualcomm.cn/cdn-cgi/trace 2>/dev/null | grep -i '^ip=' | cut -d'=' -f2 | grep .)"
-    IPV6_ADDRESS="$(curl -kLs -m3 -6 http://www.qualcomm.cn/cdn-cgi/trace 2>/dev/null | grep -i '^ip=' | cut -d'=' -f2 | grep .)"
-    if [ -n "$IPV4_ADDRESS" ]; then
-        echo "$IPV4_ADDRESS" && return
+# 获取一个登录IP即返回
+ip_address() {
+    IPV4_ADDRESS="$(curl -Ls -4 http://www.qualcomm.cn/cdn-cgi/trace 2>/dev/null | grep -i '^ip=' | cut -d'=' -f2 | grep .)"
+    IPV6_ADDRESS="$(curl -Ls -6 http://www.qualcomm.cn/cdn-cgi/trace 2>/dev/null | grep -i '^ip=' | cut -d'=' -f2 | grep .)"
+    if [[ -n "$IPV4_ADDRESS" && "$IPV4_ADDRESS" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+        echo "$IPV4_ADDRESS"
+        return
     fi
-    if [ -n "$IPV6_ADDRESS" ]; then
-        echo "[$IPV6_ADDRESS]" && return
+    if [[ -n "$IPV6_ADDRESS" && "$IPV6_ADDRESS" == *":"* ]]; then
+        echo "[$IPV6_ADDRESS]"
+        return
     fi
-    if [ -z "$IPV4_ADDRESS" ] && [ -z "$IPV6_ADDRESS" ]; then
-        echo >&2 "Error: Could not retrieve public IP."; exit 1
-    fi
+    die "Could not retrieve a valid public ip address."
 }
 
-checkConfig() {
+check_config() {
     local PUBLIC_IP
-    PUBLIC_IP="$(ipAddr)"
+    PUBLIC_IP="$(ip_address)"
 
     if [ ! -f "/etc/x-ui/x-ui.db" ]; then
         echo
-        printf "                  \033[42m\033[1m%s\033[0m\n" "login info"
+        printf "%18s\033[42m\033[1m%s\033[0m\n" "" "login info"
         separator
         if [ -z "$USER_NAME" ] || [ -z "$USER_PASSWORD" ] || [ -z "$BASE_PATH" ] || [ -z "$PANEL_PORT" ]; then
-            USERNAME_TEMP="$(randomChar 10)"
-            PASSWD_TEMP="$(randomChar 10)"
-            BASEPATH_TEMP="$(randomChar 15)"
-            randomPort
+            USERNAME_TEMP="$(random_char 10)"
+            PASSWD_TEMP="$(random_char 10)"
+            BASEPATH_TEMP="$(random_char 15)"
+            random_port
             3x-ui setting -username "$USERNAME_TEMP" -password "$PASSWD_TEMP" -port "$WEB_PORT" -webBasePath "$BASEPATH_TEMP" >/dev/null 2>&1
             echo " Panel login username: $USERNAME_TEMP"
             echo " Panel login user password: $PASSWD_TEMP"
@@ -92,7 +112,7 @@ checkConfig() {
     /usr/local/bin/3x-ui migrate >/dev/null 2>&1
 }
 
-checkConfig
+check_config
 
 if [ "$#" -eq 0 ]; then
     exec 3x-ui
