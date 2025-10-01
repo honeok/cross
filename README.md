@@ -17,6 +17,9 @@
   <a href="https://github.com/honeok/cross">
     <img src="https://img.shields.io/github/license/honeok/cross.svg?style=flat-square&logo=github" alt="License" />
   </a>
+  <a href="https://github.com/honeok/cross">
+    <img src="https://img.shields.io/github/last-commit/honeok/cross.svg?style=flat-square&logo=github" alt="Commit" />
+  </a>
 </div>
 
 ## bench.sh
