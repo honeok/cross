@@ -1,9 +1,9 @@
 # 3x-ui
 
 [![GitHub Release](https://img.shields.io/github/v/tag/MHSanaei/3x-ui?style=flat-square&label=release&logo=github&color=blue)](https://github.com/MHSanaei/3x-ui/releases)
-[![Docker Pulls](https://img.shields.io/docker/pulls/honeok/3x-ui.svg?style=flat-square&logo=docker&color=blue)](https://hub.docker.com/r/honeok/3x-ui)
-[![Docker Image Size](https://img.shields.io/docker/image-size/honeok/3x-ui.svg?style=flat-square&logo=docker&color=blue)](https://hub.docker.com/r/honeok/3x-ui)
-[![Docker Image Version](https://img.shields.io/docker/v/honeok/3x-ui.svg?style=flat-square&logo=docker&color=blue)](https://hub.docker.com/r/honeok/3x-ui)
+[![Docker Pulls](https://img.shields.io/docker/pulls/honeok/3x-ui.svg?style=flat-square&logo=docker&color=blue&logoColor=white)](https://hub.docker.com/r/honeok/3x-ui)
+[![Docker Image Size](https://img.shields.io/docker/image-size/honeok/3x-ui.svg?style=flat-square&logo=docker&color=blue&logoColor=white)](https://hub.docker.com/r/honeok/3x-ui)
+[![Docker Image Version](https://img.shields.io/docker/v/honeok/3x-ui.svg?style=flat-square&logo=docker&color=blue&logoColor=white)](https://hub.docker.com/r/honeok/3x-ui)
 
 [3x-ui][1] advanced, open-source web-based control panel designed for managing Xray-core server. It offers a user-friendly interface for configuring and monitoring various VPN and proxy protocols.
 

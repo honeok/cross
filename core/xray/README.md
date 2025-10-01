@@ -1,9 +1,9 @@
 # Xray
 
 [![GitHub Release](https://img.shields.io/github/v/tag/XTLS/Xray-core?style=flat-square&label=release&logo=github&color=blue)](https://github.com/XTLS/Xray-core/releases)
-[![Docker Pulls](https://img.shields.io/docker/pulls/honeok/xray.svg?style=flat-square&logo=docker&color=blue)](https://hub.docker.com/r/honeok/xray)
-[![Docker Image Size](https://img.shields.io/docker/image-size/honeok/xray.svg?style=flat-square&logo=docker&color=blue)](https://hub.docker.com/r/honeok/xray)
-[![Docker Image Version](https://img.shields.io/docker/v/honeok/xray.svg?style=flat-square&logo=docker&color=blue)](https://hub.docker.com/r/honeok/xray)
+[![Docker Pulls](https://img.shields.io/docker/pulls/honeok/xray.svg?style=flat-square&logo=docker&color=blue&logoColor=white)](https://hub.docker.com/r/honeok/xray)
+[![Docker Image Size](https://img.shields.io/docker/image-size/honeok/xray.svg?style=flat-square&logo=docker&color=blue&logoColor=white)](https://hub.docker.com/r/honeok/xray)
+[![Docker Image Version](https://img.shields.io/docker/v/honeok/xray.svg?style=flat-square&logo=docker&color=blue&logoColor=white)](https://hub.docker.com/r/honeok/xray)
 
 [Project X][1] originates from XTLS protocol, providing a set of network tools such as [Xray-core][2] and [REALITY][3].
 
