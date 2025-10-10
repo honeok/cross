@@ -7,31 +7,26 @@
 # https://github.com/233boy/Xray
 # https://github.com/teddysun/across
 
-FROM alpine:latest AS builder
+FROM alpine:latest AS base
 
+FROM base AS builder
 LABEL maintainer="honeok <i@honeok.com>"
-
 ARG XRAY_VERSION
 ARG TARGETOS
 ARG TARGETARCH
-
 COPY build.sh .
-
 RUN set -ex \
     && apk add --update --no-cache curl \
     && chmod +x build.sh && ./build.sh build "$XRAY_VERSION" \
     && rm -f build.sh \
     && rm -rf /var/cache/apk/*
 
-FROM alpine:latest AS dist
-
+FROM base AS dist
 LABEL maintainer="honeok <i@honeok.com>"
-
 COPY --from=builder /tmp/xray/xray /etc/xray/bin/xray
 COPY config.json /opt/config.json
 COPY build.sh .
-COPY docker-entrypoint.sh /docker-entrypoint.sh
-
+COPY docker-entrypoint.sh /
 RUN set -ex \
     && apk add --update --no-cache bash ca-certificates curl openssl tzdata \
     && chmod +x /docker-entrypoint.sh build.sh \
@@ -41,7 +36,5 @@ RUN set -ex \
     && rm -rf /var/cache/apk/* \
     && ln -sf /dev/stdout /var/log/xray/access.log \
     && ln -sf /dev/stderr /var/log/xray/error.log
-
 ENV TZ=Asia/Shanghai
-
-ENTRYPOINT [ "/docker-entrypoint.sh" ]
+ENTRYPOINT ["/docker-entrypoint.sh"]

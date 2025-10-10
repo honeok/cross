@@ -42,21 +42,9 @@
       },
       {
         "type": "field",
-        "domain": [
-          "geosite:ipip",
-          "geosite:dazn",
-          "geosite:disney",
-          "geosite:netflix",
-          "geosite:google",
-          "geosite:primevideo",
-          "geosite:tvb",
-          "geosite:spotify",
-          "geosite:bing",
-          "geosite:apple",
-          "geosite:category-ai-!cn",
-          "geosite:steam",
-          "geosite:reddit",
-          "geosite:x"
+        "ip": [
+          "0.0.0.0/0",
+          "::/0"
         ],
         "outboundTag": "proxy"
       }
@@ -76,25 +64,20 @@
     },
     {
       "tag": "proxy",
-      "protocol": "shadowsocks",
+      "protocol": "socks",
       "settings": {
         "servers": [
           {
             "address": "8.8.8.8",
-            "port": 8388,
-            "password": "admin",
-            "method": "aes-128-gcm"
+            "port": 10086,
+            "users": [
+              {
+                "user": "admin",
+                "pass": "admin"
+              }
+            ]
           }
         ]
-      },
-      "streamSettings": {
-        "network": "raw",
-        "security": "none",
-        "tcpSettings": {
-          "header": {
-            "type": "none"
-          }
-        }
       }
     }
   ]

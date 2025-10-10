@@ -42,9 +42,21 @@
       },
       {
         "type": "field",
-        "ip": [
-          "0.0.0.0/0",
-          "::/0"
+        "domain": [
+          "geosite:ipip",
+          "geosite:dazn",
+          "geosite:disney",
+          "geosite:netflix",
+          "geosite:google",
+          "geosite:primevideo",
+          "geosite:tvb",
+          "geosite:spotify",
+          "geosite:bing",
+          "geosite:apple",
+          "geosite:category-ai-!cn",
+          "geosite:steam",
+          "geosite:reddit",
+          "geosite:x"
         ],
         "outboundTag": "proxy"
       }

@@ -76,20 +76,25 @@
     },
     {
       "tag": "proxy",
-      "protocol": "socks",
+      "protocol": "shadowsocks",
       "settings": {
         "servers": [
           {
             "address": "8.8.8.8",
-            "port": 10086,
-            "users": [
-              {
-                "user": "admin",
-                "pass": "admin"
-              }
-            ]
+            "port": 8388,
+            "password": "admin",
+            "method": "aes-128-gcm"
           }
         ]
+      },
+      "streamSettings": {
+        "network": "raw",
+        "security": "none",
+        "tcpSettings": {
+          "header": {
+            "type": "none"
+          }
+        }
       }
     }
   ]
