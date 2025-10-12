@@ -5,12 +5,14 @@
 # Copyright (c) 2025 honeok <i@honeok.com>
 # SPDX-License-Identifier: GPL-2.0
 #
+# References:
+# https://github.com/bin456789/reinstall
+# https://github.com/233boy/Xray
 # Thanks:
 # https://github.com/XTLS/Xray-core
-# https://github.com/bin456789/reinstall
 # https://github.com/Loyalsoldier/v2ray-rules-dat
 
-set -eE
+set -eEu
 
 # 设置PATH环境变量
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
@@ -66,6 +68,14 @@ curl() {
     done
 }
 
+# 生成随机字符
+random_char() {
+    local LENGTH="$1"
+
+    RANDOM_STRING="$(LC_ALL=C tr -cd 'a-zA-Z0-9' </dev/urandom | fold -w "$LENGTH" | head -n1)"
+    echo "$RANDOM_STRING"
+}
+
 pkg_install() {
     for pkg in "$@"; do
         if _exists dnf; then
@@ -91,6 +101,21 @@ check_root() {
     fi
 }
 
+check_bash() {
+    local BASH_VER
+    BASH_VER="$(bash --version 2>&1 | head -n1 | awk -F ' ' '{for (i=1; i<=NF; i++) if ($i ~ /^[0-9]+\.[0-9]+\.[0-9]+/) {print $i; exit}}' | cut -d . -f1)"
+
+    if [ -z "$BASH_VERSION" ]; then
+        die "This script needs to be run with bash, not sh!"
+    fi
+    if [ -z "$BASH_VER" ] || ! [[ "$BASH_VER" =~ ^[0-9]+$ ]]; then
+        die "Failed to parse Bash version!"
+    fi
+    if [ "$BASH_VER" -lt 4 ]; then
+        die "Bash version is lower than 4.0!"
+    fi
+}
+
 # 安装必要的软件包
 check_cmd() {
     local -a INSTALL_PKG
@@ -103,12 +128,12 @@ check_cmd() {
     done
 }
 
-# 更新内核
-bump_version() {
+# 更新xray内核
+update_core() {
     local XRAY_LVER XRAY_CVER OS_NAME OS_ARCH
     local -a CORE_FILES
 
-    XRAY_LVER="$(curl -Ls https://api.github.com/repos/XTLS/Xray-core/releases | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p' | sort -Vr | head -n1)"
+    XRAY_LVER="$(curl -Ls https://api.github.com/repos/XTLS/Xray-core/releases | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p' | sort -rV | head -n1)"
     XRAY_CVER="$("$XRAY_CORE" version 2>/dev/null | head -n1 | sed -n 's/^Xray \([0-9.]\+\).*/\1/p')"
     OS_NAME="$(uname -s 2>/dev/null | sed 's/.*/\L&/')"
 
@@ -128,7 +153,7 @@ bump_version() {
     # 拼接下载链接
     for CORE_FILE in "${CORE_FILES[@]}"; do
         if ! curl -LsO "https://github.com/XTLS/Xray-core/releases/download/v$XRAY_LVER/$CORE_FILE"; then
-            die "download failed, please check the network."
+            die "download failed."
         fi
     done
 
@@ -137,17 +162,12 @@ bump_version() {
         die "sha256 checksum mismatch."
     fi
 
-    unzip -q "Xray-$OS_NAME-$OS_ARCH.zip"
-    if [ ! -x ./xray ]; then
-        chmod +x ./xray >/dev/null 2>&1
-    fi
-    if [ -x "$XRAY_CORE" ]; then
-        mv -f ./xray "$XRAY_CORE" >/dev/null 2>&1
-    fi
+    unzip -qo "Xray-$OS_NAME-$OS_ARCH.zip" -d "$XRAY_BINDIR"
+    chmod +x "$XRAY_CORE" >/dev/null 2>&1
 }
 
 # 更新geofile
-geo_file() {
+update_geo() {
     local -a GEO_FILES
     # 定义下载文件列表
     GEO_FILES=("geoip" "geosite")
@@ -162,6 +182,27 @@ geo_file() {
     if [ -d "$XRAY_BINDIR" ]; then
         mv -f ./*.dat "$XRAY_BINDIR"/ >/dev/null 2>&1
     fi
+}
+
+# 更新233boy xray脚本
+update_sh() {
+    local SCRIPT_DIR SCRIPT_BIN SCRIPT_LVER SCRIPT_CVER DOWNFILE_CHAR
+    SCRIPT_DIR="$XRAY_WORKDIR/sh"
+    SCRIPT_BIN="/usr/local/bin/xray" # 软连接 /etc/xray/sh/xray.sh
+    SCRIPT_LVER="$(curl -Ls https://api.github.com/repos/233boy/Xray/releases | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p' | sort -rV | head -n1)"
+    SCRIPT_CVER="$(sed -n 's/^is_sh_ver=v\(.*\)/\1/p' "$XRAY_WORKDIR/sh/xray.sh")"
+    DOWNFILE_CHAR="$(random_char 5)"
+
+    if [[ "$(printf '%s\n%s\n' "$SCRIPT_LVER" "$SCRIPT_CVER" | sort -V | head -n1)" == "$SCRIPT_LVER" ]]; then
+        return
+    fi
+
+    if ! curl -Ls -o "$DOWNFILE_CHAR.zip" "https://github.com/233boy/Xray/releases/download/v$SCRIPT_LVER/code.zip"; then
+        die "download failed."
+    fi
+    unzip -qo "$DOWNFILE_CHAR.zip" -d "$SCRIPT_DIR"
+    sed -i '/^get_ip() {/,/^}/ s#one.one.one.one#www.qualcomm.cn#g' "$SCRIPT_DIR/src/core.sh" >/dev/null 2>&1
+    chmod +x "$SCRIPT_BIN" >/dev/null 2>&1
 }
 
 restart_xray() {
@@ -186,7 +227,9 @@ restart_xray() {
 
 clear
 check_root
+check_bash
 check_cmd
-bump_version
-geo_file
+update_core
+update_geo
+update_sh
 restart_xray
