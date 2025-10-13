@@ -6,8 +6,8 @@
 # SPDX-License-Identifier: GPL-2.0
 #
 # References:
-# https://github.com/bin456789/reinstall
 # https://github.com/233boy/Xray
+# https://github.com/bin456789/reinstall
 # Thanks:
 # https://github.com/XTLS/Xray-core
 # https://github.com/Loyalsoldier/v2ray-rules-dat
@@ -21,9 +21,11 @@ export DEBIAN_FRONTEND=noninteractive
 
 # 各变量默认值
 TEMP_DIR="$(mktemp -d)"
-XRAY_WORKDIR="/etc/xray"
-XRAY_BINDIR="$XRAY_WORKDIR/bin"
-XRAY_CORE="$XRAY_BINDIR/xray"
+CORE_NAME="xray"
+CORE_DIR="/etc/$CORE_NAME"
+CORE_BIN="$CORE_DIR/bin/$CORE_NAME"
+SCRIPT_DIR="$CORE_DIR/sh"
+SCRIPT_BIN="/usr/local/bin/$CORE_NAME" # 软连接 /etc/xray/sh/xray.sh
 
 # 终止信号捕获
 trap 'rm -rf "${TEMP_DIR:?}" >/dev/null 2>&1' SIGINT SIGTERM EXIT
@@ -130,14 +132,14 @@ check_cmd() {
 
 # 更新xray内核
 update_core() {
-    local XRAY_LVER XRAY_CVER OS_NAME OS_ARCH
+    local LATEST_VER CURRENT_VER OS_NAME OS_ARCH
     local -a CORE_FILES
 
-    XRAY_LVER="$(curl -Ls https://api.github.com/repos/XTLS/Xray-core/releases | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p' | sort -rV | head -n1)"
-    XRAY_CVER="$("$XRAY_CORE" version 2>/dev/null | head -n1 | sed -n 's/^Xray \([0-9.]\+\).*/\1/p')"
+    LATEST_VER="$(curl -Ls https://api.github.com/repos/XTLS/Xray-core/releases | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p' | sort -rV | head -n1)"
+    CURRENT_VER="$("$CORE_BIN" version 2>/dev/null | head -n1 | sed -n 's/^Xray \([0-9.]\+\).*/\1/p')"
     OS_NAME="$(uname -s 2>/dev/null | sed 's/.*/\L&/')"
 
-    if [[ "$(printf '%s\n%s\n' "$XRAY_LVER" "$XRAY_CVER" | sort -V | head -n1)" == "$XRAY_LVER" ]]; then
+    if [[ "$(printf '%s\n%s\n' "$LATEST_VER" "$CURRENT_VER" | sort -V | head -n1)" == "$LATEST_VER" ]]; then
         return
     fi
 
@@ -152,7 +154,7 @@ update_core() {
 
     # 拼接下载链接
     for CORE_FILE in "${CORE_FILES[@]}"; do
-        if ! curl -LsO "https://github.com/XTLS/Xray-core/releases/download/v$XRAY_LVER/$CORE_FILE"; then
+        if ! curl -LsO "https://github.com/XTLS/Xray-core/releases/download/v$LATEST_VER/$CORE_FILE"; then
             die "download failed."
         fi
     done
@@ -162,8 +164,9 @@ update_core() {
         die "sha256 checksum mismatch."
     fi
 
-    unzip -qo "Xray-$OS_NAME-$OS_ARCH.zip" -d "$XRAY_BINDIR"
-    chmod +x "$XRAY_CORE" >/dev/null 2>&1
+    unzip -qo "Xray-$OS_NAME-$OS_ARCH.zip" -d "$CORE_DIR/bin"
+    chmod +x "$CORE_BIN" >/dev/null 2>&1
+    rm -f "${CORE_DIR:?}"/bin/{LICENSE,README.md} >/dev/null 2>&1 || true
 }
 
 # 更新geofile
@@ -179,30 +182,29 @@ update_geo() {
         sha256sum -c "$GEO_FILE.dat.sha256sum" >/dev/null 2>&1
     done
 
-    if [ -d "$XRAY_BINDIR" ]; then
-        mv -f ./*.dat "$XRAY_BINDIR"/ >/dev/null 2>&1
+    if [ -d "$CORE_DIR/bin" ]; then
+        mv -f ./*.dat "$CORE_DIR/bin/" >/dev/null 2>&1
     fi
 }
 
 # 更新233boy xray脚本
 update_sh() {
-    local SCRIPT_DIR SCRIPT_BIN SCRIPT_LVER SCRIPT_CVER DOWNFILE_CHAR
-    SCRIPT_DIR="$XRAY_WORKDIR/sh"
-    SCRIPT_BIN="/usr/local/bin/xray" # 软连接 /etc/xray/sh/xray.sh
-    SCRIPT_LVER="$(curl -Ls https://api.github.com/repos/233boy/Xray/releases | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p' | sort -rV | head -n1)"
-    SCRIPT_CVER="$(sed -n 's/^is_sh_ver=v\(.*\)/\1/p' "$XRAY_WORKDIR/sh/xray.sh")"
-    DOWNFILE_CHAR="$(random_char 5)"
+    local LATEST_VER CURRENT_VER TEMP_NAME
+    LATEST_VER="$(curl -Ls https://api.github.com/repos/233boy/Xray/releases | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p' | sort -rV | head -n1)"
+    CURRENT_VER="$(sed -n 's/^is_sh_ver=v\(.*\)/\1/p' "$CORE_DIR/sh/xray.sh")"
+    TEMP_NAME="$(random_char 5)"
 
-    if [[ "$(printf '%s\n%s\n' "$SCRIPT_LVER" "$SCRIPT_CVER" | sort -V | head -n1)" == "$SCRIPT_LVER" ]]; then
+    if [[ "$(printf '%s\n%s\n' "$LATEST_VER" "$CURRENT_VER" | sort -V | head -n1)" == "$LATEST_VER" ]]; then
         return
     fi
 
-    if ! curl -Ls -o "$DOWNFILE_CHAR.zip" "https://github.com/233boy/Xray/releases/download/v$SCRIPT_LVER/code.zip"; then
+    if ! curl -Ls -o "$TEMP_NAME.zip" "https://github.com/233boy/Xray/releases/download/v$LATEST_VER/code.zip"; then
         die "download failed."
     fi
-    unzip -qo "$DOWNFILE_CHAR.zip" -d "$SCRIPT_DIR"
+    unzip -qo "$TEMP_NAME.zip" -d "$SCRIPT_DIR"
     sed -i '/^get_ip() {/,/^}/ s#one.one.one.one#www.qualcomm.cn#g' "$SCRIPT_DIR/src/core.sh" >/dev/null 2>&1
     chmod +x "$SCRIPT_BIN" >/dev/null 2>&1
+    rm -f "${SCRIPT_DIR:?}"/{LICENSE,README.md} >/dev/null 2>&1 || true
 }
 
 restart_xray() {
