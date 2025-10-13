@@ -1,15 +1,14 @@
-# Description: This configuration file is used to define custom rules for the mihomo gui.
+# Description: This config defines custom routing rules and proxy policies in Mihomo GUI for domain/ip based traffic control.
 #
 # Copyright (c) 2025 honeok <i@honeok.com>
+# SPDX-License-Identifier: GPL-2.0
 #
 # References:
-# https://github.com/MetaCubeX/mihomo/blob/Meta/docs/config.yaml
 # https://linux.do/t/topic/243618
-# https://github.com/yyhhyyyyyy/selfproxy/blob/main/Mihomo/mihomo_multi.yaml
-# https://github.com/qichiyuhub/rule/blob/main/config/mihomo/config.yaml
+# https://github.com/MetaCubeX/mihomo/blob/Meta/docs/config.yaml
 # https://github.com/Kook-9527/Plugin-backup/blob/main/ClashMeta.yaml
-#
-# SPDX-License-Identifier: GPL-2.0
+# https://github.com/qichiyuhub/rule/blob/main/config/mihomo/config.yaml
+# https://github.com/yyhhyyyyyy/selfproxy/blob/main/Mihomo/mihomo_multi.yaml
 
 ## 全局配置
 port: 7890 # HTTP(S)代理服务器端口
@@ -136,7 +135,6 @@ proxy-providers:
       url: "http://connectivitycheck.gstatic.com/generate_204"
       expected-status: 204 # 当健康检查返回状态码与期望值不符时, 认为节点不可用
     override: # 覆写节点加载时的一些配置项
-      skip-cert-verify: true
       udp: true
 
 ## 锚点
