@@ -1,5 +1,5 @@
 ---
-name: 'GitHub Actions Mirror'
+name: "GitHub Actions Mirror"
 
 on:
   push:
@@ -9,37 +9,49 @@ on:
 
 jobs:
   mirror_to_gitlab:
-    name: 'Mirror to gitlab'
+    name: "Mirror to gitlab"
     runs-on: ubuntu-latest
 
     steps:
-      - name: 'checkout repository'
+      - name: "checkout repository"
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
-      - name: 'Mirror to gitlab'
+      - name: "Mirror to gitlab"
         uses: fscarmen/repository-mirroring-action@v1.0.0
         with:
-          target_repo_url:
-            git@gitlab.com:${{ github.repository }}.git
-          ssh_private_key:
-            ${{ secrets.SYNC_PRIVATE_KEY }}
+          target_repo_url: git@gitlab.com:${{ github.repository }}.git
+          ssh_private_key: ${{ secrets.SYNC_PRIVATE_KEY }}
 
   mirror_to_framagit:
-    name: 'Mirror to framagit'
+    name: "Mirror to framagit"
     runs-on: ubuntu-latest
 
     steps:
-      - name: 'checkout repository'
+      - name: "checkout repository"
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
-      - name: 'Mirror to framagit'
+      - name: "Mirror to framagit"
         uses: fscarmen/repository-mirroring-action@v1.0.0
         with:
-          target_repo_url:
-            git@framagit.org:${{ github.repository }}.git
-          ssh_private_key:
-            ${{ secrets.SYNC_PRIVATE_KEY }}
+          target_repo_url: git@framagit.org:${{ github.repository }}.git
+          ssh_private_key: ${{ secrets.SYNC_PRIVATE_KEY }}
+
+  mirror_to_codeberg:
+    name: "Mirror to codeberg"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "checkout repository"
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: "Mirror to codeberg"
+        uses: fscarmen/repository-mirroring-action@v1.0.0
+        with:
+          target_repo_url: git@codeberg.org:${{ github.repository }}.git
+          ssh_private_key: ${{ secrets.SYNC_PRIVATE_KEY }}
