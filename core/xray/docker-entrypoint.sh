@@ -1,20 +1,18 @@
 #!/usr/bin/env sh
+# SPDX-License-Identifier: GPL-2.0
 #
 # Description: This script is used to configure xray during container initialization.
-#
 # Copyright (c) 2025 honeok <i@honeok.com>
 #
 # References:
 # https://github.com/233boy/Xray
-#
-# SPDX-License-Identifier: GPL-2.0
 
 set -eu
 
-XRAY_WORKDIR="/etc/xray"
-XRAY_CONFDIR="$XRAY_WORKDIR/conf"
-XRAY_LOGDIR="/var/log/xray"
-XRAY_LOGFILE="$XRAY_LOGDIR/access.log"
+CORE_NAME="xray"
+CORE_DIR="/etc/$CORE_NAME"
+CONF_DIR="$CORE_DIR/conf"
+LOG_DIR="/var/log/$CORE_NAME"
 PUBLIC_IP="$(curl -kLs -m3 -4 http://www.qualcomm.cn/cdn-cgi/trace 2>/dev/null | grep -i '^ip=' | cut -d'=' -f2 | grep . || \
              curl -kLs -m3 -6 http://www.qualcomm.cn/cdn-cgi/trace 2>/dev/null | grep -i '^ip=' | cut -d'=' -f2 | grep .)"
 
@@ -41,7 +39,7 @@ random_port() {
     }
     PORT=1
     while [ "$PORT" -le 5 ]; do
-        TEMP_PORT="$(shuf -i 20000-50000 -n 1)"
+        TEMP_PORT="$(shuf -i 20000-50000 -n1)"
         if [ ! "$(use_port "$TEMP_PORT")" ]; then
             REALITY_PORT="$TEMP_PORT" && break
         fi
@@ -50,9 +48,9 @@ random_port() {
     done
 }
 
-[ ! -s "$XRAY_WORKDIR/config.json" ] && cat /opt/config.json > "$XRAY_WORKDIR/config.json"
+[ ! -s "$CORE_DIR/config.json" ] && cat /opt/config.json > "$CORE_DIR/config.json"
 
-if [ -d "$XRAY_CONFDIR" ] && [ -z "$(ls -A "$XRAY_CONFDIR" 2>/dev/null)" ]; then
+if [ -d "$CONF_DIR" ] && [ -z "$(ls -A "$CONF_DIR" 2>/dev/null)" ]; then
     # https://github.com/XTLS/Xray-core/issues/2005
     TLS_SERVERS="www.icloud.com music.apple.com swcdn.apple.com apps.apple.com icloud.cdn-apple.com"
     random_port
@@ -61,7 +59,7 @@ if [ -d "$XRAY_CONFDIR" ] && [ -z "$(ls -A "$XRAY_CONFDIR" 2>/dev/null)" ]; then
     PRIVATE_KEY="$(printf "%s" "$GENERATE_KEYS" | sed -n '1{s/.*: *//;s/^ *//;s/ *$//;p}')"
     PUBLIC_KEY="$(printf "%s" "$GENERATE_KEYS" | sed -n '2{s/.*: *//;s/^ *//;s/ *$//;p}')"
     TLS_SERVER="$(printf "%s" "$TLS_SERVERS" | tr " " "\n" | shuf -n1)"
-    cat > "$XRAY_CONFDIR/VLESS-REALITY-$REALITY_PORT.json" <<EOF
+    tee > "$CONF_DIR/VLESS-REALITY-$REALITY_PORT.json" <<EOF
 {
   "inbounds": [
     {
@@ -98,8 +96,10 @@ if [ -d "$XRAY_CONFDIR" ] && [ -z "$(ls -A "$XRAY_CONFDIR" 2>/dev/null)" ]; then
         "enabled": true,
         "destOverride": [
           "http",
-          "tls"
-        ]
+          "tls",
+          "quic"
+        ],
+        "routeOnly": true
       }
     }
   ]
@@ -108,13 +108,13 @@ EOF
     [ -z "$PUBLIC_IP" ] && { echo >&2 "Error: Failed to retrieve IP address, configuration generation aborted!"; exit 1; }
     {
         echo "-------------------- URL --------------------"
-        echo "vless://${GENERATE_UUID}@${PUBLIC_IP}:${REALITY_PORT}?encryption=none&security=reality&flow=xtls-rprx-vision&type=tcp&sni=${TLS_SERVER}&pbk=${PUBLIC_KEY}&fp=chrome#REALITY-${PUBLIC_IP}"
+        echo "vless://${GENERATE_UUID}@${PUBLIC_IP}:${REALITY_PORT}?encryption=none&security=reality&flow=xtls-rprx-vision&type=tcp&sni=${TLS_SERVER}&pbk=${PUBLIC_KEY}&fp=firefox#REALITY-${PUBLIC_IP}"
         echo "-------------------- END --------------------"
-    } >> "$XRAY_LOGFILE"
+    } >> "$LOG_DIR/access.log"
 fi
 
 if [ "$#" -eq 0 ]; then
-    exec xray run -config "$XRAY_WORKDIR/config.json" -confdir "$XRAY_CONFDIR"
+    exec xray run -config "$CORE_DIR/config.json" -confdir "$CONF_DIR"
 else
     exec xray "$@"
 fi
