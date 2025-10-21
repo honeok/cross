@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
-#
-# Description: This script is used to automatically update xray-core and the latest geoip/geosite data.
-#
-# Copyright (c) 2025 honeok <i@honeok.com>
 # SPDX-License-Identifier: GPL-2.0
 #
+# Description: This script is used to automatically update xray-core and the latest geoip/geosite data.
+# Copyright (c) 2025 honeok <i@honeok.com>
+
 # References:
 # https://github.com/233boy/Xray
 # https://github.com/bin456789/reinstall
@@ -20,6 +19,7 @@ export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
 export DEBIAN_FRONTEND=noninteractive
 
 # 各变量默认值
+GITHUB_PROXY="https://proxy.zzwsec.com/"
 TEMP_DIR="$(mktemp -d)"
 CORE_NAME="xray"
 CORE_DIR="/etc/$CORE_NAME"
@@ -118,6 +118,15 @@ check_bash() {
     fi
 }
 
+check_cdn() {
+    local COUNTRY
+
+    COUNTRY="$(curl -Ls -4 http://www.qualcomm.cn/cdn-cgi/trace | grep '^loc=' | cut -d= -f2 || true)"
+    if [[ -n "$GITHUB_PROXY" && -n "$COUNTRY" && "$COUNTRY" != "CN" ]]; then
+        GITHUB_PROXY=""
+    fi
+}
+
 # 安装必要的软件包
 check_cmd() {
     local -a INSTALL_PKG
@@ -135,7 +144,7 @@ update_core() {
     local LATEST_VER CURRENT_VER OS_NAME OS_ARCH
     local -a CORE_FILES
 
-    LATEST_VER="$(curl -Ls https://api.github.com/repos/XTLS/Xray-core/releases | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p' | sort -rV | head -n1)"
+    LATEST_VER="$(curl -Ls "${GITHUB_PROXY}https://api.github.com/repos/XTLS/Xray-core/releases" | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p' | sort -rV | head -n1)"
     CURRENT_VER="$("$CORE_BIN" version 2>/dev/null | head -n1 | sed -n 's/^Xray \([0-9.]\+\).*/\1/p')"
     OS_NAME="$(uname -s 2>/dev/null | sed 's/.*/\L&/')"
 
@@ -154,7 +163,7 @@ update_core() {
 
     # 拼接下载链接
     for CORE_FILE in "${CORE_FILES[@]}"; do
-        if ! curl -LsO "https://github.com/XTLS/Xray-core/releases/download/v$LATEST_VER/$CORE_FILE"; then
+        if ! curl -LsO "${GITHUB_PROXY}https://github.com/XTLS/Xray-core/releases/download/v$LATEST_VER/$CORE_FILE"; then
             die "download failed."
         fi
     done
@@ -177,8 +186,8 @@ update_geo() {
 
     # 下载数据文件和校验文件
     for GEO_FILE in "${GEO_FILES[@]}"; do
-        curl -LsO "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/$GEO_FILE.dat"
-        curl -LsO "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/$GEO_FILE.dat.sha256sum"
+        curl -LsO "${GITHUB_PROXY}https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/$GEO_FILE.dat"
+        curl -LsO "${GITHUB_PROXY}https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/$GEO_FILE.dat.sha256sum"
         sha256sum -c "$GEO_FILE.dat.sha256sum" >/dev/null 2>&1
     done
 
@@ -190,7 +199,7 @@ update_geo() {
 # 更新233boy xray脚本
 update_sh() {
     local LATEST_VER CURRENT_VER TEMP_NAME
-    LATEST_VER="$(curl -Ls https://api.github.com/repos/233boy/Xray/releases | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p' | sort -rV | head -n1)"
+    LATEST_VER="$(curl -Ls "${GITHUB_PROXY}https://api.github.com/repos/233boy/Xray/releases" | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p' | sort -rV | head -n1)"
     CURRENT_VER="$(sed -n 's/^is_sh_ver=v\(.*\)/\1/p' "$CORE_DIR/sh/xray.sh")"
     TEMP_NAME="$(random_char 5)"
 
@@ -198,7 +207,7 @@ update_sh() {
         return
     fi
 
-    if ! curl -Ls -o "$TEMP_NAME.zip" "https://github.com/233boy/Xray/releases/download/v$LATEST_VER/code.zip"; then
+    if ! curl -Ls -o "$TEMP_NAME.zip" "${GITHUB_PROXY}https://github.com/233boy/Xray/releases/download/v$LATEST_VER/code.zip"; then
         die "download failed."
     fi
     unzip -qo "$TEMP_NAME.zip" -d "$SCRIPT_DIR"
@@ -230,6 +239,7 @@ restart_xray() {
 clear
 check_root
 check_bash
+check_cdn
 check_cmd
 update_core
 update_geo
