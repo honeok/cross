@@ -70,14 +70,6 @@ curl() {
     done
 }
 
-# 生成随机字符
-random_char() {
-    local LENGTH="$1"
-
-    RANDOM_STRING="$(LC_ALL=C tr -cd 'a-zA-Z0-9' </dev/urandom | fold -w "$LENGTH" | head -n1)"
-    echo "$RANDOM_STRING"
-}
-
 pkg_install() {
     for pkg in "$@"; do
         if _exists dnf; then
@@ -198,19 +190,18 @@ update_geo() {
 
 # 更新233boy xray脚本
 update_sh() {
-    local LATEST_VER CURRENT_VER TEMP_NAME
+    local LATEST_VER CURRENT_VER
     LATEST_VER="$(curl -Ls "${GITHUB_PROXY}https://api.github.com/repos/233boy/Xray/releases" | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p' | sort -rV | head -n1)"
     CURRENT_VER="$(sed -n 's/^is_sh_ver=v\(.*\)/\1/p' "$CORE_DIR/sh/xray.sh")"
-    TEMP_NAME="$(random_char 5)"
 
     if [[ "$(printf '%s\n%s\n' "$LATEST_VER" "$CURRENT_VER" | sort -V | head -n1)" == "$LATEST_VER" ]]; then
         return
     fi
 
-    if ! curl -Ls -o "$TEMP_NAME.zip" "${GITHUB_PROXY}https://github.com/233boy/Xray/releases/download/v$LATEST_VER/code.zip"; then
+    if ! curl -LsO "${GITHUB_PROXY}https://github.com/233boy/Xray/releases/download/v$LATEST_VER/code.zip"; then
         die "download failed."
     fi
-    unzip -qo "$TEMP_NAME.zip" -d "$SCRIPT_DIR"
+    unzip -qo code.zip -d "$SCRIPT_DIR"
     sed -i '/^get_ip() {/,/^}/ s#one.one.one.one#www.qualcomm.cn#g' "$SCRIPT_DIR/src/core.sh" >/dev/null 2>&1
     chmod +x "$SCRIPT_BIN" >/dev/null 2>&1
     rm -f "${SCRIPT_DIR:?}"/{LICENSE,README.md} >/dev/null 2>&1 || true
