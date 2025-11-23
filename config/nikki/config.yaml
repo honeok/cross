@@ -30,7 +30,7 @@ lan-allowed-ips: # 允许连接的IP地址段, 仅作用于allow-lan为true, 默
 #  - always: 开启, 强制匹配所有进程
 #  - strict: 默认, 由mihomo判断是否开启
 #  - off: 不匹配进程, 推荐在路由器上使用此模式
-find-process-mode: strict
+find-process-mode: off
 
 mode: rule
 
@@ -48,7 +48,23 @@ log-level: warning # 日志等级silent/error/warning/info/debug
 
 ipv6: false # IPv6总开关, 关闭阻断所有IPv6链接和屏蔽DNS请求AAAA记录
 
+external-controller: 0.0.0.0:9090 # RESTful API监听地址
+# external-controller-tls: 0.0.0.0:9090 # RESTful API HTTPS监听地址, 需要配置tls部分配置文件
+secret: "38438"
+
+# RESTful API CORS标头配置
+external-controller-cors:
+  allow-origins:
+    - "*"
+  allow-private-network: true
+
 tcp-concurrent: true # TCP并发连接所有IP, 将使用最快握手的TCP
+
+# 配置WEB UI目录, 使用http://{{external-controller}}/ui访问
+external-ui: /etc/nikki/run/ui
+external-ui-name: zashboard
+# 目前支持下载zip tgz格式的压缩包
+external-ui-url: "https://v6.gh-proxy.com/https://github.com/Zephyruso/zashboard/archive/refs/heads/gh-pages.zip"
 
 # interface-name: en0 # 设置出口网卡
 
@@ -65,6 +81,18 @@ keep-alive-interval: 15 # 设置TCP保活探测的间隔时间为15秒
 profile:
   store-selected: true # 存储select选择记录
   store-fake-ip: true # 持久化fake-ip
+
+## Tun配置
+tun:
+  enable: true
+  stack: mixed # system/gvisor/mixed
+  dns-hijack: ["any:53", "tcp://any:53"] # 需要劫持的DNS
+  device: nikki
+  auto-detect-interface: false # 自动识别出口网卡
+  auto-route: false # 配置路由表
+  auto-redirect: false # 自动配置iptables以重定向TCP连接, 仅支持Linux带有auto-redirect的auto-route现在可以在路由器上按预期工作无需干预
+  # strict-route: true # 将所有连接路由到Tun来防止泄漏, 但你的设备将无法其他设备被访问
+  disable-icmp-forwarding: true # 禁用ICMP转发, 防止某些情况下的ICMP环回问题, ping将不会显示真实的延迟
 
 ## DNS模块
 dns:
