@@ -11,9 +11,6 @@
   <a href="https://www.codefactor.io/repository/github/honeok/cross">
     <img src="https://img.shields.io/codefactor/grade/github/honeok/cross.svg?style=flat-square&label=CodeFactor&logo=CodeFactor&logoColor=white" alt="CodeFactor" />
   </a>
-  <a href="https://github.com/XAMPPRocky/tokei">
-    <img src="https://tokei.rs/b1/github/honeok/cross?category=code&style=flat-square&label=Lines%20of%20Code" alt="Lines of Code" />
-  </a>
   <a href="https://github.com/honeok/cross">
     <img src="https://img.shields.io/github/license/honeok/cross.svg?style=flat-square&logo=github" alt="License" />
   </a>
