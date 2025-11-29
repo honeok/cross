@@ -155,7 +155,7 @@ update_core() {
 
     # 拼接下载链接
     for CORE_FILE in "${CORE_FILES[@]}"; do
-        if ! curl -LsO "${GITHUB_PROXY}https://github.com/XTLS/Xray-core/releases/download/v$LATEST_VER/$CORE_FILE"; then
+        if ! curl -Ls -O "${GITHUB_PROXY}https://github.com/XTLS/Xray-core/releases/download/v$LATEST_VER/$CORE_FILE"; then
             die "download failed."
         fi
     done
@@ -178,8 +178,8 @@ update_geo() {
 
     # 下载数据文件和校验文件
     for GEO_FILE in "${GEO_FILES[@]}"; do
-        curl -LsO "${GITHUB_PROXY}https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/$GEO_FILE.dat"
-        curl -LsO "${GITHUB_PROXY}https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/$GEO_FILE.dat.sha256sum"
+        curl -Ls -O "${GITHUB_PROXY}https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/$GEO_FILE.dat"
+        curl -Ls -O "${GITHUB_PROXY}https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/$GEO_FILE.dat.sha256sum"
         sha256sum -c "$GEO_FILE.dat.sha256sum" >/dev/null 2>&1
     done
 
@@ -198,11 +198,12 @@ update_sh() {
         return
     fi
 
-    if ! curl -LsO "${GITHUB_PROXY}https://github.com/233boy/Xray/releases/download/v$LATEST_VER/code.zip"; then
+    if ! curl -Ls -O "${GITHUB_PROXY}https://github.com/233boy/Xray/releases/download/v$LATEST_VER/code.zip"; then
         die "download failed."
     fi
     unzip -qo code.zip -d "$SCRIPT_DIR"
     sed -i '/^get_ip() {/,/^}/ s#one.one.one.one#www.qualcomm.cn#g' "$SCRIPT_DIR/src/core.sh" >/dev/null 2>&1
+    sed -i 's#chrome#firefox#g' "$SCRIPT_DIR/src/core.sh" >/dev/null 2>&1
     chmod +x "$SCRIPT_BIN" >/dev/null 2>&1
     rm -f "${SCRIPT_DIR:?}"/{LICENSE,README.md} >/dev/null 2>&1 || true
 }
