@@ -1,0 +1,16 @@
+{
+  "overrides": [
+    {
+      "files": "config/**/*",
+      "options": {
+        "printWidth": 300
+      }
+    },
+    {
+      "files": "config/xray/**/*.json",
+      "options": {
+        "printWidth": 1
+      }
+    }
+  ]
+}

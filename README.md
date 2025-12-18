@@ -7,17 +7,10 @@
   <p> <b>Across</b> the great wall, we can reach every corner in the world.</p>
 </div>
 
-<div align="center">
-  <a href="https://www.codefactor.io/repository/github/honeok/cross">
-    <img src="https://img.shields.io/codefactor/grade/github/honeok/cross.svg?style=flat-square&label=CodeFactor&logo=CodeFactor&logoColor=white" alt="CodeFactor" />
-  </a>
-  <a href="https://github.com/honeok/cross">
-    <img src="https://img.shields.io/github/license/honeok/cross.svg?style=flat-square&logo=github" alt="License" />
-  </a>
-  <a href="https://github.com/honeok/cross">
-    <img src="https://img.shields.io/github/last-commit/honeok/cross.svg?style=flat-square&logo=github" alt="Commit" />
-  </a>
-</div>
+[![CodeFactor](https://img.shields.io/codefactor/grade/github/honeok/cross.svg?label=CodeFactor&logo=CodeFactor&logoColor=white)](https://www.codefactor.io/repository/github/honeok/cross)
+[![License](https://img.shields.io/github/license/honeok/cross.svg?logo=github)](https://github.com/honeok/cross)
+[![Commit](https://img.shields.io/github/last-commit/honeok/cross.svg?&logo=github)](https://github.com/honeok/cross)
+[![Stand With Ukraine](https://github.com/vshymanskyy/StandWithUkraine/raw/main/badges/StandWithUkraine.svg)](https://stand-with-ukraine.pp.ua)
 
 ## bench.sh
 
