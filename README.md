@@ -8,8 +8,8 @@
 </div>
 
 [![CodeFactor](https://img.shields.io/codefactor/grade/github/honeok/cross.svg?label=CodeFactor&logo=CodeFactor&logoColor=white)](https://www.codefactor.io/repository/github/honeok/cross)
-[![License](https://img.shields.io/github/license/honeok/cross.svg?logo=github)](https://github.com/honeok/tools)
-[![Commit](https://img.shields.io/github/last-commit/honeok/cross.svg?&logo=github)](https://github.com/honeok/tools)
+[![License](https://img.shields.io/github/license/honeok/cross.svg?logo=github)](https://github.com/honeok/cross)
+[![Commit](https://img.shields.io/github/last-commit/honeok/cross.svg?&logo=github)](https://github.com/honeok/cross)
 [![Stand With Ukraine](https://github.com/vshymanskyy/StandWithUkraine/raw/main/badges/StandWithUkraine.svg)](https://stand-with-ukraine.pp.ua)
 
 ## bench.sh
