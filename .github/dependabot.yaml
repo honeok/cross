@@ -4,21 +4,31 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "saturday"
-      time: "16:00"
-    target-branch: "release"
+      interval: "daily"
+      time: "00:00"
+      timezone: "Asia/Shanghai"
     open-pull-requests-limit: 10
+    target-branch: "release"
     commit-message:
       prefix: "chore"
+      include: "scope"
+    groups:
+      actions:
+        patterns:
+          - "*"
 
   - package-ecosystem: "docker"
     directory: "/core/3x-ui"
     schedule:
-      interval: "weekly"
-      day: "saturday"
-      time: "16:00"
-    target-branch: "release"
+      interval: "daily"
+      time: "00:00"
+      timezone: "Asia/Shanghai"
     open-pull-requests-limit: 10
+    target-branch: "release"
     commit-message:
       prefix: "chore"
+      include: "scope"
+    groups:
+      docker:
+        patterns:
+          - "*"
