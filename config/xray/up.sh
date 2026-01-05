@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-2.0
-#
-# Description: This script is used to automatically update xray-core and the latest geoip/geosite data.
-# Copyright (c) 2025 honeok <i@honeok.com>
 
-# References:
-# https://github.com/233boy/Xray
-# https://github.com/bin456789/reinstall
+# Description: This script is used to automatically update xray-core and the latest geoip/geosite data.
+# Copyright (c) 2025-2026 honeok <i@honeok.com>
+
 # Thanks:
+# https://github.com/233boy/Xray
 # https://github.com/XTLS/Xray-core
+# https://github.com/bin456789/reinstall
 # https://github.com/Loyalsoldier/v2ray-rules-dat
 
 set -eEu
@@ -19,7 +18,6 @@ export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
 export DEBIAN_FRONTEND=noninteractive
 
 # 各变量默认值
-GITHUB_PROXY="https://proxy.zzwsec.com/"
 TEMP_DIR="$(mktemp -d)"
 CORE_NAME="xray"
 CORE_DIR="/etc/$CORE_NAME"
@@ -31,22 +29,27 @@ SCRIPT_BIN="/usr/local/bin/$CORE_NAME" # 软连接 /etc/xray/sh/xray.sh
 trap 'rm -rf "${TEMP_DIR:?}" >/dev/null 2>&1' SIGINT SIGTERM EXIT
 
 clear() {
-    [ -t 1 ] && tput clear 2>/dev/null || printf "\033[2J\033[H" || command clear
+    [ -t 1 ] && tput clear 2> /dev/null || printf "\033[2J\033[H" || command clear
 }
 
 die() {
-    echo >&2 "Error: $*"; exit 1
+    echo >&2 "Error: $*"
+    exit 1
 }
 
 # 临时工作目录
-cd "$TEMP_DIR" >/dev/null 2>&1 || die "Unable to enter the work path."
+cd "$TEMP_DIR" > /dev/null 2>&1 || die "Unable to enter the work path."
 
 _exists() {
     local _CMD="$1"
-    if type "$_CMD" >/dev/null 2>&1; then return;
-    elif command -v "$_CMD" >/dev/null 2>&1; then return;
-    elif which "$_CMD" >/dev/null 2>&1; then return;
-    else return 1;
+    if type "$_CMD" > /dev/null 2>&1; then
+        return
+    elif command -v "$_CMD" > /dev/null 2>&1; then
+        return
+    elif which "$_CMD" > /dev/null 2>&1; then
+        return
+    else
+        return 1
     fi
 }
 
@@ -55,7 +58,7 @@ curl() {
     # 添加 --fail 不然404退出码也为0
     # 32位cygwin已停止更新, 证书可能有问题, 添加 --insecure
     # centos7 curl 不支持 --retry-connrefused --retry-all-errors 因此手动 retry
-    for ((i=1; i<=5; i++)); do
+    for ((i = 1; i <= 5; i++)); do
         command curl --connect-timeout 10 --fail --insecure "$@"
         RET="$?"
         if [ "$RET" -eq 0 ]; then
@@ -110,22 +113,13 @@ check_bash() {
     fi
 }
 
-check_cdn() {
-    local COUNTRY
-
-    COUNTRY="$(curl -Ls -4 http://www.qualcomm.cn/cdn-cgi/trace | grep '^loc=' | cut -d= -f2 || true)"
-    if [[ -n "$GITHUB_PROXY" && -n "$COUNTRY" && "$COUNTRY" != "CN" ]]; then
-        GITHUB_PROXY=""
-    fi
-}
-
 # 安装必要的软件包
 check_cmd() {
     local -a INSTALL_PKG
     INSTALL_PKG=("curl" "unzip")
 
     for pkg in "${INSTALL_PKG[@]}"; do
-        if ! _exists "$pkg" >/dev/null 2>&1; then
+        if ! _exists "$pkg" > /dev/null 2>&1; then
             pkg_install "$pkg"
         fi
     done
@@ -136,18 +130,18 @@ update_core() {
     local LATEST_VER CURRENT_VER OS_NAME OS_ARCH
     local -a CORE_FILES
 
-    LATEST_VER="$(curl -Ls "${GITHUB_PROXY}https://api.github.com/repos/XTLS/Xray-core/releases" | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p' | sort -rV | head -n1)"
-    CURRENT_VER="$("$CORE_BIN" version 2>/dev/null | head -n1 | sed -n 's/^Xray \([0-9.]\+\).*/\1/p')"
-    OS_NAME="$(uname -s 2>/dev/null | sed 's/.*/\L&/')"
+    LATEST_VER="$(curl -Ls https://api.github.com/repos/XTLS/Xray-core/releases | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p' | sort -rV | head -n1)"
+    CURRENT_VER="$("$CORE_BIN" version 2> /dev/null | head -n1 | sed -n 's/^Xray \([0-9.]\+\).*/\1/p')"
+    OS_NAME="$(uname -s 2> /dev/null | sed 's/.*/\L&/')"
 
     if [[ "$(printf '%s\n%s\n' "$LATEST_VER" "$CURRENT_VER" | sort -V | head -n1)" == "$LATEST_VER" ]]; then
         return
     fi
 
-    case "$(uname -m 2>/dev/null)" in
-        amd64|x86_64) OS_ARCH="64" ;;
-        arm64|armv8|aarch64) OS_ARCH="arm64-v8a" ;;
-        *) die "unsupported cpu architecture." ;;
+    case "$(uname -m 2> /dev/null)" in
+    amd64 | x86_64) OS_ARCH="64" ;;
+    arm64 | armv8 | aarch64) OS_ARCH="arm64-v8a" ;;
+    *) die "unsupported cpu architecture." ;;
     esac
 
     # 下载内核文件和校验文件
@@ -155,7 +149,7 @@ update_core() {
 
     # 拼接下载链接
     for CORE_FILE in "${CORE_FILES[@]}"; do
-        if ! curl -Ls -O "${GITHUB_PROXY}https://github.com/XTLS/Xray-core/releases/download/v$LATEST_VER/$CORE_FILE"; then
+        if ! curl -Ls -O "https://github.com/XTLS/Xray-core/releases/download/v$LATEST_VER/$CORE_FILE"; then
             die "download failed."
         fi
     done
@@ -166,8 +160,8 @@ update_core() {
     fi
 
     unzip -qo "Xray-$OS_NAME-$OS_ARCH.zip" -d "$CORE_DIR/bin"
-    chmod +x "$CORE_BIN" >/dev/null 2>&1
-    rm -f "${CORE_DIR:?}"/bin/{LICENSE,README.md} >/dev/null 2>&1 || true
+    chmod +x "$CORE_BIN" > /dev/null 2>&1
+    rm -f "${CORE_DIR:?}"/bin/{LICENSE,README.md} > /dev/null 2>&1 || true
 }
 
 # 更新geofile
@@ -178,34 +172,34 @@ update_geo() {
 
     # 下载数据文件和校验文件
     for GEO_FILE in "${GEO_FILES[@]}"; do
-        curl -Ls -O "${GITHUB_PROXY}https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/$GEO_FILE.dat"
-        curl -Ls -O "${GITHUB_PROXY}https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/$GEO_FILE.dat.sha256sum"
-        sha256sum -c "$GEO_FILE.dat.sha256sum" >/dev/null 2>&1
+        curl -Ls -O "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/$GEO_FILE.dat"
+        curl -Ls -O "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/$GEO_FILE.dat.sha256sum"
+        sha256sum -c "$GEO_FILE.dat.sha256sum" > /dev/null 2>&1
     done
 
     if [ -d "$CORE_DIR/bin" ]; then
-        mv -f ./*.dat "$CORE_DIR/bin/" >/dev/null 2>&1
+        mv -f ./*.dat "$CORE_DIR/bin/" > /dev/null 2>&1
     fi
 }
 
 # 更新233boy xray脚本
 update_sh() {
     local LATEST_VER CURRENT_VER
-    LATEST_VER="$(curl -Ls "${GITHUB_PROXY}https://api.github.com/repos/233boy/Xray/releases" | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p' | sort -rV | head -n1)"
+    LATEST_VER="$(curl -Ls https://api.github.com/repos/233boy/Xray/releases | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p' | sort -rV | head -n1)"
     CURRENT_VER="$(sed -n 's/^is_sh_ver=v\(.*\)/\1/p' "$CORE_DIR/sh/xray.sh")"
 
     if [[ "$(printf '%s\n%s\n' "$LATEST_VER" "$CURRENT_VER" | sort -V | head -n1)" == "$LATEST_VER" ]]; then
         return
     fi
 
-    if ! curl -Ls -O "${GITHUB_PROXY}https://github.com/233boy/Xray/releases/download/v$LATEST_VER/code.zip"; then
+    if ! curl -Ls -O "https://github.com/233boy/Xray/releases/download/v$LATEST_VER/code.zip"; then
         die "download failed."
     fi
     unzip -qo code.zip -d "$SCRIPT_DIR"
-    sed -i '/^get_ip() {/,/^}/ s#one.one.one.one#www.qualcomm.cn#g' "$SCRIPT_DIR/src/core.sh" >/dev/null 2>&1
-    sed -i 's#chrome#firefox#g' "$SCRIPT_DIR/src/core.sh" >/dev/null 2>&1
-    chmod +x "$SCRIPT_BIN" >/dev/null 2>&1
-    rm -f "${SCRIPT_DIR:?}"/{LICENSE,README.md} >/dev/null 2>&1 || true
+    sed -i '/^get_ip() {/,/^}/ s#one.one.one.one#www.qualcomm.cn#g' "$SCRIPT_DIR/src/core.sh" > /dev/null 2>&1
+    sed -i 's#chrome#firefox#g' "$SCRIPT_DIR/src/core.sh" > /dev/null 2>&1
+    chmod +x "$SCRIPT_BIN" > /dev/null 2>&1
+    rm -f "${SCRIPT_DIR:?}"/{LICENSE,README.md} > /dev/null 2>&1 || true
 }
 
 restart_xray() {
@@ -217,8 +211,8 @@ restart_xray() {
         RESTART_CMD="systemctl restart xray.service --quiet"
     fi
 
-    for ((i=1; i<=3; i++)); do
-        if eval "$RESTART_CMD" >/dev/null 2>&1; then
+    for ((i = 1; i <= 3; i++)); do
+        if eval "$RESTART_CMD" > /dev/null 2>&1; then
             return
         fi
         if [ "$i" -lt 3 ]; then
@@ -231,7 +225,6 @@ restart_xray() {
 clear
 check_root
 check_bash
-check_cdn
 check_cmd
 update_core
 update_geo
