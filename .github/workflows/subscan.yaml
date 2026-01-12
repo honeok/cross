@@ -1,0 +1,59 @@
+---
+name: "Build Subscan"
+
+on:
+  push:
+    branches: ["*"]
+    paths:
+      - "evil/subscan/**"
+      - "!evil/subscan/**/*.md"
+      - ".github/workflows/subscan.yaml"
+  pull_request:
+    types: [opened, reopened, synchronize]
+    paths:
+      - "evil/subscan/**"
+      - "!evil/subscan/**/*.md"
+      - ".github/workflows/subscan.yaml"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TZ: Asia/Shanghai
+
+jobs:
+  build:
+    name: "Build Subscan"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: evil/subscan
+
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v6
+
+      - name: "Setup Python"
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: evil/subscan/requirements.txt
+
+      - name: "Install dependencies"
+        run: python3 -m pip install -r requirements.txt
+
+      - name: "Run subscan"
+        run: |
+          set -eEuxo pipefail
+          curl -L https://github.com/yitong2333/proxy-minging/raw/main/config.yaml -o channel.yaml
+          python3 main.py
+
+      - name: "Print subscan result"
+        run: |
+          set -eEuxo pipefail
+          cat latest.yaml
+          cat url.txt
+          cat v2ray.txt
