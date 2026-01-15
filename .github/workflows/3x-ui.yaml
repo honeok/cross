@@ -1,69 +1,120 @@
 ---
-name: "Build and Publish 3x-ui"
+name: "Build 3x-ui"
 
 on:
+  push:
+    branches: [master, release]
+    paths:
+      - "core/3x-ui/**"
+      - "!core/3x-ui/**/*.md"
+      - ".github/workflows/3x-ui.yaml"
+  pull_request:
+    types: [opened, reopened, synchronize]
+    paths:
+      - "core/3x-ui/**"
+      - "!core/3x-ui/**/*.md"
+      - ".github/workflows/3x-ui.yaml"
   schedule:
     - cron: "0 16 * * *"
   workflow_dispatch:
 
-defaults:
-  run:
-    shell: bash
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
-  DOCKER_USERNAME: ${{ github.repository_owner }}
-  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+  DOCKERHUB_REPO: ${{ secrets.DOCKER_USERNAME || github.repository_owner }}/3x-ui
 
 jobs:
-  build:
-    name: "Build and Publish 3x-ui"
+  check:
+    name: "Pre check"
     runs-on: ubuntu-latest
     outputs:
-      pushed: ${{ steps.bump_version.outputs.build_image }}
+      renew: ${{ steps.vers.outputs.renew }}
+      xray_version: ${{ steps.vers.outputs.xray_version }}
+      xui_tag: ${{ steps.vers.outputs.xui_tag }}
+      xui_version: ${{ steps.vers.outputs.xui_version }}
 
     steps:
-      - name: "Check out repository"
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: "Fetch Versions and Determine Build"
-        id: bump_version
+      - name: "Fetch Versions and Decide"
+        id: vers
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          XRAY_LVER="$(wget -qO- --tries=50 --header="Authorization: token ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/XTLS/Xray-core/releases | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p' | sort -Vr | head -n1)"
-          XUI_LTAG="$(wget -qO- --tries=50 --header="Authorization: token ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/MHSanaei/3x-ui/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')"
-          XUI_LVER="${XUI_LTAG#v}"
-          XUI_CVER="$(wget -qO- --tries=50 https://hub.docker.com/v2/repositories/$DOCKER_USERNAME/3x-ui/tags 2>/dev/null | grep -o '"name":"[^"]*"' | awk -F'"' '$4!="latest"{print $4}' | sort -Vr | head -n1 || true)"
-          echo "xray_version=${XRAY_LVER}" >> "$GITHUB_OUTPUT"
-          echo "xui_tag=${XUI_LTAG}" >> "$GITHUB_OUTPUT"
-          echo "xui_version=${XUI_LVER}" >> "$GITHUB_OUTPUT"
-          if [[ "$(printf '%s\n%s\n' "$XUI_LVER" "$XUI_CVER" | sort -V | head -n1)" != "$XUI_LVER" || -z "$XUI_CVER" && -n "$XRAY_LVER" && -n "$XUI_LVER" ]]; then
-            echo "build_image=1" >> "$GITHUB_OUTPUT"
+          set -eEuxo pipefail
+          RENEW="false"
+          XRAY_TAG="$(gh release view -R XTLS/Xray-core --json tagName -q .tagName)"
+          XRAY_VER=${XRAY_TAG#v}
+          XUI_TAG="$(gh release view -R MHSanaei/3x-ui --json tagName -q .tagName)"
+          XUI_VER=${XUI_TAG#v}
+          CURRENT_VER="$(skopeo list-tags "docker://docker.io/$DOCKERHUB_REPO" 2>/dev/null | jq -r '.Tags[] | select(. != "latest")' | sort -rV | head -n 1 || true)"
+          if [[ "$(printf '%s\n%s\n' "$XUI_VER" "$CURRENT_VER" | sort -V | head -n 1)" != "$XUI_VER" ]] || [[ -z "$CURRENT_VER" && -n "$XUI_VER" ]]; then
+            echo "Build required."
+            RENEW="true"
           fi
+          echo "renew=${RENEW}" >> "$GITHUB_OUTPUT"
+          echo "xray_version=${XRAY_VER}" >> "$GITHUB_OUTPUT"
+          echo "xui_tag=${XUI_TAG}" >> "$GITHUB_OUTPUT"
+          echo "xui_version=${XUI_VER}" >> "$GITHUB_OUTPUT"
 
-      - name: "Set up Docker QEMU"
-        if: steps.bump_version.outputs.build_image == '1' || github.event_name == 'workflow_dispatch'
+  build:
+    name: "Build image"
+    runs-on: ubuntu-latest
+    needs: [check]
+    if: needs.check.outputs.renew == 'true' || github.event_name == 'workflow_dispatch'
+    strategy:
+      fail-fast: true
+      matrix:
+        platform:
+          - linux/386
+          - linux/amd64
+          - linux/arm/v6
+          - linux/arm/v7
+          - linux/arm64
+          - linux/ppc64le
+          - linux/riscv64
+          - linux/s390x
+
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v6
+
+      - name: "Prepare"
+        run: |
+          PLATFORM_PAIR=$(awk -F/ '{print $1"-"$2$3}' <<< "${{ matrix.platform }}")
+          echo "PLATFORM_PAIR=$PLATFORM_PAIR" >> "$GITHUB_ENV"
+
+      - name: "Download geodat"
+        working-directory: core/3x-ui
+        run: |
+          set -eEuxo pipefail
+          curl -L -O https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat
+          curl -L -O https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat
+          curl -L -o geoip_IR.dat https://github.com/chocolate4u/Iran-v2ray-rules/releases/latest/download/geoip.dat
+          curl -L -o geosite_IR.dat https://github.com/chocolate4u/Iran-v2ray-rules/releases/latest/download/geosite.dat
+          curl -L -o geoip_RU.dat https://github.com/runetfreedom/russia-v2ray-rules-dat/releases/latest/download/geoip.dat
+          curl -L -o geosite_RU.dat https://github.com/runetfreedom/russia-v2ray-rules-dat/releases/latest/download/geosite.dat
+
+      - name: "Setup Docker QEMU"
         uses: docker/setup-qemu-action@v3
 
-      - name: "Set up Docker Buildx"
-        if: steps.bump_version.outputs.build_image == '1' || github.event_name == 'workflow_dispatch'
+      - name: "Setup Docker Buildx"
         uses: docker/setup-buildx-action@v3
 
       - name: "Login to DockerHub"
-        if: steps.bump_version.outputs.build_image == '1' || github.event_name == 'workflow_dispatch'
         uses: docker/login-action@v3
         with:
-          username: ${{ env.DOCKER_USERNAME }}
-          password: ${{ env.DOCKER_PASSWORD }}
+          registry: docker.io
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: "Extract Docker metadata"
-        if: steps.bump_version.outputs.build_image == '1' || github.event_name == 'workflow_dispatch'
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.DOCKER_USERNAME }}/3x-ui
+          images: ${{ env.DOCKERHUB_REPO }}
           tags: |
-            type=raw,value=${{ steps.bump_version.outputs.xui_version }}
+            type=raw,value=${{ needs.check.outputs.xui_version }}
             type=raw,value=latest
           labels: |
             org.opencontainers.image.description=Xray panel supporting multi-protocol multi-user expire day & traffic & IP limit (Vmess, Vless, Trojan, ShadowSocks, Wireguard, Tunnel, Mixed, HTTP).
@@ -71,38 +122,103 @@ jobs:
             org.opencontainers.image.title=3x-ui
             org.opencontainers.image.url=https://t.me/XrayUI
 
-      - name: "Build and push 3x-ui image"
-        if: steps.bump_version.outputs.build_image == '1' || github.event_name == 'workflow_dispatch'
+      - name: "Build and export"
+        id: build
         uses: docker/build-push-action@v6
         with:
-          context: ${{ github.workspace }}/core/3x-ui
-          file: ${{ github.workspace }}/core/3x-ui/Dockerfile
-          platforms: linux/amd64, linux/arm64/v8
-          build-args: |
-            XRAY_VERSION=${{ steps.bump_version.outputs.xray_version }}
-            XUI_TAG=${{ steps.bump_version.outputs.xui_tag }}
-          tags: ${{ steps.meta.outputs.tags }}
+          context: core/3x-ui/
+          platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
-          push: ${{ github.event_name != 'pull_request' }}
+          build-args: |
+            XRAY_VERSION=${{ needs.check.outputs.xray_version }}
+            XUI_TAG=${{ needs.check.outputs.xui_tag }}
+          outputs: >
+            type=image,
+            name=${{ env.DOCKERHUB_REPO }},
+            push-by-digest=${{ github.ref_name == github.event.repository.default_branch }},
+            name-canonical=${{ github.ref_name == github.event.repository.default_branch }},
+            push=${{ github.ref_name == github.event.repository.default_branch }}
 
-  sync:
-    name: "Sync readme to dockerhub"
+      - name: "Export digest"
+        if: ${{ github.ref_name == github.event.repository.default_branch }}
+        run: |
+          rm -rf /tmp/digests
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+
+      - name: "Upload artifact"
+        if: ${{ github.ref_name == github.event.repository.default_branch }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: digest-${{ env.PLATFORM_PAIR }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
     runs-on: ubuntu-latest
-    needs:
-      - build
-    if: needs.build.outputs.pushed == '1'
+    name: "Merge manifest"
+    needs: [check, build]
+    if: ${{ github.ref_name == github.event.repository.default_branch }}
 
     steps:
-      - name: "Check out repository"
-        uses: actions/checkout@v6
+      - name: "Download digests"
+        uses: actions/download-artifact@v7
         with:
-          fetch-depth: 0
+          path: /tmp/digests
+          pattern: digest-*
+          merge-multiple: true
+
+      - name: "Setup Docker Buildx"
+        uses: docker/setup-buildx-action@v3
+
+      - name: "Login to DockerHub"
+        uses: docker/login-action@v3
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: "Extract Docker metadata"
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKERHUB_REPO }}
+          tags: |
+            type=raw,value=${{ needs.check.outputs.xui_version }}
+            type=raw,value=latest
+          labels: |
+            org.opencontainers.image.description=Xray panel supporting multi-protocol multi-user expire day & traffic & IP limit (Vmess, Vless, Trojan, ShadowSocks, Wireguard, Tunnel, Mixed, HTTP).
+            org.opencontainers.image.source=https://github.com/MHSanaei/3x-ui
+            org.opencontainers.image.title=3x-ui
+            org.opencontainers.image.url=https://t.me/XrayUI
+
+      - name: "Create manifest list and push"
+        working-directory: /tmp/digests
+        run: |
+          docker buildx imagetools create \
+            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.DOCKERHUB_REPO }}@sha256:%s ' *)
+
+      - name: "Inspect image"
+        run: |
+          docker buildx imagetools inspect ${{ env.DOCKERHUB_REPO }}:${{ needs.check.outputs.xui_version }}
+
+  sync:
+    name: "Sync readme"
+    runs-on: ubuntu-latest
+    needs: [merge]
+
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v6
 
       - name: "Sync readme to dockerhub"
         uses: peter-evans/dockerhub-description@v5
         with:
-          username: ${{ env.DOCKER_USERNAME }}
-          password: ${{ env.DOCKER_PASSWORD }}
-          repository: ${{ env.DOCKER_USERNAME }}/3x-ui
-          readme-filepath: ${{ github.workspace }}/core/3x-ui/README.md
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: ${{ env.DOCKERHUB_REPO }}
+          readme-filepath: core/3x-ui/README.md
           enable-url-completion: false
