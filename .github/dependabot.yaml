@@ -18,7 +18,9 @@ updates:
           - "*"
 
   - package-ecosystem: "docker"
-    directory: "/core/3x-ui"
+    directories:
+      - "/core/3x-ui"
+      - "/core/xray"
     schedule:
       interval: "daily"
       time: "00:00"
