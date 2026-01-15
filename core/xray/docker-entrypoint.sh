@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-2.0
 #
 # Description: This script is used to configure xray during container initialization.
-# Copyright (c) 2025 honeok <i@honeok.com>
+# Copyright (c) 2025-2026 honeok <i@honeok.com>
 #
 # References:
 # https://github.com/233boy/Xray
@@ -13,15 +13,19 @@ CORE_NAME="xray"
 CORE_DIR="/etc/$CORE_NAME"
 CONF_DIR="$CORE_DIR/conf"
 LOG_DIR="/var/log/$CORE_NAME"
-PUBLIC_IP="$(curl -kLs -m3 -4 http://www.qualcomm.cn/cdn-cgi/trace 2>/dev/null | grep -i '^ip=' | cut -d'=' -f2 | grep . || \
-             curl -kLs -m3 -6 http://www.qualcomm.cn/cdn-cgi/trace 2>/dev/null | grep -i '^ip=' | cut -d'=' -f2 | grep .)"
+PUBLIC_IP="$(curl -kLs -m3 -4 http://www.qualcomm.cn/cdn-cgi/trace 2> /dev/null | grep -i '^ip=' | cut -d'=' -f2 | grep . ||
+    curl -kLs -m3 -6 http://www.qualcomm.cn/cdn-cgi/trace 2> /dev/null | grep -i '^ip=' | cut -d'=' -f2 | grep .)"
 
 _exists() {
     _CMD="$1"
-    if type "$_CMD" >/dev/null 2>&1; then return 0;
-    elif command -v "$_CMD" >/dev/null 2>&1; then return 0;
-    elif which "$_CMD" >/dev/null 2>&1; then return 0;
-    else return 1;
+    if type "$_CMD" > /dev/null 2>&1; then
+        return 0
+    elif command -v "$_CMD" > /dev/null 2>&1; then
+        return 0
+    elif which "$_CMD" > /dev/null 2>&1; then
+        return 0
+    else
+        return 1
     fi
 }
 
@@ -29,9 +33,13 @@ _exists() {
 random_port() {
     use_port() {
         if [ -z "${IS_USED_PORT+x}" ]; then
-            if _exists netstat; then IS_USED_PORT="$(netstat -tunlp | sed -n 's/.*:\([0-9]\+\).*/\1/p' | sort -nu)";
-            elif _exists ss; then IS_USED_PORT="$(ss -tunlp | sed -n 's/.*:\([0-9]\+\).*/\1/p' | sort -nu)";
-            else echo >&2 "Error: The netstat and ss commands are unavailable."; exit 1
+            if _exists netstat; then
+                IS_USED_PORT="$(netstat -tunlp | sed -n 's/.*:\([0-9]\+\).*/\1/p' | sort -nu)"
+            elif _exists ss; then
+                IS_USED_PORT="$(ss -tunlp | sed -n 's/.*:\([0-9]\+\).*/\1/p' | sort -nu)"
+            else
+                echo >&2 "Error: The netstat and ss commands are unavailable."
+                exit 1
             fi
         fi
         printf "%s" "$IS_USED_PORT" | sed 's/ /\n/g' | grep -w "$1"
@@ -43,23 +51,26 @@ random_port() {
         if [ ! "$(use_port "$TEMP_PORT")" ]; then
             REALITY_PORT="$TEMP_PORT" && break
         fi
-        [ "$PORT" -eq 5 ] && { echo >&2 "Error: No free port found after 5 attempts."; exit 1; }
+        [ "$PORT" -eq 5 ] && {
+            echo >&2 "Error: No free port found after 5 attempts."
+            exit 1
+        }
         PORT=$((PORT + 1))
     done
 }
 
 [ ! -s "$CORE_DIR/config.json" ] && cat /opt/config.json > "$CORE_DIR/config.json"
 
-if [ -d "$CONF_DIR" ] && [ -z "$(ls -A "$CONF_DIR" 2>/dev/null)" ]; then
+if [ -d "$CONF_DIR" ] && [ -z "$(ls -A "$CONF_DIR" 2> /dev/null)" ]; then
     # https://github.com/XTLS/Xray-core/issues/2005
     TLS_SERVERS="www.icloud.com music.apple.com swcdn.apple.com apps.apple.com icloud.cdn-apple.com"
     random_port
-    GENERATE_UUID="$(xray uuid 2>/dev/null || cat /proc/sys/kernel/random/uuid)"
-    GENERATE_KEYS="$(xray x25519 2>/dev/null)"
+    GENERATE_UUID="$(xray uuid 2> /dev/null || cat /proc/sys/kernel/random/uuid)"
+    GENERATE_KEYS="$(xray x25519 2> /dev/null)"
     PRIVATE_KEY="$(printf "%s" "$GENERATE_KEYS" | sed -n '1{s/.*: *//;s/^ *//;s/ *$//;p}')"
     PUBLIC_KEY="$(printf "%s" "$GENERATE_KEYS" | sed -n '2{s/.*: *//;s/^ *//;s/ *$//;p}')"
     TLS_SERVER="$(printf "%s" "$TLS_SERVERS" | tr " " "\n" | shuf -n1)"
-    tee > "$CONF_DIR/VLESS-REALITY-$REALITY_PORT.json" <<EOF
+    tee > "$CONF_DIR/VLESS-REALITY-$REALITY_PORT.json" << EOF
 {
   "inbounds": [
     {
@@ -96,8 +107,7 @@ if [ -d "$CONF_DIR" ] && [ -z "$(ls -A "$CONF_DIR" 2>/dev/null)" ]; then
         "enabled": true,
         "destOverride": [
           "http",
-          "tls",
-          "quic"
+          "tls"
         ],
         "routeOnly": true
       }
@@ -105,7 +115,10 @@ if [ -d "$CONF_DIR" ] && [ -z "$(ls -A "$CONF_DIR" 2>/dev/null)" ]; then
   ]
 }
 EOF
-    [ -z "$PUBLIC_IP" ] && { echo >&2 "Error: Failed to retrieve IP address, configuration generation aborted!"; exit 1; }
+    [ -z "$PUBLIC_IP" ] && {
+        echo >&2 "Error: Failed to retrieve IP address, configuration generation aborted!"
+        exit 1
+    }
     {
         echo "-------------------- URL --------------------"
         echo "vless://${GENERATE_UUID}@${PUBLIC_IP}:${REALITY_PORT}?encryption=none&security=reality&flow=xtls-rprx-vision&type=tcp&sni=${TLS_SERVER}&pbk=${PUBLIC_KEY}&fp=firefox#REALITY-${PUBLIC_IP}"
