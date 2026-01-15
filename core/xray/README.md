@@ -37,7 +37,7 @@ touch "$PWD/config.json"
 
 Next, create `docker-compose.yaml`.
 
-Add the following content to the `docker-compose.yaml`  file.
+Add the following content to the `docker-compose.yaml` file.
 
 ```shell
 tee docker-compose.yaml >/dev/null <<'EOF'
