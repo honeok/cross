@@ -1,0 +1,45 @@
+---
+name: "NextTrace CI"
+
+on:
+  push:
+    branches: ["*"]
+    paths: ["**/nxtrace.*"]
+  pull_request:
+    types: [opened, reopened, synchronize]
+    paths: ["**/nxtrace.*"]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  run:
+    name: "NextTrace install"
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v5
+
+      - name: "Get NextTrace Version"
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -eEuxo pipefail
+          STABLE_VERSION="$(gh release view -R nxtrace/NTrace-core --json tagName -q .tagName)"
+          DEV_VERSION="$(gh release view -R nxtrace/NTrace-V1 --json tagName -q .tagName)"
+          echo "STABLE_VERSION=$STABLE_VERSION" >> "$GITHUB_ENV"
+          echo "DEV_VERSION=$DEV_VERSION" >> "$GITHUB_ENV"
+
+      - name: "Run NextTrace install"
+        run: |
+          set -x
+          bash nxtrace.sh --debug
+          bash nxtrace.sh --channel stable --debug --version ${{ env.STABLE_VERSION }}
+          bash nxtrace.sh --channel dev --debug --version ${{ env.DEV_VERSION }}

@@ -107,8 +107,8 @@ dns:
   # 支持UDP TCP DoT DoH DoQ
   # 这部分为主要DNS配置, 影响所有直连, 确保使用对大陆解析精准的DNS
   nameserver:
-    - https://1.1.1.1/dns-query
-    - https://8.8.8.8/dns-query
+    - https://one.one.one.one/dns-query
+    - https://dns.google/dns-query
 
   # 专用于节点域名解析的DNS服务器, 非必要配置项, 如果不填则遵循nameserver-policy nameserver和fallback的配置
   proxy-server-nameserver:
@@ -126,7 +126,7 @@ dns:
 proxies:
   # 链式代理流量走向机制 丨 Mihomo本机 <-> 前置节点 <-> 落地节点 <-> Internet互联网
   - name: "🇸🇬 狮城链式"
-    dialer-proxy: "🇭🇰 香港节点"
+    dialer-proxy: "🇭🇰 香港自动"
     type: socks5
     server: "1.1.1.1"
     port: 1080

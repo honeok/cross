@@ -10,7 +10,6 @@
 [![CodeFactor](https://img.shields.io/codefactor/grade/github/honeok/cross.svg?label=CodeFactor&logo=CodeFactor&logoColor=white)](https://www.codefactor.io/repository/github/honeok/cross)
 [![License](https://img.shields.io/github/license/honeok/cross.svg?logo=github)](https://github.com/honeok/cross)
 [![Commit](https://img.shields.io/github/last-commit/honeok/cross.svg?&logo=github)](https://github.com/honeok/cross)
-[![Stand With Ukraine](https://github.com/vshymanskyy/StandWithUkraine/raw/main/badges/StandWithUkraine.svg)](https://stand-with-ukraine.pp.ua)
 
 ## bench.sh
 
@@ -22,7 +21,7 @@ bash <(curl -Ls https://github.com/honeok/cross/raw/master/bench.sh)
 
 ## nxtrace.sh
 
-Description: This script installs or updates the latest nexttrace version, overcoming the official script's restriction to only stable versions.
+Description: The script installs NextTrace with support for stable/dev channels, custom versions, and multi-architecture compatibility.
 
 ```shell
 bash <(curl -Ls https://github.com/honeok/cross/raw/master/nxtrace.sh)
