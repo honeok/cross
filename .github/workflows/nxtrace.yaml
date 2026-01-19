@@ -3,10 +3,7 @@ name: "NextTrace CI"
 
 on:
   push:
-    branches: ["*"]
-    paths: ["**/nxtrace.*"]
-  pull_request:
-    types: [opened, reopened, synchronize]
+    branches: [master, release]
     paths: ["**/nxtrace.*"]
   workflow_dispatch:
 
@@ -17,11 +14,7 @@ concurrency:
 jobs:
   run:
     name: "NextTrace install"
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [macos-latest, ubuntu-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
 
     steps:
       - name: "Checkout repository"

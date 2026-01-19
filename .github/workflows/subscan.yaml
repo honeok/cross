@@ -3,13 +3,7 @@ name: "Build Subscan"
 
 on:
   push:
-    branches: ["*"]
-    paths:
-      - "evil/subscan/**"
-      - "!evil/subscan/**/*.md"
-      - ".github/workflows/subscan.yaml"
-  pull_request:
-    types: [opened, reopened, synchronize]
+    branches: [master, release]
     paths:
       - "evil/subscan/**"
       - "!evil/subscan/**/*.md"
@@ -48,7 +42,7 @@ jobs:
       - name: "Run subscan"
         run: |
           set -eEuxo pipefail
-          curl -L https://github.com/yitong2333/proxy-minging/raw/main/config.yaml -o channel.yaml
+          curl -L https://github.com/yitong2333/proxy-minging/raw/main/config.yaml | sed -n '1,10p' > channel.yaml
           python3 main.py
 
       - name: "Print subscan result"
