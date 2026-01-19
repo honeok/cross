@@ -5,7 +5,7 @@
 # References:
 # https://docs.docker.com/build/building/multi-platform
 
-FROM golang:1.25-alpine@sha256:e6898559d553d81b245eb8eadafcb3ca38ef320a9e26674df59d4f07a4fd0b07 AS builder
+FROM golang:1.25-alpine@sha256:d9b2e14101f27ec8d09674cd01186798d227bb0daec90e032aeb1cd22ac0f029 AS builder
 LABEL maintainer="honeok <i@honeok.com>"
 WORKDIR /go/src/github.com/MHSanaei/3x-ui
 ARG XRAY_VERSION
