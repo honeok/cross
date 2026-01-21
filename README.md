@@ -1,10 +1,10 @@
 # cross
 
 <div align="center">
-  <br>
-  <img width="80%" style="max-width:80%" src=".github/cross.jpg" title="cross">
-  <br>
-  <p> <b>Across</b> the great wall, we can reach every corner in the world.</p>
+  <br />
+  <img width="90%" style="max-width: 90%" src=".github/assets/cross.png" title="cross" />
+  <br />
+  <p><b>Cross</b> the great wall, we can reach every corner in the world.</p>
 </div>
 
 [![CodeFactor](https://img.shields.io/codefactor/grade/github/honeok/cross.svg?label=CodeFactor&logo=CodeFactor&logoColor=white)](https://www.codefactor.io/repository/github/honeok/cross)
