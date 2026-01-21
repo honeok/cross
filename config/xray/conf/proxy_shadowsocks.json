@@ -27,17 +27,12 @@
     "rules": [
       {
         "type": "field",
-        "protocol": [
-          "bittorrent"
-        ],
+        "protocol": ["bittorrent"],
         "outboundTag": "block"
       },
       {
         "type": "field",
-        "ip": [
-          "geoip:private",
-          "geoip:cn"
-        ],
+        "ip": ["geoip:private", "geoip:cn"],
         "outboundTag": "block"
       },
       {
