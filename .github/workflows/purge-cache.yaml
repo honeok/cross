@@ -1,0 +1,33 @@
+---
+name: "Purge cdn cache"
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "**/*.sh"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  purge-cache:
+    name: "Purge cdn cache"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: "Purge changed scripts from CDN"
+        run: |
+          set -eEuxo pipefail
+          CHANGED_FILES="$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '\.sh$' || true)"
+          [ -n "$CHANGED_FILES" ] || exit 0
+          echo "$CHANGED_FILES" | while IFS= read -r FILE; do
+            curl -fLsS "https://purge.jsdelivr.net/gh/$GITHUB_REPOSITORY@${GITHUB_REF##*/}/$FILE"
+          done
