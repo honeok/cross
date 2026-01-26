@@ -16,7 +16,7 @@
 Description: A script for automated testing of I/O performance, upload & download speed, global network benchmarking, system information retrieval, and disk I/O tests.
 
 ```shell
-bash <(curl -Ls https://github.com/honeok/cross/raw/master/bench.sh)
+bash <(curl -Ls https://github.com/honeok/cross/raw/master/bench.sh || wget -qO- $_)
 ```
 
 ## nxtrace.sh
@@ -24,5 +24,11 @@ bash <(curl -Ls https://github.com/honeok/cross/raw/master/bench.sh)
 Description: The script installs NextTrace with support for stable/dev channels, custom versions, and multi-architecture compatibility.
 
 ```shell
-bash <(curl -Ls https://github.com/honeok/cross/raw/master/nxtrace.sh)
+bash <(curl -Ls https://github.com/honeok/cross/raw/master/nxtrace.sh || wget -qO- $_)
+```
+
+or
+
+```shell
+bash <(curl -Ls https://fastly.jsdelivr.net/gh/honeok/cross@master/nxtrace.sh || wget -qO- $_)
 ```
