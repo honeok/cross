@@ -3,12 +3,12 @@
 # Copyright (c) 2025 zzwsec <zzwsec@163.com>
 
 # References:
-# https://linux.do/t/topic/243618
 # https://github.com/MetaCubeX/mihomo/blob/Meta/docs/config.yaml
 # https://github.com/Kook-9527/Plugin-backup/blob/main/ClashMeta.yaml
 # https://github.com/qichiyuhub/rule/blob/main/config/mihomo/config.yaml
 # https://github.com/yyhhyyyyyy/selfproxy/blob/main/Mihomo/mihomo_single.yaml
 # https://www.nodeseek.com/post-290031-1
+# https://gist.github.com/zhengxiongzhao/097ce20efee1ba0efe3796a1e10e5150
 
 ## 全局配置
 port: 7890 # HTTP(S)代理服务器端口
@@ -225,10 +225,12 @@ rules:
   - RULE-SET,private_domain,DIRECT
 
   # 广告拦截
-  - RULE-SET,ads_domain,REJECT
+  - RULE-SET,awaAd_domain,REJECT
 
   # 应用分流
-  - RULE-SET,apple_cn_domain,DIRECT
+  - RULE-SET,meituan_domain,DIRECT
+  - RULE-SET,appleCn_domain,DIRECT
+
   - RULE-SET,apple_domain,🍎 Apple
   - RULE-SET,google_domain,🍀 Google
   - RULE-SET,ai_domain,🤖 AI
@@ -260,16 +262,18 @@ rules:
 ## 规则集
 # https://github.com/MetaCubeX/meta-rules-dat
 rule-anchor:
-  ip: &ip { type: http, interval: 86400, behavior: ipcidr, format: mrs }
+  class: &class { type: http, interval: 86400, behavior: classical, format: text }
   domain: &domain { type: http, interval: 86400, behavior: domain, format: mrs }
-  # class: &class { type: http, interval: 86400, behavior: classical, format: text }
+  ip: &ip { type: http, interval: 86400, behavior: ipcidr, format: mrs }
 
-## 订阅规则
+## 规则
 rule-providers:
+  # 广告规则
+  awaAd_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/TG-Twilight/AWAvenue-Ads-Rule@main/Filters/AWAvenue-Ads-Rule-Clash.mrs" }
+
   ai_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/category-ai-!cn.mrs" }
-  ads_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/TG-Twilight/AWAvenue-Ads-Rule@main/Filters/AWAvenue-Ads-Rule-Clash.mrs" }
   apple_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/apple.mrs" }
-  apple_cn_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/apple-cn.mrs" }
+  appleCn_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/apple-cn.mrs" }
   bilibili_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/bilibili.mrs" }
   cn_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/cn.mrs" }
   direct_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/wwqgtxx/clash-rules@release/direct.mrs" }
@@ -279,6 +283,7 @@ rule-providers:
   github_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/github.mrs" }
   gitlab_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/gitlab.mrs" }
   google_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/google.mrs" }
+  meituan_domain: { <<: *class, url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/MeiTuan/MeiTuan.list" }
   microsoft_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/microsoft.mrs" }
   netflix_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/netflix.mrs" }
   onedrive_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/onedrive.mrs" }
