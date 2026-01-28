@@ -11,13 +11,13 @@
 # https://gist.github.com/zhengxiongzhao/097ce20efee1ba0efe3796a1e10e5150
 
 ## 全局配置
-port: 7890 # HTTP(S)代理服务器端口
-socks-port: 7891 # SOCKS5代理端口
+# port: 7890 # HTTP(S)代理服务器端口
+# socks-port: 7891 # SOCKS5代理端口
 mixed-port: 10801 # HTTP(S)和SOCKS代理混合端口
-redir-port: 7892 # 透明代理端口, 用于Linux和MacOS
+# redir-port: 7892 # 透明代理端口, 用于Linux和MacOS
 
 # Transparent proxy server port for Linux (TProxy TCP and TProxy UDP)
-tproxy-port: 7893 # Linux透明代理服务器端口
+# tproxy-port: 7893 # Linux透明代理服务器端口
 
 allow-lan: true # 允许局域网连接
 bind-address: "*" # 绑定IP地址, 仅作用于allow-lan为true, '*'表示所有地址
@@ -43,6 +43,7 @@ geox-url:
   mmdb: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.metadb"
   asn: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/GeoLite2-ASN.mmdb"
 
+# geodata-mode: true
 geo-auto-update: true # 是否自动更新geodata
 geo-update-interval: 24 # 更新间隔 单位: 小时
 
@@ -59,7 +60,7 @@ tcp-concurrent: true # TCP并发连接所有IP, 将使用最快握手的TCP
 # 全局TLS指纹, 优先低于proxy内的client-fingerprint
 # 可选： "chrome" "firefox" "safari" "ios" "random" "none" options.
 # Utls is currently support TLS transport in TCP/grpc/WS/HTTP for VLESS/Vmess and trojan.
-global-client-fingerprint: firefox
+global-client-fingerprint: random
 
 # TCP保持活动间隔
 disable-keep-alive: false # 目前在android端强制为true
@@ -73,13 +74,52 @@ profile:
   store-selected: true # 存储select选择记录
   store-fake-ip: true # 持久化fake-ip
 
+ntp:
+  enable: false
+  write-to-system: true
+  server: time.apple.com
+  port: 123
+  interval: 30
+
+## Tun配置
+tun:
+  enable: false
+  stack: system # gvisor/mixed
+  dns-hijack: # 需要劫持的DNS
+    - "any:53"
+    - "tcp://any:53"
+  auto-route: true # 配置路由表
+  auto-detect-interface: true # 自动识别出口网卡
+
+## 嗅探域名 可选配置
+sniffer:
+  enable: true
+  ## 对 redir-host 类型识别的流量进行强制嗅探
+  ## 如: Tun Redir和TProxy并DNS为redir-host皆属于
+  # force-dns-mapping: false
+  ## 对所有未获取到域名的流量进行强制嗅探
+  # parse-pure-ip: false
+  # 是否使用嗅探结果作为实际访问 默认true
+  # 全局配置 优先级低于sniffer.sniff实际配置
+  override-destination: false
+  sniff: # TLS和QUIC默认如果不配置ports默认嗅探443
+    QUIC:
+      ports: [443]
+    TLS:
+      ports: [443, 8443]
+    # 默认嗅探80
+    HTTP: # 需要嗅探的端口
+      ports: [80, 8080-8880]
+      # 可覆盖 sniffer.override-destination
+      override-destination: true
+
 ## DNS模块
 dns:
   cache-algorithm: arc
   enable: true # 关闭将使用系统DNS
   prefer-h3: false # 是否开启DoH支持HTTP/3, 将并发尝试
   listen: :1053 # 开启DNS服务器监听
-  ipv6: false # false将返回AAAA的空结果
+  # ipv6: false # false将返回AAAA的空结果
   # ipv6-timeout: 300 # 单位：ms 内部双栈并发时, 向上游查询AAAA时, 等待AAAA的时间, 默认100ms
   default-nameserver: # 指定初始DNS解析服务器, 用于解析mihomo自身需要的域名 (如订阅地址、规则集地址) 只能使用纯IP地址
     - 119.29.29.29
