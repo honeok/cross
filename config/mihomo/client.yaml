@@ -9,6 +9,7 @@
 # https://github.com/yyhhyyyyyy/selfproxy/blob/main/Mihomo/mihomo_single.yaml
 # https://www.nodeseek.com/post-290031-1
 # https://gist.github.com/zhengxiongzhao/097ce20efee1ba0efe3796a1e10e5150
+# https://github.com/HenryChiao/mihomo_yamls
 
 ## 全局配置
 # port: 7890 # HTTP(S)代理服务器端口
@@ -84,7 +85,7 @@ ntp:
 ## Tun配置
 tun:
   enable: false
-  stack: system # gvisor/mixed
+  stack: mixed # system/gvisor/mixed
   dns-hijack: # 需要劫持的DNS
     - "any:53"
     - "tcp://any:53"
@@ -237,6 +238,7 @@ proxy-groups:
   - { name: 🪟 Microsoft, <<: *main }
   - { name: 🐬 OneDrive, <<: *main }
   - { name: 📲 Telegram, <<: *proxy }
+  - { name: 🐦 Twitter, <<: *proxy }
   - { name: 📺 BiliBili, <<: *island }
   - { name: 🎥 NETFLIX, <<: *specific }
   - { name: 🎧 Spotify, <<: *island }
@@ -256,7 +258,7 @@ proxy-groups:
 
   #------------------------特殊分组------------------------#
   - { name: 🎯 全球直连, type: select, proxies: [DIRECT, 🚀 默认代理] }
-  - { name: 🐟 漏网之鱼, <<: *main }
+  - { name: 🎣 漏网之鱼, <<: *main }
 
 ## 规则匹配
 rules:
@@ -269,10 +271,10 @@ rules:
 
   # 应用分流
   - RULE-SET,meituan_domain,DIRECT
-  - RULE-SET,appleCn_domain,DIRECT
 
   - RULE-SET,apple_domain,🍎 Apple
   - RULE-SET,google_domain,🍀 Google
+  - RULE-SET,googleCn_domain,🍀 Google
   - RULE-SET,ai_domain,🤖 AI
   - RULE-SET,github_domain,👨‍💻 GitHub
   - RULE-SET,gitlab_domain,🦊 GitLab
@@ -280,6 +282,7 @@ rules:
   - RULE-SET,microsoft_domain,🪟 Microsoft
   - RULE-SET,onedrive_domain,🐬 OneDrive
   - RULE-SET,telegram_domain,📲 Telegram
+  - RULE-SET,twitter_domain,🐦 Twitter
   - RULE-SET,bilibili_domain,📺 BiliBili
   - RULE-SET,netflix_domain,🎥 NETFLIX
   - RULE-SET,spotify_domain,🎧 Spotify
@@ -292,12 +295,14 @@ rules:
   - RULE-SET,direct_domain,DIRECT
   - RULE-SET,geolocation-!cn,🚀 默认代理
 
+  - RULE-SET,apple_ip,🍎 Apple,no-resolve
   - RULE-SET,google_ip,🍀 Google,no-resolve
-  - RULE-SET,telegram_ip,📲 Telegram,no-resolve
   - RULE-SET,netflix_ip,🎥 NETFLIX,no-resolve
+  - RULE-SET,telegram_ip,📲 Telegram,no-resolve
+  - RULE-SET,twitter_ip,🐦 Twitter,no-resolve
 
   # 兜底规则
-  - MATCH,🐟 漏网之鱼
+  - MATCH,🎣 漏网之鱼
 
 ## 规则集
 # https://github.com/MetaCubeX/meta-rules-dat
@@ -313,7 +318,6 @@ rule-providers:
 
   ai_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/category-ai-!cn.mrs" }
   apple_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/apple.mrs" }
-  appleCn_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/apple-cn.mrs" }
   bilibili_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/bilibili.mrs" }
   cn_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/cn.mrs" }
   direct_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/wwqgtxx/clash-rules@release/direct.mrs" }
@@ -323,6 +327,7 @@ rule-providers:
   github_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/github.mrs" }
   gitlab_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/gitlab.mrs" }
   google_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/google.mrs" }
+  googleCn_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/google-cn.mrs" }
   meituan_domain: { <<: *class, url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/MeiTuan/MeiTuan.list" }
   microsoft_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/microsoft.mrs" }
   netflix_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/netflix.mrs" }
@@ -333,9 +338,12 @@ rule-providers:
   spotify_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/spotify.mrs" }
   telegram_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/telegram.mrs" }
   tiktok_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/tiktok.mrs" }
+  twitter_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/twitter.mrs" }
 
+  apple_ip: { <<: *ip, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo-lite/geoip/apple.mrs" }
   cn_ip: { <<: *ip, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/cn.mrs" }
   google_ip: { <<: *ip, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/google.mrs" }
   netflix_ip: { <<: *ip, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/netflix.mrs" }
   private_ip: { <<: *ip, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/private.mrs" }
   telegram_ip: { <<: *ip, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/telegram.mrs" }
+  twitter_ip: { <<: *ip, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/twitter.mrs" }
