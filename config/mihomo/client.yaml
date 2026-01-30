@@ -158,7 +158,7 @@ dns:
 
   # 配置查询域名使用的DNS服务器
   nameserver-policy:
-    "rule-set:private_domain,cn_domain,direct_domain":
+    "rule-set:private_domain,cn_domain":
       - https://doh.pub/dns-query
       - https://dns.alidns.com/dns-query
     "geosite:category-ads-all": rcode://success # 广告域名在DNS层直接返回"成功但无记录"
@@ -267,6 +267,7 @@ rules:
   - RULE-SET,private_domain,DIRECT
 
   # 广告拦截
+  - RULE-SET,antiAd_domain,REJECT
   - RULE-SET,awaAd_domain,REJECT
 
   # 应用分流
@@ -292,7 +293,6 @@ rules:
 
   - RULE-SET,cn_ip,🎯 全球直连
   - RULE-SET,cn_domain,🎯 全球直连
-  - RULE-SET,direct_domain,DIRECT
   - RULE-SET,geolocation-!cn,🚀 默认代理
 
   - RULE-SET,apple_ip,🍎 Apple,no-resolve
@@ -314,13 +314,13 @@ rule-anchor:
 ## 规则
 rule-providers:
   # 广告规则
+  antiAd_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/privacy-protection-tools/anti-ad.github.io@master/docs/mihomo.mrs" }
   awaAd_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/TG-Twilight/AWAvenue-Ads-Rule@main/Filters/AWAvenue-Ads-Rule-Clash.mrs" }
 
   ai_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/category-ai-!cn.mrs" }
   apple_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/apple.mrs" }
   bilibili_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/bilibili.mrs" }
   cn_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/cn.mrs" }
-  direct_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/wwqgtxx/clash-rules@release/direct.mrs" }
   docker_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/docker.mrs" }
   fakeipfilter_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/wwqgtxx/clash-rules@release/fakeip-filter.mrs" }
   geolocation-!cn: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/geolocation-!cn.mrs" }
