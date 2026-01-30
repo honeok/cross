@@ -3,9 +3,11 @@ name: "Purge cdn cache"
 
 on:
   push:
-    branches: [master]
+    branches: [master, release]
     paths:
       - "**/*.sh"
+  schedule:
+    - cron: "0 22 * * *"
   workflow_dispatch:
 
 concurrency:
@@ -23,11 +25,27 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: "Purge changed scripts from CDN"
+      - name: "Purge script CDN cache"
+        if: github.event_name == 'push'
         run: |
-          set -eEuxo pipefail
+          set -eEuo pipefail
           CHANGED_FILES="$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '\.sh$' || true)"
           [ -n "$CHANGED_FILES" ] || exit 0
-          echo "$CHANGED_FILES" | while IFS= read -r FILE; do
-            curl -fLsS "https://purge.jsdelivr.net/gh/$GITHUB_REPOSITORY@${GITHUB_REF##*/}/$FILE"
-          done
+          while IFS= read -r CHANGED_FILE; do
+            curl -Ls "https://purge.jsdelivr.net/gh/$GITHUB_REPOSITORY@${GITHUB_REF##*/}/$CHANGED_FILE"
+          done <<< "$CHANGED_FILES"
+
+      - name: "Purge routing ruleset CDN cache"
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        working-directory: config/mihomo
+        run: |
+          set -eEuo pipefail
+          JSDELIVR_URLS="$(grep -hIor "https://[^\"']*jsdelivr\.net[^\"']*" . | sort -u)"
+          [ -n "$JSDELIVR_URLS" ] || exit 0
+          echo "Purge CDN cache"
+          sed 's/https:\/\/[^/]*jsdelivr\.net/https:\/\/purge.jsdelivr.net/' <<< "$JSDELIVR_URLS" | xargs -n 1 curl -Ls -o /dev/null -w "%{http_code} %{url_effective}\n"
+          echo "Warming CDN resources"
+          while read -r JSDELIVR_URL; do
+            curl -Ls -o /dev/null "$JSDELIVR_URL"
+            curl -Ls -o /dev/null -w "%{http_code} %{url_effective}\n" "$JSDELIVR_URL"
+          done <<< "$JSDELIVR_URLS"
