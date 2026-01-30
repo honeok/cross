@@ -5,7 +5,7 @@
 # References:
 # https://docs.docker.com/build/building/multi-platform
 
-FROM golang:1.25-alpine@sha256:d9b2e14101f27ec8d09674cd01186798d227bb0daec90e032aeb1cd22ac0f029 AS builder
+FROM golang:1.25-alpine@sha256:660f0b83cf50091e3777e4730ccc0e63e83fea2c420c872af5c60cb357dcafb2 AS builder
 LABEL maintainer="honeok <i@honeok.com>"
 WORKDIR /go/src/github.com/MHSanaei/3x-ui
 ARG XRAY_VERSION
@@ -22,7 +22,7 @@ RUN set -ex \
     && go mod download \
     && go build -v -trimpath -o /go/bin/3x-ui -ldflags "-s -w -buildid= -linkmode external -extldflags '-static'"
 
-FROM alpine:3.23.2@sha256:865b95f46d98cf867a156fe4a135ad3fe50d2056aa3f25ed31662dff6da4eb62 AS dist
+FROM alpine:3.23.3@sha256:25109184c71bdad752c8312a8623239686a9a2071e8825f20acb8f2198c3f659 AS dist
 LABEL maintainer="honeok <i@honeok.com>"
 WORKDIR /usr/local/bin
 ARG TARGETARCH

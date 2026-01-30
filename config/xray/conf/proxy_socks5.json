@@ -27,36 +27,27 @@
     "rules": [
       {
         "type": "field",
-        "protocol": [
-          "bittorrent"
-        ],
+        "protocol": ["bittorrent"],
         "outboundTag": "block"
       },
       {
         "type": "field",
-        "ip": [
-          "geoip:private",
-          "geoip:cn"
-        ],
+        "ip": ["geoip:private", "geoip:cn"],
         "outboundTag": "block"
       },
       {
         "type": "field",
         "domain": [
-          "geosite:ipip",
-          "geosite:dazn",
-          "geosite:disney",
-          "geosite:netflix",
-          "geosite:google",
-          "geosite:primevideo",
-          "geosite:tvb",
-          "geosite:spotify",
-          "geosite:bing",
           "geosite:apple",
-          "geosite:category-ai-!cn",
-          "geosite:steam",
+          "geosite:bing",
+          "geosite:google",
+          "geosite:ipip",
           "geosite:reddit",
-          "geosite:x"
+          "geosite:steam",
+          "geosite:tvb",
+          "geosite:x",
+          "geosite:category-entertainment",
+          "geosite:category-ai-!cn"
         ],
         "outboundTag": "proxy"
       }
