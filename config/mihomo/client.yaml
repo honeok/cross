@@ -220,7 +220,7 @@ proxy-providers:
 ## 代理分组锚点
 main: &main { type: select, include-all: true, proxies: [🚀 默认代理, ♻️ 自动选择, 🇭🇰 香港自动, 🇹🇼 台湾自动, 🇸🇬 狮城自动, 🇯🇵 日本自动, 🇺🇸 美国自动, 🇳🇱 荷兰自动, 🇩🇪 德国自动, DIRECT] }
 proxy: &proxy { type: select, include-all: true, proxies: [🚀 默认代理, ♻️ 自动选择, 🇭🇰 香港自动, 🇹🇼 台湾自动, 🇸🇬 狮城自动, 🇯🇵 日本自动, 🇺🇸 美国自动, 🇳🇱 荷兰自动, 🇩🇪 德国自动] }
-specific: &specific { type: select, include-all: true, <<: *airports, filter: "^((?!(?i)(🇭🇰|香港|hk|hong\\s?kong|🇲🇴|澳门|澳門|macau|macao|🇷🇺|俄罗斯|ru|russia|🇨🇳|中国|回国|china|cn)).)*$" }
+specific: &specific { type: select, include-all: true, proxies: [🚀 默认代理, ♻️ 自动选择, 🇹🇼 台湾自动, 🇸🇬 狮城自动, 🇯🇵 日本自动, 🇺🇸 美国自动, 🇳🇱 荷兰自动, 🇩🇪 德国自动], <<: *airports, filter: "^((?!(?i)(🇭🇰|香港|hk|hong\\s?kong|🇲🇴|澳门|澳門|macau|macao|🇷🇺|俄罗斯|ru|russia|🇨🇳|中国|回国|china|cn)).)*$" }
 island: &island { type: select, proxies: [DIRECT], <<: *airports, filter: "(?i)(🇭🇰|香港|hk|hong\\s?kong|🇲🇴|澳门|澳門|macau|macao|🇹🇼|台湾|台灣|tw|taiwan|taipei)" }
 
 ## 代理分组
