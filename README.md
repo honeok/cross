@@ -10,6 +10,7 @@
 [![CodeFactor](https://img.shields.io/codefactor/grade/github/honeok/cross.svg?label=CodeFactor&logo=CodeFactor&logoColor=white)](https://www.codefactor.io/repository/github/honeok/cross)
 [![License](https://img.shields.io/github/license/honeok/cross.svg?logo=github)](https://github.com/honeok/cross)
 [![Commit](https://img.shields.io/github/last-commit/honeok/cross.svg?&logo=github)](https://github.com/honeok/cross)
+[![Jsdelivr Stats](https://data.jsdelivr.com/v1/package/gh/honeok/cross/badge?style=rounded)](https://www.jsdelivr.com/package/gh/honeok/cross)
 
 ## bench.sh
 
