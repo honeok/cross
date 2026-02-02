@@ -37,10 +37,9 @@ jobs:
 
       - name: "Purge routing ruleset CDN cache"
         if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-        working-directory: config/mihomo
         run: |
           set -eEuo pipefail
-          JSDELIVR_URLS="$(grep -hIor "https://[^\"']*jsdelivr\.net[^\"']*" . | sort -u)"
+          JSDELIVR_URLS="$(grep -EhIor --exclude="*.md" "https://[^\"'\$\\{[:space:];|,]+jsdelivr\.net[^\"'\$\\{[:space:];|,]+(/[^\$\\{[:space:];|,\"']+)+" . | sort -u || true)"
           [ -n "$JSDELIVR_URLS" ] || exit 0
           echo "Purge CDN cache"
           sed 's/https:\/\/[^/]*jsdelivr\.net/https:\/\/purge.jsdelivr.net/' <<< "$JSDELIVR_URLS" | xargs -n 1 curl -Ls -o /dev/null -w "%{http_code} %{url_effective}\n"
