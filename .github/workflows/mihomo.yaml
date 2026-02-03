@@ -87,9 +87,6 @@ jobs:
           curl -L -O https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.metadb
           curl -L -O https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/GeoLite2-ASN.mmdb
 
-      - name: "Set up Docker QEMU"
-        uses: docker/setup-qemu-action@v3
-
       - name: "Setup Docker Buildx"
         uses: docker/setup-buildx-action@v3
 
