@@ -123,12 +123,12 @@ jobs:
           outputs: >
             type=image,
             name=${{ env.DOCKERHUB_REPO }},
-            push-by-digest=${{ github.ref_name == github.event.repository.default_branch }},
-            name-canonical=${{ github.ref_name == github.event.repository.default_branch }},
-            push=${{ github.ref_name == github.event.repository.default_branch }}
+            push-by-digest=${{ github.ref_name == 'master' }},
+            name-canonical=${{ github.ref_name == 'master' }},
+            push=${{ github.ref_name == 'master' }}
 
       - name: "Export digest"
-        if: ${{ github.ref_name == github.event.repository.default_branch }}
+        if: github.ref_name == 'master'
         run: |
           rm -rf /tmp/digests
           mkdir -p /tmp/digests
@@ -136,7 +136,7 @@ jobs:
           touch "/tmp/digests/${digest#sha256:}"
 
       - name: "Upload artifact"
-        if: ${{ github.ref_name == github.event.repository.default_branch }}
+        if: github.ref_name == 'master'
         uses: actions/upload-artifact@v6
         with:
           name: digest-${{ env.PLATFORM_PAIR }}
@@ -148,7 +148,7 @@ jobs:
     runs-on: ubuntu-latest
     name: "Merge manifest"
     needs: [check, build]
-    if: ${{ github.ref_name == github.event.repository.default_branch }}
+    if: github.ref_name == 'master'
 
     steps:
       - name: "Download digests"
