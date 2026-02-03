@@ -21,6 +21,7 @@ updates:
     directories:
       - "/core/3x-ui"
       - "/core/mihomo"
+      - "/core/sing-box"
       - "/core/xray"
     schedule:
       interval: "daily"
