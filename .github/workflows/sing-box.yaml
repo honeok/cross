@@ -1,19 +1,19 @@
 ---
-name: "Build Mihomo"
+name: "Build Sing-box"
 
 on:
   push:
     branches: [master, release]
     paths:
-      - "core/mihomo/**"
-      - "!core/mihomo/**/*.md"
-      - ".github/workflows/mihomo.yaml"
+      - "core/sing-box/**"
+      - "!core/sing-box/**/*.md"
+      - ".github/workflows/sing-box.yaml"
   pull_request:
     types: [opened, reopened, synchronize]
     paths:
-      - "core/mihomo/**"
-      - "!core/mihomo/**/*.md"
-      - ".github/workflows/mihomo.yaml"
+      - "core/sing-box/**"
+      - "!core/sing-box/**/*.md"
+      - ".github/workflows/sing-box.yaml"
   schedule:
     - cron: "0 16 * * *"
   workflow_dispatch:
@@ -23,8 +23,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  WORK_DIR: core/mihomo
-  DOCKERHUB_REPO: ${{ secrets.DOCKER_USERNAME || github.repository_owner }}/mihomo
+  WORK_DIR: core/sing-box
+  DOCKERHUB_REPO: ${{ secrets.DOCKER_USERNAME || github.repository_owner }}/sing-box
 
 jobs:
   check:
@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       renew: ${{ steps.vers.outputs.renew }}
-      mihomo_version: ${{ steps.vers.outputs.mihomo_version }}
+      singbox_version: ${{ steps.vers.outputs.singbox_version }}
 
     steps:
       - name: "Fetch Versions and Decide"
@@ -42,14 +42,14 @@ jobs:
         run: |
           set -eEuxo pipefail
           RENEW="false"
-          LATEST_VER="$(gh release view -R MetaCubeX/mihomo --json tagName -q .tagName)"
-          CURRENT_VER="$(skopeo list-tags "docker://docker.io/$DOCKERHUB_REPO" 2>/dev/null | jq -r '.Tags[] | select(test("^v"))' | sort -rV | head -n 1 || true)"
+          LATEST_VER="$(gh release view -R SagerNet/sing-box --json tagName -q .tagName)"
+          CURRENT_VER="$(skopeo list-tags "docker://docker.io/$DOCKERHUB_REPO" 2>/dev/null | jq -r '.Tags[]' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$'  | sort -rV | head -n 1 || true)"
           if [[ "$(printf '%s\n%s\n' "$LATEST_VER" "$CURRENT_VER" | sort -V | head -n 1)" != "$LATEST_VER" ]] || [[ -z "$CURRENT_VER" && -n "$LATEST_VER" ]]; then
             echo "Build required."
             RENEW="true"
           fi
           echo "renew=${RENEW}" >> "$GITHUB_OUTPUT"
-          echo "mihomo_version=${LATEST_VER}" >> "$GITHUB_OUTPUT"
+          echo "singbox_version=${LATEST_VER}" >> "$GITHUB_OUTPUT"
 
   build:
     name: "Build image"
@@ -75,17 +75,8 @@ jobs:
 
       - name: "Prepare"
         run: |
-          PLATFORM_PAIR=$(awk -F/ '{print $1"-"$2$3}' <<< ${{ matrix.platform }})
+          PLATFORM_PAIR="$(awk -F/ '{print $1"-"$2$3}' <<< ${{ matrix.platform }})"
           echo "PLATFORM_PAIR=$PLATFORM_PAIR" >> "$GITHUB_ENV"
-
-      - name: "Download geodat"
-        working-directory: ${{ env.WORK_DIR }}
-        run: |
-          set -eEuxo pipefail
-          curl -L -O https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.dat
-          curl -L -O https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geosite.dat
-          curl -L -O https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.metadb
-          curl -L -O https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/GeoLite2-ASN.mmdb
 
       - name: "Setup Docker Buildx"
         uses: docker/setup-buildx-action@v3
@@ -104,13 +95,13 @@ jobs:
         with:
           images: ${{ env.DOCKERHUB_REPO }}
           tags: |
-            type=raw,value=${{ needs.check.outputs.mihomo_version }}
+            type=raw,value=${{ needs.check.outputs.singbox_version }}
             type=raw,value=latest
           labels: |
-            org.opencontainers.image.description=Mihomo is a high-performance, cross-platform rule-based tunnel core supporting modern protocols like VLESS, Hysteria2, and TUIC.
-            org.opencontainers.image.source=https://github.com/MetaCubeX/mihomo
-            org.opencontainers.image.title=mihomo
-            org.opencontainers.image.url=https://wiki.metacubex.one
+            org.opencontainers.image.description=The universal proxy platform.
+            org.opencontainers.image.source=https://github.com/SagerNet/sing-box
+            org.opencontainers.image.title=sing-box
+            org.opencontainers.image.url=https://sing-box.sagernet.org
 
       - name: "Build and export"
         id: build
@@ -119,7 +110,7 @@ jobs:
           context: ${{ env.WORK_DIR }}
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: MIHOMO_VERSION=${{ needs.check.outputs.mihomo_version }}
+          build-args: SINGBOX_VERSION=${{ needs.check.outputs.singbox_version }}
           outputs: >
             type=image,
             name=${{ env.DOCKERHUB_REPO }},
@@ -174,13 +165,13 @@ jobs:
         with:
           images: ${{ env.DOCKERHUB_REPO }}
           tags: |
-            type=raw,value=${{ needs.check.outputs.mihomo_version }}
+            type=raw,value=${{ needs.check.outputs.singbox_version }}
             type=raw,value=latest
           labels: |
-            org.opencontainers.image.description=Mihomo is a high-performance, cross-platform rule-based tunnel core supporting modern protocols like VLESS, Hysteria2, and TUIC.
-            org.opencontainers.image.source=https://github.com/MetaCubeX/mihomo
-            org.opencontainers.image.title=mihomo
-            org.opencontainers.image.url=https://wiki.metacubex.one
+            org.opencontainers.image.description=The universal proxy platform.
+            org.opencontainers.image.source=https://github.com/SagerNet/sing-box
+            org.opencontainers.image.title=sing-box
+            org.opencontainers.image.url=https://sing-box.sagernet.org
 
       - name: "Create manifest list and push"
         working-directory: /tmp/digests
@@ -191,4 +182,4 @@ jobs:
 
       - name: "Inspect image"
         run: |
-          docker buildx imagetools inspect ${{ env.DOCKERHUB_REPO }}:${{ needs.check.outputs.mihomo_version }}
+          docker buildx imagetools inspect ${{ env.DOCKERHUB_REPO }}:${{ needs.check.outputs.singbox_version }}
