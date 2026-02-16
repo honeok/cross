@@ -13,7 +13,23 @@ set -eE
 
 # MAJOR.MINOR.PATCH
 # shellcheck disable=SC2034
-readonly SCRIPT_VERSION='v1.0.0'
+readonly SCRIPT_VERSION='v1.0.1'
+
+_red() {
+    printf "\033[31m%b\033[0m\n" "$*"
+}
+
+_yellow() {
+    printf "\033[33m%b\033[0m\n" "$*"
+}
+
+_err_msg() {
+    printf "\033[41m\033[1mError\033[0m %b\n" "$*"
+}
+
+_blue_bg() {
+    printf "\033[44;37m%b\033[0m\n" "$*"
+}
 
 # 各变量默认值
 TEMP_DIR="$(mktemp -d)"
@@ -35,7 +51,7 @@ clear() {
 }
 
 die() {
-    echo >&2 "Error: $*"
+    _err_msg >&2 "$(_red "$@")"
     exit 1
 }
 
@@ -81,14 +97,6 @@ random_port() {
     [ -n "$PORT" ] || die "Failed generate random port."
 }
 
-random_char() {
-    local LENGTH="$1"
-    local RANDOM_STRING
-
-    RANDOM_STRING="$(LC_ALL=C tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w "$LENGTH" | head -n1)"
-    echo "$RANDOM_STRING"
-}
-
 get_ip() {
     local PUBLIC_IP
 
@@ -115,6 +123,7 @@ install_ss() {
         GLIBC="gnu"
     fi
 
+    _yellow "Download $CORE_NAME."
     FILENAMES=("$PROJECT_NAME-v$VERSION.$OS_ARCH-unknown-linux-$GLIBC.tar.xz" "$PROJECT_NAME-v$VERSION.$OS_ARCH-unknown-linux-$GLIBC.tar.xz.sha256")
     for f in "${FILENAMES[@]}"; do
         curl -Ls -O "https://github.com/$PROJECT_NAME/$CORE_NAME/releases/download/v$VERSION/$f"
@@ -123,16 +132,19 @@ install_ss() {
     tar fJx "$PROJECT_NAME-v$VERSION.$OS_ARCH-unknown-linux-$GLIBC.tar.xz"
     chmod +x ss*
     mv -f ss* /usr/local/bin
+
+    clear
 }
 
 gen_cfg() {
     local SERVER_PORT PASSWORD METHOD IP
 
+    _yellow "Generate config."
     mkdir -p "$CORE_DIR" || die "Unable to create directory."
 
     SERVER_PORT="$(random_port)" # 生成随机端口
-    PASSWORD="$(random_char 25)"
     METHOD="chacha20-ietf-poly1305"
+    PASSWORD="$(ssservice genkey -m "$METHOD")"
     IP="$(get_ip)"
 
     tee > "$CORE_DIR/config.json" <<- EOF
@@ -147,14 +159,14 @@ gen_cfg() {
 EOF
 
     echo "$(separator 9) $CORE_NAME $(separator 8)"
-    printf "%-15s: %s\n" "Protocol" "$PROJECT_NAME"
-    printf "%-15s: %s\n" "Address" "$IP"
-    printf "%-15s: %s\n" "Port" "$SERVER_PORT"
-    printf "%-15s: %s\n" "Password" "$PASSWORD"
-    printf "%-15s: %s\n" "Encryption" "$METHOD"
+    printf "%-25s: %s\n" "协议 (Protocol)" "$(_blue_bg "$PROJECT_NAME")"
+    printf "%-25s: %s\n" "地址 (Address)" "$(_blue_bg "$IP")"
+    printf "%-25s: %s\n" "端口 (Port)" "$(_blue_bg "$SERVER_PORT")"
+    printf "%-25s: %s\n" "密码 (Password)" "$(_blue_bg "$PASSWORD")"
+    printf "%-27s: %s\n" "加密方式 (Encryption)" "$(_blue_bg "$METHOD")"
     echo "$(separator) URL $(separator)"
-    echo "ss://$(printf '%s:%s' "$METHOD" "$PASSWORD" | base64 | tr -d '\n')@$IP:$SERVER_PORT#$PROJECT_NAME-honeok"
-    echo "$(separator) URL $(separator)"
+    _blue_bg "ss://$(printf '%s:%s' "$METHOD" "$PASSWORD" | base64 | tr -d '\n')@$IP:$SERVER_PORT#$PROJECT_NAME-honeok"
+    echo "$(separator) END $(separator)"
 }
 
 install_svc() {
