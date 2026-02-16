@@ -1,8 +1,8 @@
 # Xray
 
-[![GitHub Release](https://img.shields.io/github/v/tag/XTLS/Xray-core.svg?label=release&logo=github)](https://github.com/XTLS/Xray-core/releases)
-[![GitHub Release](https://img.shields.io/github/v/tag/233boy/Xray.svg?label=release&logo=github)](https://github.com/233boy/Xray/releases)
-[![GitHub Releases Stats](https://img.shields.io/github/downloads/XTLS/Xray-core/total.svg?label=downloads&logo=github)](https://somsubhra.github.io/github-release-stats/?username=XTLS&repository=Xray-core)
+[![GitHub Release](https://img.shields.io/github/v/release/XTLS/Xray-core.svg?logo=github)](https://github.com/XTLS/Xray-core/releases)
+[![GitHub Release](https://img.shields.io/github/v/release/233boy/Xray.svg?logo=github)](https://github.com/233boy/Xray/releases)
+[![GitHub Releases Stats](https://img.shields.io/github/downloads/XTLS/Xray-core/total.svg?&logo=github)](https://somsubhra.github.io/github-release-stats/?username=XTLS&repository=Xray-core)
 
 [Project X][1] originates from XTLS protocol, providing a set of network tools such as [Xray-core][2] and [REALITY][3].
 
@@ -11,7 +11,7 @@
 This repository uses [233boy's script][4] to install Xray-core and then applies a custom configuration.
 
 ```shell
-bash <(curl -Ls https://github.com/233boy/Xray/raw/main/install.sh)
+bash <(curl -Ls https://fastly.jsdelivr.net/gh/233boy/Xray@main/install.sh)
 ```
 
 This script is used to fetches and updates the latest geo data file automatically.
@@ -19,13 +19,13 @@ This script is used to fetches and updates the latest geo data file automaticall
 Manual update.
 
 ```shell
-bash <(curl -Ls https://github.com/honeok/cross/raw/master/config/xray/up.sh)
+bash <(curl -Ls https://fastly.jsdelivr.net/gh/honeok/cross@master/config/xray/up.sh)
 ```
 
 Automatic update.
 
 ```shell
-(crontab -l 2>/dev/null; echo "0 7 * * * /bin/bash -c 'bash <(curl -Ls https://github.com/honeok/cross/raw/master/config/xray/up.sh)'") | crontab -
+(crontab -l 2>/dev/null; echo "0 7 * * * /bin/bash -c 'bash <(curl -Ls https://fastly.jsdelivr.net/gh/honeok/cross@master/config/xray/up.sh)'") | crontab -
 ```
 
 [1]: https://github.com/XTLS
