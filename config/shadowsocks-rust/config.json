@@ -1,0 +1,8 @@
+{
+  "server": "::",
+  "server_port": 8388,
+  "password": "password",
+  "timeout": 300,
+  "method": "chacha20-ietf-poly1305",
+  "mode": "tcp_and_udp"
+}
