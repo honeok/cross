@@ -120,7 +120,7 @@ jobs:
           echo "BINARY_NAME=${BINARY_NAME}" >> "$GITHUB_ENV"
 
       - name: "Upload artifact"
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: xray-${{ env.PLATFORM_PAIR }}
           path: core/xray/src/${{ env.BINARY_NAME }}
@@ -154,7 +154,7 @@ jobs:
           echo "PLATFORM_PAIR=$PLATFORM_PAIR" >> "$GITHUB_ENV"
 
       - name: "Download binary"
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: xray-${{ env.PLATFORM_PAIR }}
           path: core/xray
@@ -228,7 +228,7 @@ jobs:
 
       - name: "Upload artifact"
         if: ${{ github.ref_name == github.event.repository.default_branch }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: digest-${{ env.PLATFORM_PAIR }}
           path: /tmp/digests/*
@@ -243,7 +243,7 @@ jobs:
 
     steps:
       - name: "Download digests"
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           path: /tmp/digests
           pattern: digest-*
