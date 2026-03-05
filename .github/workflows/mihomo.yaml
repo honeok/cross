@@ -88,7 +88,7 @@ jobs:
           curl -L -O https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/GeoLite2-ASN.mmdb
 
       - name: "Setup Docker Buildx"
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: "Login to DockerHub"
         uses: docker/login-action@v4
@@ -159,7 +159,7 @@ jobs:
           merge-multiple: true
 
       - name: "Setup Docker Buildx"
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: "Login to DockerHub"
         uses: docker/login-action@v4
