@@ -111,7 +111,7 @@ jobs:
 
       - name: "Extract Docker metadata"
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ env.DOCKERHUB_REPO }}
           tags: |
@@ -125,7 +125,7 @@ jobs:
 
       - name: "Build and export"
         id: build
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: core/3x-ui/
           platforms: ${{ matrix.platform }}
@@ -183,7 +183,7 @@ jobs:
 
       - name: "Extract Docker metadata"
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ env.DOCKERHUB_REPO }}
           tags: |
