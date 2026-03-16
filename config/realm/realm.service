@@ -1,0 +1,15 @@
+[Unit]
+Description=Realm Proxy Service
+Documentation=https://github.com/zhboner/realm
+Wants=network-online.target systemd-networkd-wait-online.service
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/realm -c /etc/realm/realm.toml
+Restart=on-failure
+RestartSec=5s
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
