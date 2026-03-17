@@ -10,6 +10,14 @@ skip-auth-prefixes:
   - ::1/128
 find-process-mode: strict
 mode: rule
+geox-url:
+  geoip: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-geodata/geoip-all.dat"
+  geosite: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-geodata/geosite-all.dat"
+  mmdb: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-geodata/Country-all.mmdb"
+  asn: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-geodata/Country-ASN-all.mmdb"
+# geodata-mode: true
+geo-auto-update: true
+geo-update-interval: 24
 log-level: warning
 ipv6: false
 unified-delay: true

@@ -35,15 +35,16 @@ find-process-mode: strict
 mode: rule
 
 # 自定义 geodata url
-# geox-url:
-#   geoip: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.dat"
-#   geosite: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geosite.dat"
-#   mmdb: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.metadb"
-#   asn: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/GeoLite2-ASN.mmdb"
+geox-url:
+  geoip: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-geodata/geoip-all.dat"
+  geosite: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-geodata/geosite-all.dat"
+  mmdb: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-geodata/Country-all.mmdb"
+  asn: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-geodata/Country-ASN-all.mmdb"
 
-# geodata-mode: true
-# geo-auto-update: true # 是否自动更新geodata
-# geo-update-interval: 24 # 更新间隔 单位: 小时
+# https://keunlas.net/posts/a2809040
+# geodata-mode: true # 默认: false 使用 mmdb 数据库
+geo-auto-update: true # 是否自动更新geodata
+geo-update-interval: 24 # 更新间隔 单位: 小时
 
 log-level: warning # 日志等级silent/error/warning/info/debug
 
