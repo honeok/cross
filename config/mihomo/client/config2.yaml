@@ -281,6 +281,9 @@ rules:
   - RULE-SET,netflix_ip,🎥 NETFLIX,no-resolve
   - RULE-SET,telegram_ip,📲 Telegram,no-resolve
   - RULE-SET,twitter_ip,🐦 Twitter,no-resolve
+
+  # https://www.nodeseek.com/post-652016-2#11
+  - GEOSITE,CN,🎯 全球直连
   - GEOIP,CN,🎯 全球直连
 
   # 兜底规则
