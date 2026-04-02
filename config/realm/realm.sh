@@ -11,7 +11,7 @@
 set -eE
 
 # MAJOR.MINOR.PATCH
-readonly SCRIPT_VERSION='v1.1.1'
+readonly SCRIPT_VERSION='v1.2.0'
 
 _red() {
     printf "\033[31m%b\033[0m\n" "$*"
@@ -39,7 +39,7 @@ _italic() {
 
 # 各变量默认值
 TEMP_DIR="$(mktemp -d 2> /dev/null)"
-GITHUB_PROXYS=('' 'https://github.akams.cn/' 'https://v6.gh-proxy.org/' 'https://hub.glowp.xyz/' 'https://proxy.vvvv.ee/')
+GITHUB_PROXY="https://v6.gh-proxy.org/"
 
 : "${GITHUB_REPO:="zhboner/realm"}"
 : "${PROJECT_NAME:="${GITHUB_REPO##*/}"}"
@@ -89,6 +89,27 @@ is_linux() {
     [ "$(uname -s 2> /dev/null)" = "Linux" ]
 }
 
+is_in_china() {
+    if [ -z "$COUNTRY" ]; then
+        # www.prologis.cn
+        # www.autodesk.com.cn
+        # www.keysight.com.cn
+        if ! COUNTRY="$(curl -L http://www.qualcomm.cn/cdn-cgi/trace | grep '^loc=' | cut -d= -f2 | grep .)"; then
+            exit 1
+        fi
+        echo >&2 "Location: $COUNTRY"
+    fi
+    [ "$COUNTRY" = CN ]
+}
+
+has_ipv4() {
+    ip -4 route get 151.101.65.1 > /dev/null 2>&1
+}
+
+has_ipv6() {
+    ip -6 route get 2a04:4e42:200::485 > /dev/null 2>&1
+}
+
 print_msg() {
     _before() {
         clear
@@ -136,16 +157,14 @@ is_glibc() {
     fi
 }
 
-# 检测是否需要启用 Github CDN 如能直接连通则不使用
 check_cdn() {
-    # GITHUB_PROXYS 数组第一个元素为空相当于直连
-    local CHECK_URL STATUS_CODE
-
-    for PROXY_URL in "${GITHUB_PROXYS[@]}"; do
-        CHECK_URL="${PROXY_URL}https://github.com/honeok/cross/raw/master/README.md"
-        STATUS_CODE="$(command curl --connect-timeout 3 --fail --insecure -L --output /dev/null --write-out "%{http_code}" "$CHECK_URL")"
-        [ "$STATUS_CODE" = "200" ] && GITHUB_PROXY="$PROXY_URL" && break
-    done
+    if is_in_china; then
+        return
+    elif ! has_ipv4 && has_ipv6; then
+        return
+    else
+        GITHUB_PROXY=""
+    fi
 }
 
 check_sys() {
@@ -202,7 +221,7 @@ gen_cfg() {
 [Unit]
 Description=Realm Proxy Service
 Documentation=https://github.com/$GITHUB_REPO
-Wants=network-online.target systemd-networkd-wait-online.service
+Wants=network-online.target
 After=network-online.target
 
 [Service]
