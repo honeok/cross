@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-2.0
-
+#
 # Description: This script is used to automatically update xray-core and the latest geoip/geosite data.
 # Copyright (c) 2025-2026 honeok <i@honeok.com>
-
+#
 # Thanks:
 # https://github.com/233boy/Xray
 # https://github.com/XTLS/Xray-core
 # https://github.com/bin456789/reinstall
 # https://github.com/Loyalsoldier/v2ray-rules-dat
 
-set -eEu
+set -eE
 
 # 设置PATH环境变量
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
@@ -18,15 +18,16 @@ export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
 export DEBIAN_FRONTEND=noninteractive
 
 # 各变量默认值
-TEMP_DIR="$(mktemp -d)"
-CORE_NAME="xray"
-CORE_DIR="/etc/$CORE_NAME"
-CORE_BIN="$CORE_DIR/bin/$CORE_NAME"
-SCRIPT_DIR="$CORE_DIR/sh"
-SCRIPT_BIN="/usr/local/bin/$CORE_NAME" # 软连接 /etc/xray/sh/xray.sh
+TEMP_DIR="$(mktemp -d 2> /dev/null)"
+
+: "${CORE_NAME:="xray"}"
+: "${CORE_DIR:="/etc/$CORE_NAME"}"
+: "${CORE_BIN:="$CORE_DIR/bin/$CORE_NAME"}"
+: "${SCRIPT_DIR:="$CORE_DIR/sh"}"
+: "${SCRIPT_BIN:="/usr/local/bin/$CORE_NAME"}" # 软连接 /etc/xray/sh/xray.sh
 
 # 终止信号捕获
-trap 'rm -rf "${TEMP_DIR:?}" >/dev/null 2>&1' SIGINT SIGTERM EXIT
+trap 'rm -rf "${TEMP_DIR:?}" > /dev/null 2>&1' SIGINT SIGTERM EXIT
 
 clear() {
     [ -t 1 ] && tput clear 2> /dev/null || printf "\033[2J\033[H" || command clear
@@ -40,21 +41,39 @@ die() {
 # 临时工作目录
 cd "$TEMP_DIR" > /dev/null 2>&1 || die "Unable to enter the work path."
 
-_exists() {
-    local _CMD="$1"
-    if type "$_CMD" > /dev/null 2>&1; then
-        return
-    elif command -v "$_CMD" > /dev/null 2>&1; then
-        return
-    elif which "$_CMD" > /dev/null 2>&1; then
-        return
-    else
-        return 1
-    fi
+get_cmd_path() {
+    # arch 云镜像不带 which
+    # command -v 包括脚本里面的方法
+    # ash 无效
+    type -f -p "$1"
+}
+
+is_have_cmd() {
+    get_cmd_path "$1" > /dev/null 2>&1
+}
+
+install_pkg() {
+    for pkg in "$@"; do
+        if is_have_cmd dnf; then
+            dnf install -y "$pkg"
+        elif is_have_cmd yum; then
+            yum install -y "$pkg"
+        elif is_have_cmd apt-get; then
+            apt-get update
+            apt-get install -y -q "$pkg"
+        elif is_have_cmd apk; then
+            apk add --no-cache "$pkg"
+        else
+            die "The package manager is not supported."
+        fi
+    done
 }
 
 curl() {
     local RET
+
+    is_have_cmd curl || install_pkg curl
+
     # 添加 --fail 不然404退出码也为0
     # 32位cygwin已停止更新, 证书可能有问题, 添加 --insecure
     # centos7 curl 不支持 --retry-connrefused --retry-all-errors 因此手动 retry
@@ -73,43 +92,13 @@ curl() {
     done
 }
 
-pkg_install() {
-    for pkg in "$@"; do
-        if _exists dnf; then
-            dnf install -y "$pkg"
-        elif _exists yum; then
-            yum install -y "$pkg"
-        elif _exists apt-get; then
-            apt-get update
-            apt-get install -y -q "$pkg"
-        elif _exists apk; then
-            apk add --no-cache "$pkg"
-        elif _exists pacman; then
-            pacman -S --noconfirm --needed "$pkg"
-        else
-            die "The package manager is not supported."
-        fi
-    done
+is_in_alpine() {
+    [ -f /etc/alpine-release ]
 }
 
 check_root() {
     if [ "$EUID" -ne 0 ] || [ "$(id -ru)" -ne 0 ]; then
         die "This script must be run as root."
-    fi
-}
-
-check_bash() {
-    local BASH_VER
-    BASH_VER="$(bash --version 2>&1 | head -n1 | awk -F ' ' '{for (i=1; i<=NF; i++) if ($i ~ /^[0-9]+\.[0-9]+\.[0-9]+/) {print $i; exit}}' | cut -d . -f1)"
-
-    if [ -z "$BASH_VERSION" ]; then
-        die "This script needs to be run with bash, not sh!"
-    fi
-    if [ -z "$BASH_VER" ] || ! [[ "$BASH_VER" =~ ^[0-9]+$ ]]; then
-        die "Failed to parse Bash version!"
-    fi
-    if [ "$BASH_VER" -lt 4 ]; then
-        die "Bash version is lower than 4.0!"
     fi
 }
 
@@ -119,8 +108,8 @@ check_cmd() {
     INSTALL_PKG=("curl" "unzip")
 
     for pkg in "${INSTALL_PKG[@]}"; do
-        if ! _exists "$pkg" > /dev/null 2>&1; then
-            pkg_install "$pkg"
+        if ! is_have_cmd "$pkg" > /dev/null 2>&1; then
+            install_pkg "$pkg"
         fi
     done
 }
@@ -149,7 +138,7 @@ update_core() {
 
     # 拼接下载链接
     for CORE_FILE in "${CORE_FILES[@]}"; do
-        if ! curl -Ls -O "https://github.com/XTLS/Xray-core/releases/download/v$LATEST_VER/$CORE_FILE"; then
+        if ! curl -L -O "https://github.com/XTLS/Xray-core/releases/download/v$LATEST_VER/$CORE_FILE"; then
             die "download failed."
         fi
     done
@@ -172,8 +161,8 @@ update_geo() {
 
     # 下载数据文件和校验文件
     for GEO_FILE in "${GEO_FILES[@]}"; do
-        curl -Ls -O "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/$GEO_FILE.dat"
-        curl -Ls -O "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/$GEO_FILE.dat.sha256sum"
+        curl -L -O "https://fastly.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/$GEO_FILE.dat"
+        curl -L -O "https://fastly.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/$GEO_FILE.dat.sha256sum"
         sha256sum -c "$GEO_FILE.dat.sha256sum" > /dev/null 2>&1
     done
 
@@ -192,7 +181,7 @@ update_sh() {
         return
     fi
 
-    if ! curl -Ls -O "https://github.com/233boy/Xray/releases/download/v$LATEST_VER/code.zip"; then
+    if ! curl -L -O "https://github.com/233boy/Xray/releases/download/v$LATEST_VER/code.zip"; then
         die "download failed."
     fi
     unzip -qo code.zip -d "$SCRIPT_DIR"
@@ -205,18 +194,15 @@ update_sh() {
 restart_xray() {
     local RESTART_CMD
 
-    if [ -f /etc/alpine-release ]; then
-        RESTART_CMD="rc-service xray restart"
+    if is_in_alpine; then
+        RESTART_CMD="/etc/init.d/xray restart"
     else
-        RESTART_CMD="systemctl restart xray.service --quiet"
+        RESTART_CMD="systemctl restart xray.service"
     fi
 
     for ((i = 1; i <= 3; i++)); do
         if eval "$RESTART_CMD" > /dev/null 2>&1; then
             return
-        fi
-        if [ "$i" -lt 3 ]; then
-            sleep 1
         fi
     done
     die "Failed to restart xray service."
@@ -224,7 +210,6 @@ restart_xray() {
 
 clear
 check_root
-check_bash
 check_cmd
 update_core
 update_geo
