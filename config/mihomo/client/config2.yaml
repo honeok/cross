@@ -94,6 +94,7 @@ sniffer:
     - "Mijia Cloud"
 
 ## DNS模块
+# https://www.nodeseek.com/post-609424-3#24
 dns:
   cache-algorithm: arc
   enable: true # 关闭将使用系统DNS
@@ -109,7 +110,7 @@ dns:
   # 配置不使用fake-ip的域名
   fake-ip-filter:
     - RULE-SET,fakeip_domain,fake-ip
-    - RULE-SET,direct_domain,real-ip
+    - RULE-SET,cn_domain,real-ip
     - RULE-SET,private_domain,real-ip
     - MATCH,fake-ip
   fake-ip-filter-mode: rule # 配置fake-ip-filter的匹配模式 默认为blacklist 即如果匹配成功不返回fake-ip
@@ -135,9 +136,10 @@ dns:
 
   # 配置查询域名使用的DNS服务器
   nameserver-policy:
-    "rule-set:direct_domain,private_domain":
+    "rule-set:cn_domain,private_domain":
       - https://doh.pub/dns-query
       - https://dns.alidns.com/dns-query
+    "rule-set:hageziads_domain": "rcode://success"
 
 ## 节点信息
 proxies:
@@ -176,7 +178,7 @@ airport_conf: &airport_conf
   health-check: # 节点自动检测延时
     enable: true
     interval: 300
-    url: "http://www.gstatic.com/generate_204"
+    url: "http://cp.cloudflare.com/generate_204" # 用于健康检查的 URL
     expected-status: 204 # 当健康检查返回状态码与期望值不符时认为节点不可用
 
 # 策略组引用列表
@@ -244,18 +246,15 @@ rules:
   - RULE-SET,private_domain,DIRECT
 
   # 广告拦截
-  - RULE-SET,ad_domain,REJECT
+  - RULE-SET,awaads_domain,REJECT
   # QUIC
   - AND,((NETWORK,UDP),(DST-PORT,443)),REJECT
 
   - RULE-SET,direct_list,DIRECT
-  - RULE-SET,meituan_list,DIRECT
 
   # 应用分流
   - RULE-SET,apple_domain,🍎 Apple
-  - RULE-SET,applecn_domain,🍎 Apple
   - RULE-SET,google_domain,🍀 Google
-  - RULE-SET,googlecn_domain,🍀 Google
   - RULE-SET,ai_domain,🤖 AI
   - RULE-SET,github_domain,👨‍💻 GitHub
   - RULE-SET,gitlab_domain,🦊 GitLab
@@ -273,8 +272,8 @@ rules:
 
   - RULE-SET,proxy_domain,🚀 默认代理
   - RULE-SET,gfw_domain,🚀 默认代理
-  - RULE-SET,tldnotcn_domain,🚀 默认代理
-  - RULE-SET,direct_domain,🎯 全球直连
+  - RULE-SET,tld_domain,🚀 默认代理
+  - RULE-SET,cn_domain,🎯 全球直连
 
   - RULE-SET,apple_ip,🍎 Apple,no-resolve
   - RULE-SET,google_ip,🍀 Google,no-resolve
@@ -298,21 +297,19 @@ rule-anchor:
 ## 规则集订阅
 rule-providers:
   direct_list: { <<: *class, url: "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/rules/direct.list" }
-  meituan_list: { <<: *class, url: "https://fastly.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/MeiTuan/MeiTuan.list" }
 
-  ad_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/TG-Twilight/AWAvenue-Ads-Rule@main/Filters/AWAvenue-Ads-Rule-Clash.mrs" }
-  ai_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/category-ai-!cn.mrs" }
-  apple_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/apple.mrs" }
-  applecn_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/wwqgtxx/clash-rules@release/apple.mrs" }
+  awaads_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/TG-Twilight/AWAvenue-Ads-Rule@main/Filters/AWAvenue-Ads-Rule-Clash.mrs" }
+  ai_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/ai.mrs" }
+  apple_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/GitMetaio/rule@master/rule/Clash/Apple/Apple_OCD_Domain.mrs" }
   bilibili_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/bilibili.mrs" }
-  direct_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/wwqgtxx/clash-rules@release/direct.mrs" }
+  cn_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/cn.mrs" }
   docker_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/docker.mrs" }
-  fakeip_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/wwqgtxx/clash-rules@release/fakeip-filter.mrs" }
+  fakeip_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/fakeip-filter.mrs" }
   gfw_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/wwqgtxx/clash-rules@release/gfw.mrs" }
   github_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/github.mrs" }
   gitlab_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/gitlab.mrs" }
-  google_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/google.mrs" }
-  googlecn_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/wwqgtxx/clash-rules@release/google.mrs" }
+  google_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/GitMetaio/rule@master/rule/Clash/Google/Google_OCD_Domain.mrs" }
+  hageziads_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MiHomoer/MiHomo-Hagezi@release/HageziProPlus.mrs" }
   microsoft_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/microsoft.mrs" }
   netflix_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/netflix.mrs" }
   onedrive_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/onedrive.mrs" }
@@ -323,10 +320,10 @@ rule-providers:
   spotify_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/spotify.mrs" }
   telegram_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/telegram.mrs" }
   tiktok_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/tiktok.mrs" }
-  tldnotcn_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/wwqgtxx/clash-rules@release/tld-not-cn.mrs" }
+  tld_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/wwqgtxx/clash-rules@release/tld-not-cn.mrs" }
   twitter_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/twitter.mrs" }
 
-  apple_ip: { <<: *ip, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo-lite/geoip/apple.mrs" }
+  apple_ip: { <<: *ip, url: "https://fastly.jsdelivr.net/gh/GitMetaio/rule@master/rule/Clash/Apple/Apple_OCD_IP.mrs" }
   google_ip: { <<: *ip, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/google.mrs" }
   netflix_ip: { <<: *ip, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/netflixip.mrs" }
   private_ip: { <<: *ip, url: "https://fastly.jsdelivr.net/gh/wwqgtxx/clash-rules@release/lancidr.mrs" }
