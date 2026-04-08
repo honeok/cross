@@ -298,8 +298,8 @@ rule-anchor:
 rule-providers:
   direct_list: { <<: *class, url: "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/rules/direct.list" }
 
+  ai_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/category-ai-!cn.mrs" }
   awaads_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/TG-Twilight/AWAvenue-Ads-Rule@main/Filters/AWAvenue-Ads-Rule-Clash.mrs" }
-  ai_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/ai.mrs" }
   apple_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/GitMetaio/rule@master/rule/Clash/Apple/Apple_OCD_Domain.mrs" }
   bilibili_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/bilibili.mrs" }
   cn_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/cn.mrs" }
