@@ -132,6 +132,11 @@ dns:
     - https://doh.pub/dns-query
     - https://dns.alidns.com/dns-query
 
+  # 专用于direct出口域名解析的DNS服务器
+  direct-nameserver:
+    - https://doh.pub/dns-query
+    - https://dns.alidns.com/dns-query
+
   # 配置查询域名使用的DNS服务器
   nameserver-policy:
     "rule-set:cn_domain,private_domain":
