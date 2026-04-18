@@ -6,7 +6,8 @@ mixed-port: 7890 # HTTP(S)和SOCKS代理混合端口
 
 allow-lan: true # 允许局域网连接
 bind-address: "*" # 绑定IP地址 仅作用于allow-lan为true '*'表示所有地址
-skip-auth-prefixes: # 设置跳过验证的IP段
+# 设置跳过验证的IP段
+skip-auth-prefixes:
   - 127.0.0.1/8
   - ::1/128
 
@@ -33,7 +34,7 @@ log-level: warning # 日志等级silent/error/warning/info/debug
 
 ipv6: false # IPv6总开关, 关闭阻断所有IPv6链接和屏蔽DNS请求AAAA记录
 
-external-controller: 0.0.0.0:9090 # RESTful API 监听地址
+external-controller: "[::]:9090" # RESTful API 监听地址
 
 unified-delay: true # 统一延迟时会计算RTT以消除连接握手等带来的不同类型节点的延迟差异
 
@@ -69,27 +70,27 @@ ntp:
 tun:
   enable: true
   stack: mixed # system/gvisor/mixed
-  dns-hijack: # 需要劫持的DNS
-    - "any:53"
-    - "tcp://any:53"
-  auto-route: true # 配置路由表
+  dns-hijack: [ "any:53", "tcp://any:53" ] # 需要劫持的DNS
   auto-detect-interface: true # 自动识别出口网卡
+  auto-route: true # 配置路由表
+  auto-redirect: true
 
 ## 域名嗅探
 sniffer:
   enable: true
   force-dns-mapping: true
-  parse-pure-ip: true
-  override-destination: false
+  parse-pure-ip: true # 对所有未获取到域名的流量进行强制嗅探
+  override-destination: true # 使用嗅探结果作为实际访问
   sniff:
     QUIC:
-      ports: [1-65535]
+      ports: [ 443, 8443 ]
     TLS:
-      ports: [1-65535]
+      ports: [ 443, 8443 ]
     HTTP:
-      ports: [1-65535]
+      ports: [ 80, 8080-8880 ]
   skip-domain:
     - "Mijia Cloud"
+    - "+.push.apple.com"
 
 ## DNS模块
 # https://www.nodeseek.com/post-609424-3#24
@@ -98,7 +99,8 @@ dns:
   enable: true # 关闭将使用系统DNS
   listen: :53 # 开启DNS服务器监听
   # ipv6: false # false将返回AAAA的空结果
-  default-nameserver: # 指定初始DNS解析服务器 用于解析mihomo自身需要的域名 (如订阅地址、规则集地址) 只能使用纯IP地址
+  # 指定初始DNS解析服务器 用于解析mihomo自身需要的域名 (如订阅地址、规则集地址) 只能使用纯IP地址
+  default-nameserver:
     - 119.28.28.28
     - 223.5.5.5
   enhanced-mode: fake-ip # 启用Fake-IP模式 or redir-host
@@ -107,7 +109,7 @@ dns:
 
   # 配置不使用fake-ip的域名
   fake-ip-filter:
-    - RULE-SET,fakeip_domain,fake-ip
+    - RULE-SET,fakeipfilter_domain,real-ip
     - RULE-SET,cn_domain,real-ip
     - RULE-SET,private_domain,real-ip
     - MATCH,fake-ip
@@ -178,7 +180,8 @@ airport_conf: &airport_conf
   proxy: DIRECT # 通过直连拉取机场订阅 该名字是指策略组或某个代理节点的名字
   lazy: true # 懒加载
   client-fingerprint: firefox
-  health-check: # 节点自动检测延时
+  # 节点自动检测延时
+  health-check:
     enable: true
     interval: 300
     url: "http://cp.cloudflare.com/generate_204" # 用于健康检查的 URL
@@ -200,15 +203,15 @@ proxy-providers:
     url: "url2"
 
 ## 代理分组锚点
-main: &main { type: select, include-all: true, proxies: [🚀 默认代理, ♻️ 自动选择, 🇭🇰 香港自动, 🇹🇼 台湾自动, 🇸🇬 狮城自动, 🇯🇵 日本自动, 🇺🇸 美国自动, 🇳🇱 荷兰自动, 🇩🇪 德国自动, DIRECT] }
-proxy: &proxy { type: select, include-all: true, proxies: [🚀 默认代理, ♻️ 自动选择, 🇭🇰 香港自动, 🇹🇼 台湾自动, 🇸🇬 狮城自动, 🇯🇵 日本自动, 🇺🇸 美国自动, 🇳🇱 荷兰自动, 🇩🇪 德国自动] }
-specific: &specific { type: select, include-all: true, proxies: [🚀 默认代理, ♻️ 自动选择, 🇹🇼 台湾自动, 🇸🇬 狮城自动, 🇯🇵 日本自动, 🇺🇸 美国自动, 🇳🇱 荷兰自动, 🇩🇪 德国自动], <<: *airports, filter: "^((?!(?i)(🇭🇰|香港|hk|hong\\s?kong|🇲🇴|澳门|澳門|macau|macao|🇷🇺|俄罗斯|ru|russia|🇨🇳|中国|回国|china|cn)).)*$" }
-island: &island { type: select, proxies: [DIRECT], <<: *airports, filter: "(?i)(🇭🇰|香港|hk|hong\\s?kong|🇲🇴|澳门|澳門|macau|macao|🇹🇼|台湾|tw|taiwan)" }
+main: &main { type: select, include-all: true, proxies: [ 🚀 默认代理, ♻️ 自动选择, 🇭🇰 香港自动, 🇹🇼 台湾自动, 🇸🇬 狮城自动, 🇯🇵 日本自动, 🇺🇸 美国自动, 🇳🇱 荷兰自动, 🇩🇪 德国自动, DIRECT ] }
+proxy: &proxy { type: select, include-all: true, proxies: [ 🚀 默认代理, ♻️ 自动选择, 🇭🇰 香港自动, 🇹🇼 台湾自动, 🇸🇬 狮城自动, 🇯🇵 日本自动, 🇺🇸 美国自动, 🇳🇱 荷兰自动, 🇩🇪 德国自动 ] }
+specific: &specific { type: select, include-all: true, proxies: [ 🚀 默认代理, ♻️ 自动选择, 🇹🇼 台湾自动, 🇸🇬 狮城自动, 🇯🇵 日本自动, 🇺🇸 美国自动, 🇳🇱 荷兰自动, 🇩🇪 德国自动 ], <<: *airports, filter: "^((?!(?i)(🇭🇰|香港|hk|hong\\s?kong|🇲🇴|澳门|澳門|macau|macao|🇷🇺|俄罗斯|ru|russia|🇨🇳|中国|回国|china|cn)).)*$" }
+island: &island { type: select, proxies: [ DIRECT ], <<: *airports, filter: "(?i)(🇭🇰|香港|hk|hong\\s?kong|🇲🇴|澳门|澳門|macau|macao|🇹🇼|台湾|tw|taiwan)" }
 
 ## 代理分组
 proxy-groups:
   #------------------------基础分组------------------------#
-  - { name: 🚀 默认代理, type: select, include-all: true, proxies: [♻️ 自动选择, 🇭🇰 香港自动, 🇹🇼 台湾自动, 🇸🇬 狮城自动, 🇯🇵 日本自动, 🇺🇸 美国自动, 🇳🇱 荷兰自动, 🇩🇪 德国自动] }
+  - { name: 🚀 默认代理, type: select, include-all: true, proxies: [ ♻️ 自动选择, 🇭🇰 香港自动, 🇹🇼 台湾自动, 🇸🇬 狮城自动, 🇯🇵 日本自动, 🇺🇸 美国自动, 🇳🇱 荷兰自动, 🇩🇪 德国自动 ] }
   - { name: ♻️ 自动选择, type: url-test, include-all: true, tolerance: 100, interval: 300 }
 
   #------------------------场景分组------------------------#
@@ -239,7 +242,7 @@ proxy-groups:
   - { name: 🇩🇪 德国自动, type: url-test, <<: *airports, include-all: true, tolerance: 100, interval: 300, filter: "(?i)(🇩🇪|德国|de|germany|frankfurt)" }
 
   #------------------------特殊分组------------------------#
-  - { name: 🎯 全球直连, type: select, proxies: [DIRECT, 🚀 默认代理] }
+  - { name: 🎯 全球直连, type: select, proxies: [ DIRECT, 🚀 默认代理 ] }
   - { name: 🎣 漏网之鱼, <<: *main }
 
 ## 规则匹配
@@ -311,7 +314,7 @@ rule-providers:
   bilibili_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/bilibili.mrs" }
   cn_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/cn.mrs" }
   docker_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/docker.mrs" }
-  fakeip_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/fakeip-filter.mrs" }
+  fakeipfilter_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/fakeip-filter.mrs" }
   gfw_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/wwqgtxx/clash-rules@release/gfw.mrs" }
   github_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/github.mrs" }
   gitlab_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/gitlab.mrs" }
