@@ -1,0 +1,97 @@
+{
+  "log": {
+    "level": "warn",
+    "output": "/var/log/sing-box/sing-box.log",
+    "timestamp": true
+  },
+  "dns": {
+    "servers": [
+      {
+        "type": "local",
+        "prefer_go": true
+      }
+    ],
+    "strategy": "prefer_ipv4"
+  },
+  "ntp": {
+    "enabled": true,
+    "server": "time.apple.com",
+    "server_port": 123,
+    "interval": "60m"
+  },
+  "outbounds": [
+    {
+      "type": "direct",
+      "tag": "direct"
+    },
+    {
+      "type": "block",
+      "tag": "block"
+    }
+  ],
+  "route": {
+    "rule_set": [
+      {
+        "type": "remote",
+        "tag": "geoip-cn",
+        "format": "binary",
+        "url": "https://fastly.jsdelivr.net/gh/SagerNet/sing-geoip@rule-set/geoip-cn.srs",
+        "download_detour": "direct",
+        "update_interval": "1d"
+      },
+      {
+        "type": "remote",
+        "tag": "geosite-category-ads-all",
+        "format": "binary",
+        "url": "https://fastly.jsdelivr.net/gh/SagerNet/sing-geosite@rule-set/geosite-category-ads-all.srs",
+        "download_detour": "direct",
+        "update_interval": "1d"
+      },
+      {
+        "type": "remote",
+        "tag": "geosite-meituan",
+        "format": "binary",
+        "url": "https://fastly.jsdelivr.net/gh/SagerNet/sing-geosite@rule-set/geosite-meituan.srs",
+        "download_detour": "direct",
+        "update_interval": "1d"
+      }
+    ],
+    "rules": [
+      {
+        "action": "sniff"
+      },
+      {
+        "protocol": ["bittorrent"],
+        "action": "route",
+        "outbound": "block"
+      },
+      {
+        "domain": ["ping0.cc"],
+        "domain_suffix": [".ping0.cc"],
+        "action": "route",
+        "outbound": "block"
+      },
+      {
+        "rule_set": ["geosite-category-ads-all", "geosite-meituan"],
+        "action": "route",
+        "outbound": "block"
+      },
+      {
+        "type": "logical",
+        "mode": "or",
+        "rules": [
+          {
+            "ip_is_private": true
+          },
+          {
+            "rule_set": ["geoip-cn"]
+          }
+        ],
+        "action": "route",
+        "outbound": "block"
+      }
+    ],
+    "final": "direct",
+    "auto_detect_interface": true
+  }
+}
