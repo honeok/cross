@@ -19,6 +19,26 @@
     ],
     "queryStrategy": "UseIP"
   },
+  "routing": {
+    "domainStrategy": "IPIfNonMatch",
+    "rules": [
+      {
+        "type": "field",
+        "protocol": ["bittorrent"],
+        "outboundTag": "block"
+      },
+      {
+        "type": "field",
+        "domain": ["geosite:category-ads-all", "geosite:meituan", "domain:ping0.cc"],
+        "outboundTag": "block"
+      },
+      {
+        "type": "field",
+        "ip": ["geoip:private", "geoip:cn"],
+        "outboundTag": "block"
+      }
+    ]
+  },
   "policy": {
     "levels": {
       "0": {
@@ -36,26 +56,6 @@
       "statsOutboundUplink": false,
       "statsOutboundDownlink": false
     }
-  },
-  "routing": {
-    "domainStrategy": "IPIfNonMatch",
-    "rules": [
-      {
-        "type": "field",
-        "protocol": ["bittorrent"],
-        "outboundTag": "block"
-      },
-      {
-        "type": "field",
-        "ip": ["geoip:private", "geoip:cn"],
-        "outboundTag": "block"
-      },
-      {
-        "type": "field",
-        "domain": ["geosite:category-ads-all"],
-        "outboundTag": "block"
-      }
-    ]
   },
   "outbounds": [
     {

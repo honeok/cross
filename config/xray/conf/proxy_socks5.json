@@ -4,6 +4,42 @@
     "error": "/var/log/xray/error.log",
     "loglevel": "warning"
   },
+  "routing": {
+    "domainStrategy": "IPIfNonMatch",
+    "rules": [
+      {
+        "type": "field",
+        "protocol": ["bittorrent"],
+        "outboundTag": "block"
+      },
+      {
+        "type": "field",
+        "domain": ["geosite:category-ads-all", "geosite:meituan", "domain:ping0.cc"],
+        "outboundTag": "block"
+      },
+      {
+        "type": "field",
+        "ip": ["geoip:private", "geoip:cn"],
+        "outboundTag": "block"
+      },
+      {
+        "type": "field",
+        "domain": [
+          "geosite:category-ai-!cn",
+          "geosite:apple",
+          "geosite:bing",
+          "geosite:google",
+          "geosite:reddit",
+          "geosite:steam",
+          "geosite:tvb",
+          "geosite:x",
+          "geosite:category-ip-geo-detect",
+          "geosite:category-entertainment"
+        ],
+        "outboundTag": "proxy"
+      }
+    ]
+  },
   "policy": {
     "levels": {
       "0": {
@@ -21,37 +57,6 @@
       "statsOutboundUplink": false,
       "statsOutboundDownlink": false
     }
-  },
-  "routing": {
-    "domainStrategy": "IPIfNonMatch",
-    "rules": [
-      {
-        "type": "field",
-        "protocol": ["bittorrent"],
-        "outboundTag": "block"
-      },
-      {
-        "type": "field",
-        "ip": ["geoip:private", "geoip:cn"],
-        "outboundTag": "block"
-      },
-      {
-        "type": "field",
-        "domain": [
-          "geosite:apple",
-          "geosite:bing",
-          "geosite:google",
-          "geosite:ipip",
-          "geosite:reddit",
-          "geosite:steam",
-          "geosite:tvb",
-          "geosite:x",
-          "geosite:category-entertainment",
-          "geosite:category-ai-!cn"
-        ],
-        "outboundTag": "proxy"
-      }
-    ]
   },
   "outbounds": [
     {
