@@ -1,1 +1,13 @@
+# https://www.nodeseek.com/post-674661-1
 DOMAIN-SUFFIX,ping0.cc
+
+# https://www.nodeseek.com/post-651705-1
+DOMAIN-SUFFIX,buychennai.com
+DOMAIN-SUFFIX,pages-gist.com
+
+# https://www.nodeseek.com/post-652016-1
+# 美团 HTTPDNS
+DOMAIN-SUFFIX,httpdnsmultiapi.meituan.com
+DOMAIN-SUFFIX,httpdnsmultiapivip.meituan.com
+# 美团定位 SDK 上报
+DOMAIN-SUFFIX,maplocatesdksnapshot.dreport.meituan.net
