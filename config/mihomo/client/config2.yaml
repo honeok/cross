@@ -222,22 +222,26 @@ proxy-groups:
   - { name: 🐳 Docker, <<: *proxy }
   - { name: 🪟 Microsoft, <<: *main }
   - { name: 🐬 OneDrive, <<: *main }
+  - { name: 🍎 Apple, <<: *main }
+  - { name: 💶 PayPal, <<: *main }
   - { name: 📲 Telegram, <<: *proxy }
   - { name: 🐦 Twitter, <<: *proxy }
+  - { name: 🌀 Meta, <<: *proxy }
   - { name: 📺 BiliBili, <<: *island }
   - { name: 🎥 NETFLIX, <<: *specific }
   - { name: 🎧 Spotify, <<: *island }
   - { name: 🎵 TikTok, <<: *specific }
-  - { name: 💶 PayPal, <<: *main }
+  - { name: 🎮 Games, <<: *main }
   - { name: ✈️ Speedtest, <<: *main }
-  - { name: 🍎 Apple, <<: *main }
 
   #------------------------地区分组------------------------#
   - { name: 🇭🇰 香港自动, type: url-test, <<: *airports, include-all: true, tolerance: 100, interval: 300, filter: "(?i)(🇭🇰|香港|hk|hong\\s?kong)" }
   - { name: 🇹🇼 台湾自动, type: url-test, <<: *airports, include-all: true, tolerance: 100, interval: 300, filter: "(?i)(🇹🇼|台湾|tw|taiwan)" }
   - { name: 🇸🇬 狮城自动, type: url-test, <<: *airports, include-all: true, tolerance: 100, interval: 300, filter: "(?i)(🇸🇬|新加坡|sg|singapore|lion\\s?city)" }
   - { name: 🇯🇵 日本自动, type: url-test, <<: *airports, include-all: true, tolerance: 100, interval: 300, filter: "(?i)(🇯🇵|日本|jp|japan|tokyo|osaka)" }
+  - { name: 🇰🇷 韩国自动, type: url-test, <<: *airports, include-all: true, tolerance: 100, interval: 300, filter: "(?i)(🇰🇷|韩国|kr|korea|seoul)" }
   - { name: 🇺🇸 美国自动, type: url-test, <<: *airports, include-all: true, tolerance: 100, interval: 300, filter: "(?i)(🇺🇸|美国|us|united\\s?states|america)" }
+  - { name: 🇬🇧 英国自动, type: url-test, <<: *airports, include-all: true, tolerance: 100, interval: 300, filter: "(?i)(🇬🇧|英国|gb|great\\s?britain|london)" }
   - { name: 🇳🇱 荷兰自动, type: url-test, <<: *airports, include-all: true, tolerance: 100, interval: 300, filter: "(?i)(🇳🇱|荷兰|nl|netherlands|amsterdam)" }
   - { name: 🇩🇪 德国自动, type: url-test, <<: *airports, include-all: true, tolerance: 100, interval: 300, filter: "(?i)(🇩🇪|德国|de|germany|frankfurt)" }
 
@@ -251,12 +255,16 @@ rules:
   - RULE-SET,private_ip,DIRECT,no-resolve
   - RULE-SET,private_domain,DIRECT
 
-  # 广告拦截
-  - RULE-SET,awaads_domain,REJECT
+  - RULE-SET,reject_list,REJECT
+  - RULE-SET,awaads_domain,REJECT # 广告拦截
+  - RULE-SET,winspy_domain,REJECT # Windows 隐私追踪
+  - RULE-SET,httpdns_domain,REJECT # 国内 HTTPDNS 劫持
+
   # QUIC
   - AND,((NETWORK,UDP),(DST-PORT,443)),REJECT
 
   - RULE-SET,direct_list,DIRECT
+  - RULE-SET,meituan_domain,DIRECT
 
   # 应用分流
   - RULE-SET,apple_domain,🍎 Apple
@@ -264,9 +272,14 @@ rules:
   - RULE-SET,google_domain,🍀 Google
   - RULE-SET,googlecn_domain,🍀 Google
   - RULE-SET,ai_domain,🤖 AI
+  - RULE-SET,steam_domain,🎮 Games
+  - RULE-SET,epicgames_domain,🎮 Games
   - RULE-SET,github_domain,👨‍💻 GitHub
   - RULE-SET,gitlab_domain,🦊 GitLab
   - RULE-SET,docker_domain,🐳 Docker
+  - RULE-SET,facebook_domain,🌀 Meta
+  - RULE-SET,instagram_domain,🌀 Meta
+  - RULE-SET,whatsapp_domain,🌀 Meta
   - RULE-SET,microsoft_domain,🪟 Microsoft
   - RULE-SET,microsoftcn_domain,🪟 Microsoft
   - RULE-SET,onedrive_domain,🐬 OneDrive
@@ -276,12 +289,12 @@ rules:
   - RULE-SET,netflix_domain,🎥 NETFLIX
   - RULE-SET,spotify_domain,🎧 Spotify
   - RULE-SET,tiktok_domain,🎵 TikTok
+  - RULE-SET,bytedance-!cn_domain,🎵 TikTok
   - RULE-SET,paypal_domain,💶 PayPal
   - RULE-SET,speedtest_domain,✈️ Speedtest
 
   - RULE-SET,proxy_domain,🚀 默认代理
   - RULE-SET,gfw_domain,🚀 默认代理
-  - RULE-SET,tld_domain,🚀 默认代理
   - RULE-SET,cn_domain,🎯 全球直连
 
   - RULE-SET,apple_ip,🍎 Apple,no-resolve
@@ -289,10 +302,11 @@ rules:
   - RULE-SET,netflix_ip,🎥 NETFLIX,no-resolve
   - RULE-SET,telegram_ip,📲 Telegram,no-resolve
   - RULE-SET,twitter_ip,🐦 Twitter,no-resolve
+  - RULE-SET,cn_ip,🎯 全球直连,no-resolve
 
   # https://www.nodeseek.com/post-652016-2#11
-  - GEOSITE,CN,🎯 全球直连
-  - GEOIP,CN,🎯 全球直连
+  # - GEOSITE,CN,🎯 全球直连
+  # - GEOIP,CN,🎯 全球直连
 
   # 兜底规则
   - MATCH,🎣 漏网之鱼
@@ -306,21 +320,28 @@ rule-anchor:
 ## 规则集订阅
 rule-providers:
   direct_list: { <<: *class, url: "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/rules/direct.list" }
+  reject_list: { <<: *class, url: "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/rules/reject.list" }
 
   ai_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/category-ai-!cn.mrs" }
   awaads_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/TG-Twilight/AWAvenue-Ads-Rule@main/Filters/AWAvenue-Ads-Rule-Clash.mrs" }
   apple_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/apple.mrs" }
   applecn_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/apple-cn.mrs" }
   bilibili_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/bilibili.mrs" }
+  bytedance-!cn_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/bytedance@!cn.mrs" }
   cn_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/cn.mrs" }
   docker_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/docker.mrs" }
+  epicgames_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/epicgames.mrs" }
   fakeipfilter_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/fakeip-filter.mrs" }
+  facebook_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/facebook.mrs" }
   gfw_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/wwqgtxx/clash-rules@release/gfw.mrs" }
   github_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/github.mrs" }
   gitlab_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/gitlab.mrs" }
   google_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/google.mrs" }
   googlecn_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/wwqgtxx/clash-rules@release/google.mrs" }
   hageziads_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MiHomoer/MiHomo-Hagezi@release/HageziProPlus.mrs" }
+  httpdns_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/httpdns.mrs" }
+  instagram_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/instagram.mrs" }
+  meituan_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/Keviin560/Shunt_Rules@main/rule/Mihomo/MeiTuan.mrs" }
   microsoft_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/microsoft.mrs" }
   microsoftcn_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/microsoft@cn.mrs" }
   netflix_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/netflix.mrs" }
@@ -330,12 +351,15 @@ rule-providers:
   proxy_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/wwqgtxx/clash-rules@release/proxy.mrs" }
   speedtest_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/ookla-speedtest.mrs" }
   spotify_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/spotify.mrs" }
+  steam_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/steam.mrs" }
   telegram_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/telegram.mrs" }
   tiktok_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/tiktok.mrs" }
-  tld_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/wwqgtxx/clash-rules@release/tld-not-cn.mrs" }
   twitter_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/twitter.mrs" }
+  whatsapp_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/whatsapp.mrs" }
+  winspy_domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/win-spy.mrs" }
 
-  apple_ip: { <<: *ip, url: "https://fastly.jsdelivr.net/gh/GitMetaio/rule@master/rule/Clash/Apple/Apple_OCD_IP.mrs" }
+  apple_ip: { <<: *ip, url: "https://fastly.jsdelivr.net/gh/Keviin560/Shunt_Rules@main/rule/Mihomo/Apple_IP.mrs" }
+  cn_ip: { <<: *ip, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/cnip.mrs" }
   google_ip: { <<: *ip, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/google.mrs" }
   netflix_ip: { <<: *ip, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/netflixip.mrs" }
   private_ip: { <<: *ip, url: "https://fastly.jsdelivr.net/gh/wwqgtxx/clash-rules@release/lancidr.mrs" }
