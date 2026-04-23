@@ -261,14 +261,16 @@ rules:
   - RULE-SET,private-domain,DIRECT
 
   - AND,((NETWORK,UDP),(DST-PORT,443)),REJECT # QUIC 拦截
-  - RULE-SET,reject-list,REJECT
-  - RULE-SET,awaads-domain,REJECT # 广告拦截
   - RULE-SET,icloudprivaterelay-domain,REJECT # iCloud 私有中继
-  - RULE-SET,winspy-domain,REJECT # Windows 隐私追踪
   - RULE-SET,httpdns-cn-domain,REJECT # 国内 HTTPDNS 劫持
+  - RULE-SET,winspy-domain,REJECT # Windows 隐私追踪
+  - RULE-SET,awaads-domain,REJECT # 广告拦截
+  - RULE-SET,hageziproplus-domain,REJECT # 广告恶意域名拦截
+  - RULE-SET,reject-list,REJECT # 拦截补充
 
-  - RULE-SET,direct-list,DIRECT
+  - RULE-SET,connectivity-check-domain,DIRECT # 连接性检查
   - RULE-SET,meituan-domain,DIRECT
+  - RULE-SET,direct-list,DIRECT # 直连补充
 
   # 应用分流
   - RULE-SET,apple-domain,🍎 Apple
@@ -333,6 +335,7 @@ rule-providers:
   bilibili-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/bilibili.mrs" }
   bytedance-!cn-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/bytedance@!cn.mrs" }
   cn-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/cn.mrs" }
+  connectivity-check-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/connectivity-check.mrs" }
   docker-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/docker.mrs" }
   epicgames-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/epicgames.mrs" }
   fakeip-filter-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/fakeip-filter.mrs" }
