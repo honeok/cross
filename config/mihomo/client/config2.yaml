@@ -45,7 +45,7 @@ tcp-concurrent: true # TCP并发连接所有IP 将使用最快握手的TCP
 external-ui: "ui" # WEB UI 目录
 external-ui-name: "zashboard"
 # 目前支持下载 zip tgz 格式的压缩包
-external-ui-url: "https://v6.gh-proxy.org/https://github.com/Zephyruso/zashboard/releases/latest/download/dist.zip"
+external-ui-url: "https://proxy.vvvv.ee/https://github.com/Zephyruso/zashboard/releases/latest/download/dist.zip"
 
 # TCP保持活动间隔
 disable-keep-alive: false # 目前在android端强制为true
