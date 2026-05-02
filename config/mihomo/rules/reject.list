@@ -11,5 +11,3 @@ DOMAIN-SUFFIX,httpdnsmultiapi.meituan.com
 DOMAIN-SUFFIX,httpdnsmultiapivip.meituan.com
 DOMAIN-SUFFIX,dnspod.meituan.httpdns.qcloud.com
 DOMAIN-SUFFIX,dnspod.meituan.httpdns.start.qcloud.com
-# 美团定位 SDK 上报
-DOMAIN-SUFFIX,maplocatesdksnapshot.dreport.meituan.net
