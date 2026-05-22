@@ -1,0 +1,47 @@
+{
+  "inbounds": [
+    {
+      "tag": "HYSTERIA2-38438.json",
+      "listen": "::",
+      "port": 38438,
+      "protocol": "hysteria",
+      "settings": {
+        "version": 2
+      },
+      "streamSettings": {
+        "network": "hysteria",
+        "security": "tls",
+        "tlsSettings": {
+          "serverName": "www.google.com",
+          "alpn": ["h3"],
+          "certificates": [
+            {
+              "usage": "encipherment",
+              "certificateFile": "/etc/xray/cert/certificate.crt",
+              "keyFile": "/etc/xray/cert/private.key"
+            }
+          ]
+        },
+        "hysteriaSettings": {
+          "version": 2,
+          "auth": "openssl rand -base64 22 | tr '+/' '-_' | tr -d '='"
+        },
+        "finalmask": {
+          "udp": [
+            {
+              "type": "salamander",
+              "settings": {
+                "password": "openssl rand -base64 22 | tr '+/' '-_' | tr -d '='"
+              }
+            }
+          ],
+          "quicParams": {
+            "congestion": "force-brutal",
+            "brutalUp": "950 mbps",
+            "brutalDown": "150 mbps"
+          }
+        }
+      }
+    }
+  ]
+}

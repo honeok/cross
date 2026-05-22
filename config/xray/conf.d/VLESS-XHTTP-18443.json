@@ -1,0 +1,48 @@
+{
+  "inbounds": [
+    {
+      "tag": "VLESS-XHTTP-18443.json",
+      "port": 18443,
+      "listen": "::",
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "id": "827867e4-dd69-44f0-8ac0-3e89f6e54935"
+          }
+        ],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "xhttp",
+        "security": "tls",
+        "tlsSettings": {
+          "serverName": "www.google.com",
+          "alpn": ["h2", "http/1.1"],
+          "certificates": [
+            {
+              "certificateFile": "/etc/xray/cert/certificate.crt",
+              "keyFile": "/etc/xray/cert/private.key"
+            }
+          ]
+        },
+        "xhttpSettings": {
+          "host": "",
+          "path": "/apis/networking.k8s.io/v1/namespaces/default/ingresses",
+          "mode": "auto",
+          "xPaddingObfsMode": true,
+          "xPaddingMethod": "tokenish",
+          "xPaddingPlacement": "queryInHeader",
+          "xPaddingHeader": "X-Cache",
+          "xPaddingKey": "_dc"
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls", "quic"],
+        "metadataOnly": false,
+        "routeOnly": true
+      }
+    }
+  ]
+}
