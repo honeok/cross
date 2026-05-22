@@ -29,6 +29,7 @@ geox-url:
   asn: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-geodata/Country-ASN-all.mmdb"
 
 geodata-mode: true
+geodata-loader: memconservative # geo 文件加载模式 standard: 标准加载器 memconservative: 专为内存受限设备优化的加载器 (默认值)
 geo-auto-update: true # 是否自动更新geodata
 geo-update-interval: 24 # 更新间隔 单位: 小时
 
@@ -45,7 +46,7 @@ tcp-concurrent: true # TCP并发连接所有IP 将使用最快握手的TCP
 external-ui: "ui" # WEB UI 目录
 external-ui-name: "zashboard"
 # 目前支持下载 zip tgz 格式的压缩包
-external-ui-url: "https://proxy.vvvv.ee/https://github.com/Zephyruso/zashboard/releases/latest/download/dist.zip"
+external-ui-url: "https://v6.gh-proxy.org/https://github.com/Zephyruso/zashboard/releases/latest/download/dist.zip"
 
 # TCP保持活动间隔
 disable-keep-alive: false # 目前在android端强制为true
@@ -72,7 +73,7 @@ ntp:
 tun:
   enable: true
   stack: mixed # system/gvisor/mixed
-  dns-hijack: [ "any:53", "tcp://any:53" ] # 需要劫持的DNS
+  dns-hijack: ["any:53", "tcp://any:53"] # 需要劫持的DNS
   auto-detect-interface: true # 自动识别出口网卡
   auto-route: true # 配置路由表
   auto-redirect: true
@@ -82,19 +83,44 @@ sniffer:
   enable: true
   force-dns-mapping: true
   parse-pure-ip: true # 对所有未获取到域名的流量进行强制嗅探
-  override-destination: true # 使用嗅探结果作为实际访问
+  override-destination: false # 默认不使用嗅探结果改写目标
   sniff:
     QUIC:
-      ports: [ 443, 8443 ]
+      ports: [443, 8443]
     TLS:
-      ports: [ 443, 8443 ]
+      ports: [443, 8443]
     HTTP:
-      ports: [ 80, 8080-8880 ]
+      ports: [80, 8080-8880]
+      override-destination: true # 使用嗅探结果作为实际访问
+  # 对于目标 ip 跳过嗅探
+  # skip-dst-address:
+  #   - "rule-set:private-ip"
   skip-domain:
+    - "rule-set:private-domain"
     - "Mijia Cloud"
     - "+.push.apple.com"
 
 ## DNS模块
+# DNS锚点
+# https://adguard-dns.io/kb/zh-CN/general/dns-providers
+dns-cn: &dns-cn
+  - https://doh.pub/dns-query
+  - https://dns.alidns.com/dns-query
+  - https://doh-pure.onedns.net/dns-query # 北京微步 / OneDNS 纯净版
+  - https://doh.360.cn/dns-query
+  - https://doh.18bit.cn/dns-query
+
+dns-not-cn: &dns-not-cn
+  - https://cloudflare-dns.com/dns-query#🚀 默认代理
+  - https://dns.google/dns-query#🚀 默认代理
+  - https://doh.opendns.com/dns-query#🚀 默认代理 # Cisco
+  - https://dns.quad9.net/dns-query#🚀 默认代理
+  - https://wikimedia-dns.org/dns-query#🚀 默认代理 # Wikimedia 公共 DoH
+  - https://dns.adguard-dns.com/dns-query#🚀 默认代理 # AdGuard 过滤版
+  - https://doh.dns.sb/dns-query#🚀 默认代理 # xTom
+  - https://dns.rabbitdns.org/dns-query#🚀 默认代理
+  - https://doh-sg.blahdns.com/dns-query#🚀 默认代理 # BlahDNS 新加坡节点
+
 # https://www.nodeseek.com/post-609424-3#24
 dns:
   cache-algorithm: arc
@@ -127,27 +153,18 @@ dns:
   # DNS主要域名配置
   # 支持UDP TCP DoT DoH DoQ
   # 这部分为主要DNS配置 影响所有直连 确保使用对大陆解析精准的DNS
-  nameserver:
-    - https://dns.adguard-dns.com/dns-query#🚀 默认代理
-    - https://one.one.one.one/dns-query#🚀 默认代理
-    - https://dns.google/dns-query#🚀 默认代理
+  nameserver: *dns-not-cn
 
   # 专用于节点域名解析的DNS服务器 非必要配置项 如果不填则遵循nameserver-policy nameserver和fallback的配置
-  proxy-server-nameserver:
-    - https://doh.pub/dns-query
-    - https://dns.alidns.com/dns-query
+  proxy-server-nameserver: *dns-cn
 
   # 专用于direct出口域名解析的DNS服务器
-  direct-nameserver:
-    - https://doh.pub/dns-query
-    - https://dns.alidns.com/dns-query
+  direct-nameserver: *dns-cn
 
   # 配置查询域名使用的DNS服务器
   nameserver-policy:
-    "rule-set:cn-domain,private-domain":
-      - https://doh.pub/dns-query
-      - https://dns.alidns.com/dns-query
-    "rule-set:hageziproplus-domain": "rcode://success"
+    "rule-set:cn-domain,private-domain": *dns-cn
+    "rule-set:hagezi-domain": "rcode://success"
 
 ## 节点信息
 proxies:
@@ -189,14 +206,9 @@ airport_conf: &airport_conf
   health-check:
     enable: true
     interval: 300
+    # https://blog.clash-plus.com/post/clash-204-test-url
     url: "http://cp.cloudflare.com/generate_204" # 用于健康检查的 URL
     expected-status: 204 # 当健康检查返回状态码与期望值不符时认为节点不可用
-
-# 策略组引用列表
-Airports: &airports
-  use:
-    - Airport1
-    - Airport2
 
 # 机场订阅合集
 proxy-providers:
@@ -207,53 +219,102 @@ proxy-providers:
     <<: *airport_conf
     url: "url2"
 
+## Icon 锚点
+proxy-icon: &proxy-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/svg/proxy.svg"
+auto-icon: &auto-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/svg/auto.svg"
+fallback-icon: &fallback-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/svg/fallback.svg"
+ai-icon: &ai-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/svg/openai.svg"
+google-icon: &google-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/svg/google.svg"
+github-icon: &github-icon "https://cdn.simpleicons.org/github?size=48"
+gitlab-icon: &gitlab-icon "https://cdn.simpleicons.org/gitlab?size=48"
+docker-icon: &docker-icon "https://cdn.simpleicons.org/docker?size=48"
+microsoft-icon: &microsoft-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/svg/microsoft.svg"
+onedrive-icon: &onedrive-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/svg/onedrive.svg"
+apple-icon: &apple-icon "https://cdn.simpleicons.org/apple/0A84FF?size=48"
+paypal-icon: &paypal-icon "https://cdn.simpleicons.org/paypal?size=48"
+telegram-icon: &telegram-icon "https://cdn.simpleicons.org/telegram?size=48"
+twitter-icon: &twitter-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/svg/twitter.svg"
+meta-icon: &meta-icon "https://cdn.simpleicons.org/meta?size=48"
+bilibili-icon: &bilibili-icon "https://cdn.simpleicons.org/bilibili?size=48"
+netflix-icon: &netflix-icon "https://cdn.simpleicons.org/netflix?size=48"
+spotify-icon: &spotify-icon "https://cdn.simpleicons.org/spotify?size=48"
+tiktok-icon: &tiktok-icon "https://cdn.simpleicons.org/tiktok?size=48"
+game-icon: &game-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/svg/game.svg"
+speedtest-icon: &speedtest-icon "https://cdn.simpleicons.org/speedtest?size=48"
+direct-icon: &direct-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/svg/direct.svg"
+fish-icon: &fish-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/svg/fish.svg"
+
+# proxy-icon: &proxy-icon "https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Proxy.png"
+# auto-icon: &auto-icon "https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Auto.png"
+# fallback-icon: &fallback-icon "https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Available.png"
+# ai-icon: &ai-icon "https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/ChatGPT.png"
+# google-icon: &google-icon "https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Google_Search.png"
+# github-icon: &github-icon "https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/GitHub.png"
+# gitlab-icon: &gitlab-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/png/gitlab.png"
+# docker-icon: &docker-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/png/docker.png"
+# microsoft-icon: &microsoft-icon "https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Microsoft.png"
+# onedrive-icon: &onedrive-icon "https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/OneDrive.png"
+# apple-icon: &apple-icon "https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Apple.png"
+# paypal-icon: &paypal-icon "https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/PayPal.png"
+# telegram-icon: &telegram-icon "https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Telegram.png"
+# twitter-icon: &twitter-icon "https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Twitter.png"
+# meta-icon: &meta-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/png/meta.png"
+# bilibili-icon: &bilibili-icon "https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/bilibili.png"
+# netflix-icon: &netflix-icon "https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Netflix.png"
+# spotify-icon: &spotify-icon "https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Spotify.png"
+# tiktok-icon: &tiktok-icon "https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/TikTok.png"
+# game-icon: &game-icon "https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Game.png"
+# speedtest-icon: &speedtest-icon "https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Speedtest.png"
+# direct-icon: &direct-icon "https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Direct.png"
+# fish-icon: &fish-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/png/fish.png"
+
 ## 代理分组锚点
-main: &main { type: select, include-all: true, proxies: [ 🚀 默认代理, ♻️ 自动选择, 🇭🇰 香港自动, 🇹🇼 台湾自动, 🇸🇬 狮城自动, 🇯🇵 日本自动, 🇰🇷 韩国自动, 🇺🇸 美国自动, 🇬🇧 英国自动, 🇳🇱 荷兰自动, 🇩🇪 德国自动, DIRECT ] }
-proxy: &proxy { type: select, include-all: true, proxies: [ 🚀 默认代理, ♻️ 自动选择, 🇭🇰 香港自动, 🇹🇼 台湾自动, 🇸🇬 狮城自动, 🇯🇵 日本自动, 🇰🇷 韩国自动, 🇺🇸 美国自动, 🇬🇧 英国自动, 🇳🇱 荷兰自动, 🇩🇪 德国自动 ] }
-specific: &specific { type: select, include-all: true, proxies: [ 🚀 默认代理, ♻️ 自动选择, 🇹🇼 台湾自动, 🇸🇬 狮城自动, 🇯🇵 日本自动, 🇰🇷 韩国自动, 🇺🇸 美国自动, 🇬🇧 英国自动, 🇳🇱 荷兰自动, 🇩🇪 德国自动 ], <<: *airports, filter: "^((?!(?i)(🇭🇰|香港|hk|hong\\s?kong|🇲🇴|澳门|澳門|macau|macao|🇷🇺|俄罗斯|ru|russia|🇨🇳|中国|回国|china|cn)).)*$" }
-island: &island { type: select, proxies: [ DIRECT ], <<: *airports, filter: "(?i)(🇭🇰|香港|hk|hong\\s?kong|🇲🇴|澳门|澳門|macau|macao|🇹🇼|台湾|tw|taiwan)" }
+main: &main { type: select, include-all: true, proxies: [🚀 默认代理, ♻️ 自动选择, 🔯 故障转移, 🇭🇰 香港自动, 🇹🇼 台湾自动, 🇸🇬 狮城自动, 🇯🇵 日本自动, 🇰🇷 韩国自动, 🇺🇸 美国自动, 🇬🇧 英国自动, 🇳🇱 荷兰自动, 🇩🇪 德国自动, DIRECT] }
+proxy: &proxy { type: select, include-all: true, proxies: [🚀 默认代理, ♻️ 自动选择, 🔯 故障转移, 🇭🇰 香港自动, 🇹🇼 台湾自动, 🇸🇬 狮城自动, 🇯🇵 日本自动, 🇰🇷 韩国自动, 🇺🇸 美国自动, 🇬🇧 英国自动, 🇳🇱 荷兰自动, 🇩🇪 德国自动] }
+specific: &specific { type: select, include-all: true, proxies: [🚀 默认代理, 🇹🇼 台湾自动, 🇸🇬 狮城自动, 🇯🇵 日本自动, 🇰🇷 韩国自动, 🇺🇸 美国自动, 🇬🇧 英国自动, 🇳🇱 荷兰自动, 🇩🇪 德国自动], exclude-filter: "(?i)(🇭🇰|香港|\\bHK\\b|\\bHKG\\b|Hong\\s?Kong|🇲🇴|澳门|澳門|\\bMO\\b|\\bMAC\\b|Macau|Macao|🇷🇺|俄罗斯|\\bRU\\b|\\bRUS\\b|Russia|🇨🇳|中国|回国|\\bCN\\b|\\bCHN\\b|China)" }
+island: &island { type: select, include-all: true, proxies: [DIRECT], filter: "(?i)(🇭🇰|香港|\\bHK\\b|\\bHKG\\b|Hong\\s?Kong|🇲🇴|澳门|澳門|\\bMO\\b|\\bMAC\\b|Macau|Macao|🇹🇼|台湾|台灣|\\bTW\\b|\\bTWN\\b|Taiwan)" }
 
 ## 代理分组
 proxy-groups:
   #------------------------基础分组------------------------#
-  - { name: 🚀 默认代理, type: select, include-all: true, proxies: [ ♻️ 自动选择, 🇭🇰 香港自动, 🇹🇼 台湾自动, 🇸🇬 狮城自动, 🇯🇵 日本自动, 🇰🇷 韩国自动, 🇺🇸 美国自动, 🇬🇧 英国自动, 🇳🇱 荷兰自动, 🇩🇪 德国自动 ] }
-  - { name: ♻️ 自动选择, type: url-test, include-all: true, tolerance: 100, interval: 300 }
-  - { name: 🔯 故障转移, type: fallback, include-all: true, tolerance: 100, interval: 300 }
+  - { name: 🚀 默认代理, type: select, include-all: true, proxies: [♻️ 自动选择, 🔯 故障转移, 🇭🇰 香港自动, 🇹🇼 台湾自动, 🇸🇬 狮城自动, 🇯🇵 日本自动, 🇰🇷 韩国自动, 🇺🇸 美国自动, 🇬🇧 英国自动, 🇳🇱 荷兰自动, 🇩🇪 德国自动], icon: *proxy-icon }
+  - { name: ♻️ 自动选择, type: url-test, include-all: true, tolerance: 100, interval: 300, icon: *auto-icon }
+  - { name: 🔯 故障转移, type: fallback, include-all: true, interval: 300, icon: *fallback-icon }
 
   #------------------------场景分组------------------------#
-  - { name: 🤖 AI, <<: *specific }
-  - { name: 🍀 Google, <<: *proxy }
-  - { name: 👨‍💻 GitHub, <<: *proxy }
-  - { name: 🦊 GitLab, <<: *proxy }
-  - { name: 🐳 Docker, <<: *proxy }
-  - { name: 🪟 Microsoft, <<: *main }
-  - { name: 🐬 OneDrive, <<: *main }
-  - { name: 🍎 Apple, <<: *main }
-  - { name: 💶 PayPal, <<: *main }
-  - { name: 📲 Telegram, <<: *proxy }
-  - { name: 🐦 Twitter, <<: *proxy }
-  - { name: 🌀 Meta, <<: *proxy }
-  - { name: 📺 BiliBili, <<: *island }
-  - { name: 🎥 NETFLIX, <<: *specific }
-  - { name: 🎧 Spotify, <<: *island }
-  - { name: 🎵 TikTok, <<: *specific }
-  - { name: 🎮 Games, <<: *main }
-  - { name: ✈️ Speedtest, <<: *main }
+  - { name: 🤖 AI, <<: *specific, icon: *ai-icon }
+  - { name: 🍀 Google, <<: *proxy, icon: *google-icon }
+  - { name: 👨‍💻 GitHub, <<: *proxy, icon: *github-icon }
+  - { name: 🦊 GitLab, <<: *proxy, icon: *gitlab-icon }
+  - { name: 🐳 Docker, <<: *proxy, icon: *docker-icon }
+  - { name: 🪟 Microsoft, <<: *main, icon: *microsoft-icon }
+  - { name: 🐬 OneDrive, <<: *main, icon: *onedrive-icon }
+  - { name: 🍎 Apple, <<: *main, icon: *apple-icon }
+  - { name: 💶 PayPal, <<: *main, icon: *paypal-icon }
+  - { name: 📲 Telegram, <<: *proxy, icon: *telegram-icon }
+  - { name: 🐦 Twitter, <<: *proxy, icon: *twitter-icon }
+  - { name: 🌀 Meta, <<: *proxy, icon: *meta-icon }
+  - { name: 📺 BiliBili, <<: *island, icon: *bilibili-icon }
+  - { name: 🎥 NETFLIX, <<: *specific, icon: *netflix-icon }
+  - { name: 🎧 Spotify, <<: *island, icon: *spotify-icon }
+  - { name: 🎵 TikTok, <<: *specific, icon: *tiktok-icon }
+  - { name: 🎮 Games, <<: *main, icon: *game-icon }
+  - { name: ✈️ Speedtest, <<: *main, icon: *speedtest-icon }
 
   #------------------------地区分组------------------------#
-  - { name: 🇭🇰 香港自动, type: url-test, <<: *airports, include-all: true, tolerance: 100, interval: 300, filter: "(?i)(🇭🇰|香港|hk|hong\\s?kong)" }
-  - { name: 🇹🇼 台湾自动, type: url-test, <<: *airports, include-all: true, tolerance: 100, interval: 300, filter: "(?i)(🇹🇼|台湾|tw|taiwan)" }
-  - { name: 🇸🇬 狮城自动, type: url-test, <<: *airports, include-all: true, tolerance: 100, interval: 300, filter: "(?i)(🇸🇬|新加坡|sg|singapore|lion\\s?city)" }
-  - { name: 🇯🇵 日本自动, type: url-test, <<: *airports, include-all: true, tolerance: 100, interval: 300, filter: "(?i)(🇯🇵|日本|jp|japan|tokyo|osaka)" }
-  - { name: 🇰🇷 韩国自动, type: url-test, <<: *airports, include-all: true, tolerance: 100, interval: 300, filter: "(?i)(🇰🇷|韩国|kr|korea|seoul)" }
-  - { name: 🇺🇸 美国自动, type: url-test, <<: *airports, include-all: true, tolerance: 100, interval: 300, filter: "(?i)(🇺🇸|美国|us|united\\s?states|america)" }
-  - { name: 🇬🇧 英国自动, type: url-test, <<: *airports, include-all: true, tolerance: 100, interval: 300, filter: "(?i)(🇬🇧|英国|gb|great\\s?britain|london)" }
-  - { name: 🇳🇱 荷兰自动, type: url-test, <<: *airports, include-all: true, tolerance: 100, interval: 300, filter: "(?i)(🇳🇱|荷兰|nl|netherlands|amsterdam)" }
-  - { name: 🇩🇪 德国自动, type: url-test, <<: *airports, include-all: true, tolerance: 100, interval: 300, filter: "(?i)(🇩🇪|德国|de|germany|frankfurt)" }
+  - { name: 🇭🇰 香港自动, type: url-test, include-all: true, tolerance: 100, interval: 300, filter: "(?i)(🇭🇰|香港|\\bHK\\b|\\bHKG\\b|Hong\\s?Kong)" }
+  - { name: 🇹🇼 台湾自动, type: url-test, include-all: true, tolerance: 100, interval: 300, filter: "(?i)(🇹🇼|台湾|台灣|\\bTW\\b|\\bTWN\\b|Taiwan)" }
+  - { name: 🇸🇬 狮城自动, type: url-test, include-all: true, tolerance: 100, interval: 300, filter: "(?i)(🇸🇬|新加坡|狮城|\\bSG\\b|\\bSGP\\b|Singapore)" }
+  - { name: 🇯🇵 日本自动, type: url-test, include-all: true, tolerance: 100, interval: 300, filter: "(?i)(🇯🇵|日本|\\bJP\\b|\\bJPN\\b|Japan)" }
+  - { name: 🇰🇷 韩国自动, type: url-test, include-all: true, tolerance: 100, interval: 300, filter: "(?i)(🇰🇷|韩国|\\bKR\\b|\\bKOR\\b|Korea)" }
+  - { name: 🇺🇸 美国自动, type: url-test, include-all: true, tolerance: 100, interval: 300, filter: "(?i)(🇺🇸|美国|\\bUS\\b|\\bUSA\\b|United\\s?States|America)" }
+  - { name: 🇬🇧 英国自动, type: url-test, include-all: true, tolerance: 100, interval: 300, filter: "(?i)(🇬🇧|英国|\\bUK\\b|\\bGB\\b|\\bGBR\\b|United\\s?Kingdom|Great\\s?Britain|Britain|England)" }
+  - { name: 🇳🇱 荷兰自动, type: url-test, include-all: true, tolerance: 100, interval: 300, filter: "(?i)(🇳🇱|荷兰|\\bNL\\b|\\bNLD\\b|Netherlands|Holland)" }
+  - { name: 🇩🇪 德国自动, type: url-test, include-all: true, tolerance: 100, interval: 300, filter: "(?i)(🇩🇪|德国|\\bDE\\b|\\bDEU\\b|Germany)" }
 
   #------------------------特殊分组------------------------#
-  - { name: 🎯 全球直连, type: select, proxies: [ DIRECT, 🚀 默认代理 ] }
-  - { name: 🎣 漏网之鱼, <<: *main }
+  - { name: 🎯 全球直连, type: select, proxies: [DIRECT, 🚀 默认代理], icon: *direct-icon }
+  - { name: 🎣 漏网之鱼, <<: *main, icon: *fish-icon }
 
 ## 规则匹配
 rules:
@@ -262,11 +323,12 @@ rules:
   - RULE-SET,private-domain,DIRECT
 
   - AND,((NETWORK,UDP),(DST-PORT,443)),REJECT # QUIC 拦截
-  - RULE-SET,icloudprivaterelay-domain,REJECT # iCloud 私有中继
+  - RULE-SET,icloudprivaterelay-domain,REJECT # iCloud 私有中继拦截
   - RULE-SET,httpdns-cn-domain,REJECT # 国内 HTTPDNS 劫持
   - RULE-SET,winspy-domain,REJECT # Windows 隐私追踪
   - RULE-SET,awaads-domain,REJECT # 广告拦截
-  - RULE-SET,hageziproplus-domain,REJECT # 广告恶意域名拦截
+  - RULE-SET,hagezi-domain,REJECT # 广告恶意域名拦截
+  # - RULE-SET,stun-domain,REJECT # STUN 拦截
   - RULE-SET,reject-list,REJECT # 拦截补充
 
   - RULE-SET,connectivity-check-domain,DIRECT # 连接性检查
@@ -274,29 +336,30 @@ rules:
   - RULE-SET,direct-list,DIRECT # 直连补充
 
   # 应用分流
-  - RULE-SET,apple-domain,🍎 Apple
-  - RULE-SET,apple-cn-domain,🍎 Apple
   - RULE-SET,google-domain,🍀 Google
   - RULE-SET,google-cn-domain,🍀 Google
   - RULE-SET,ai-domain,🤖 AI
-  - RULE-SET,steam-domain,🎮 Games
-  - RULE-SET,epicgames-domain,🎮 Games
   - RULE-SET,github-domain,👨‍💻 GitHub
   - RULE-SET,gitlab-domain,🦊 GitLab
   - RULE-SET,docker-domain,🐳 Docker
-  - RULE-SET,facebook-domain,🌀 Meta
-  - RULE-SET,instagram-domain,🌀 Meta
-  - RULE-SET,whatsapp-domain,🌀 Meta
+  - RULE-SET,onedrive-domain,🐬 OneDrive
   - RULE-SET,microsoft-domain,🪟 Microsoft
   - RULE-SET,microsoft-cn-domain,🪟 Microsoft
-  - RULE-SET,onedrive-domain,🐬 OneDrive
+  - RULE-SET,apple-domain,🍎 Apple
+  - RULE-SET,apple-cn-domain,🍎 Apple
   - RULE-SET,telegram-domain,📲 Telegram
   - RULE-SET,twitter-domain,🐦 Twitter
+  - RULE-SET,facebook-domain,🌀 Meta
+  - RULE-SET,instagram-domain,🌀 Meta
+  - RULE-SET,threads-domain,🌀 Meta
+  - RULE-SET,whatsapp-domain,🌀 Meta
   - RULE-SET,bilibili-domain,📺 BiliBili
   - RULE-SET,netflix-domain,🎥 NETFLIX
   - RULE-SET,spotify-domain,🎧 Spotify
   - RULE-SET,tiktok-domain,🎵 TikTok
   - RULE-SET,bytedance-!cn-domain,🎵 TikTok
+  - RULE-SET,steam-domain,🎮 Games
+  - RULE-SET,epicgames-domain,🎮 Games
   - RULE-SET,paypal-domain,💶 PayPal
   - RULE-SET,speedtest-domain,✈️ Speedtest
 
@@ -346,7 +409,7 @@ rule-providers:
   gitlab-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/gitlab.mrs" }
   google-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/google.mrs" }
   google-cn-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/wwqgtxx/clash-rules@release/google.mrs" }
-  hageziproplus-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MiHomoer/MiHomo-Hagezi@release/HageziProPlus.mrs" }
+  hagezi-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MiHomoer/MiHomo-Hagezi@release/HageziPro.mrs" }
   httpdns-cn-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/category-httpdns-cn.mrs" }
   icloudprivaterelay-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/icloudprivaterelay.mrs" }
   instagram-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/instagram.mrs" }
@@ -361,7 +424,9 @@ rule-providers:
   speedtest-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/ookla-speedtest.mrs" }
   spotify-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/spotify.mrs" }
   steam-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/steam.mrs" }
+  # stun-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/Kwisma/rules@main/rules/mihomo/STUN/STUN_Domain.mrs" }
   telegram-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/telegram.mrs" }
+  threads-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/threads.mrs" }
   tiktok-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/tiktok.mrs" }
   twitter-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/twitter.mrs" }
   whatsapp-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/whatsapp.mrs" }
