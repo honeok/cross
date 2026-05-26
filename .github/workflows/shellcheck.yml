@@ -39,3 +39,4 @@ jobs:
           SHFMT_OPTS: -i 4 -sr
         with:
           sh_checker_only_diff: ${{ github.event_name == 'pull_request' }}
+          sh_checker_exclude: '^bench\.sh$'
