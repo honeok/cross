@@ -13,7 +13,7 @@ set -eE
 
 # MAJOR.MINOR.PATCH
 # shellcheck disable=SC2034
-readonly SCRIPT_VERSION='v1.0.1'
+readonly SCRIPT_VERSION='v1.0.2'
 
 _red() {
     printf "\033[31m%b\033[0m\n" "$*"
@@ -32,7 +32,7 @@ _blue_bg() {
 }
 
 # 各变量默认值
-TEMP_DIR="$(mktemp -d)"
+TEMP_DIR="$(mktemp -d 2> /dev/null)"
 PROJECT_NAME="shadowsocks"
 CORE_NAME="$PROJECT_NAME-rust"
 CORE_DIR="/etc/$CORE_NAME"
@@ -42,8 +42,8 @@ trap 'rm -rf "${TEMP_DIR:?}" > /dev/null 2>&1' INT TERM EXIT
 
 # 分隔符
 separator() {
-    local LENGTH="${1:-15}"
-    printf "%-${LENGTH}s\n" "-" | sed 's/\s/-/g'
+    local length="${1:-15}"
+    printf "%-${length}s\n" "-" | sed 's/\s/-/g'
 }
 
 clear() {
@@ -58,78 +58,85 @@ die() {
 cd "$TEMP_DIR" > /dev/null 2>&1 || die "Unable to enter the work path."
 
 curl() {
-    local RC
+    local rc
 
     # 添加 --fail 不然404退出码也为0
     # 32位cygwin已停止更新, 证书可能有问题, 添加 --insecure
     # centos7 curl 不支持 --retry-connrefused --retry-all-errors 因此手动 retry
     for ((i = 1; i <= 5; i++)); do
         command curl --connect-timeout 10 --fail --insecure "$@"
-        RC="$?"
-        if [ "$RC" -eq 0 ]; then
+        rc="$?"
+        if [ "$rc" -eq 0 ]; then
             return
         else
             # 403 404 错误或达到重试次数
-            if [ "$RC" -eq 22 ] || [ "$i" -eq 5 ]; then
-                return "$RC"
+            if [ "$rc" -eq 22 ] || [ "$i" -eq 5 ]; then
+                return "$rc"
             fi
             sleep 0.5
         fi
     done
 }
 
-is_alpine() {
+is_in_alpine() {
     [ -f /etc/alpine-release ]
 }
 
-random_port() {
-    local EXIST_PORT TEMP_PORT PORT
+# 将输入转换为小写
+to_lower() {
+    tr '[:upper:]' '[:lower:]'
+}
 
-    EXIST_PORT="$(ss -lnptu | sed -n 's/.*:\([0-9]\+\).*/\1/p' | sort -nu)"
+random_port() {
+    local exist_port temp_port port
+
+    exist_port="$(ss -lnptu | sed -n 's/.*:\([0-9]\+\).*/\1/p' | sort -nu)"
     for ((i = 1; i <= 5; i++)); do
-        TEMP_PORT="$(shuf -i 20000-65535 -n 1)"
-        if ! grep -q "^$TEMP_PORT$" <<< "$EXIST_PORT"; then
-            PORT="$TEMP_PORT"
-            echo "$PORT"
+        temp_port="$(shuf -i 20000-65535 -n 1)"
+        if ! grep -q "^$temp_port$" <<< "$exist_port"; then
+            port="$temp_port"
+            echo "$port"
             break
         fi
     done
-    [ -n "$PORT" ] || die "Failed generate random port."
+    [ -n "$port" ] || die "Failed generate random port."
 }
 
 get_ip() {
-    local PUBLIC_IP
+    local public_ip
 
-    [ -n "$PUBLIC_IP" ] || PUBLIC_IP="$(curl -Ls -4 http://www.qualcomm.cn/cdn-cgi/trace | grep '^ip=' | cut -d= -f2 | grep .)"
-    [ -n "$PUBLIC_IP" ] || PUBLIC_IP="$(curl -Ls -4 ip.sb 2>&1)"
-    echo "$PUBLIC_IP"
+    [ -n "$public_ip" ] || public_ip="$(curl -Ls -4 http://www.qualcomm.cn/cdn-cgi/trace | grep '^ip=' | cut -d= -f2 | grep .)"
+    [ -n "$public_ip" ] || public_ip="$(curl -Ls -4 ip.honeok.com 2>&1)"
+    echo "$public_ip"
 }
 
 install_ss() {
-    local OS_ARCH GLIBC
-    local -a FILENAMES
+    local os_name os_arch glibc
+    local -a filenames
 
-    [ -n "$VERSION" ] || VERSION="$(curl -Ls https://api.github.com/repos/$PROJECT_NAME/$CORE_NAME/releases | grep -m1 '"tag_name":' | sed -E 's/.*"v?([^"]+)".*/\1/')"
+    os_name="$(to_lower <<< "$(uname -s)")"
+
+    [ -n "${VERSION:-}" ] || VERSION="$(curl -Ls https://api.github.com/repos/$PROJECT_NAME/$CORE_NAME/releases | grep -m1 '"tag_name":' | sed -E 's/.*"v?([^"]+)".*/\1/')"
 
     case "$(uname -m 2> /dev/null)" in
-    amd64 | x86_64) OS_ARCH="x86_64" ;;
-    arm64 | armv8* | aarch64) OS_ARCH="aarch64" ;;
+    amd64 | x86_64) os_arch="x86_64" ;;
+    arm64 | armv8* | aarch64) os_arch="aarch64" ;;
     *) die "unsupported cpu architecture." ;;
     esac
 
-    if is_alpine; then
-        GLIBC="musl"
+    if is_in_alpine; then
+        glibc="musl"
     else
-        GLIBC="gnu"
+        glibc="gnu"
     fi
 
     _yellow "Download $CORE_NAME."
-    FILENAMES=("$PROJECT_NAME-v$VERSION.$OS_ARCH-unknown-linux-$GLIBC.tar.xz" "$PROJECT_NAME-v$VERSION.$OS_ARCH-unknown-linux-$GLIBC.tar.xz.sha256")
-    for f in "${FILENAMES[@]}"; do
+    filenames=("$PROJECT_NAME-v$VERSION.$os_arch-unknown-$os_name-$glibc.tar.xz" "$PROJECT_NAME-v$VERSION.$os_arch-unknown-$os_name-$glibc.tar.xz.sha256")
+    for f in "${filenames[@]}"; do
         curl -Ls -O "https://github.com/$PROJECT_NAME/$CORE_NAME/releases/download/v$VERSION/$f"
     done
-    sha256sum -c "$PROJECT_NAME-v$VERSION.$OS_ARCH-unknown-linux-$GLIBC.tar.xz.sha256" > /dev/null 2>&1 || die "checksum verification failed."
-    tar fJx "$PROJECT_NAME-v$VERSION.$OS_ARCH-unknown-linux-$GLIBC.tar.xz"
+    sha256sum -c "$PROJECT_NAME-v$VERSION.$os_arch-unknown-$os_name-$glibc.tar.xz.sha256" > /dev/null 2>&1 || die "checksum verification failed."
+    tar fJx "$PROJECT_NAME-v$VERSION.$os_arch-unknown-$os_name-$glibc.tar.xz"
     chmod +x ss*
     mv -f ss* /usr/local/bin
 
@@ -137,35 +144,35 @@ install_ss() {
 }
 
 gen_cfg() {
-    local SERVER_PORT PASSWORD METHOD IP
+    local server_port password method ip
 
     _yellow "Generate config."
     mkdir -p "$CORE_DIR" || die "Unable to create directory."
 
-    SERVER_PORT="$(random_port)" # 生成随机端口
-    METHOD="chacha20-ietf-poly1305"
-    PASSWORD="$(ssservice genkey -m "$METHOD")"
-    IP="$(get_ip)"
+    server_port="$(random_port)" # 生成随机端口
+    method="chacha20-ietf-poly1305"
+    password="$(ssservice genkey -m "$method")"
+    ip="$(get_ip)"
 
     tee > "$CORE_DIR/config.json" <<- EOF
 {
   "server": "::",
-  "server_port": $SERVER_PORT,
-  "password": "$PASSWORD",
+  "server_port": $server_port,
+  "password": "$password",
   "timeout": 300,
-  "method": "$METHOD",
+  "method": "$method",
   "mode": "tcp_and_udp"
 }
 EOF
 
     echo "$(separator 9) $CORE_NAME $(separator 8)"
     printf "%-25s: %s\n" "协议 (Protocol)" "$(_blue_bg "$PROJECT_NAME")"
-    printf "%-25s: %s\n" "地址 (Address)" "$(_blue_bg "$IP")"
-    printf "%-25s: %s\n" "端口 (Port)" "$(_blue_bg "$SERVER_PORT")"
-    printf "%-25s: %s\n" "密码 (Password)" "$(_blue_bg "$PASSWORD")"
-    printf "%-27s: %s\n" "加密方式 (Encryption)" "$(_blue_bg "$METHOD")"
+    printf "%-25s: %s\n" "地址 (Address)" "$(_blue_bg "$ip")"
+    printf "%-25s: %s\n" "端口 (Port)" "$(_blue_bg "$server_port")"
+    printf "%-25s: %s\n" "密码 (Password)" "$(_blue_bg "$password")"
+    printf "%-27s: %s\n" "加密方式 (Encryption)" "$(_blue_bg "$method")"
     echo "$(separator) URL $(separator)"
-    _blue_bg "ss://$(printf '%s:%s' "$METHOD" "$PASSWORD" | base64 | tr -d '\n')@$IP:$SERVER_PORT#$PROJECT_NAME-honeok"
+    _blue_bg "ss://$(printf '%s:%s' "$method" "$password" | base64 | tr -d '\n')@$ip:$server_port#$PROJECT_NAME-honeok"
     echo "$(separator) END $(separator)"
 }
 
