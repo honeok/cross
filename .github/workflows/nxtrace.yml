@@ -1,5 +1,5 @@
 ---
-name: "NextTrace CI"
+name: "NextTrace run test"
 
 on:
   push:
@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   run:
-    name: "NextTrace install"
+    name: "NextTrace run test"
     runs-on: ubuntu-latest
 
     steps:
@@ -30,7 +30,7 @@ jobs:
           echo "STABLE_VERSION=$STABLE_VERSION" >> "$GITHUB_ENV"
           echo "DEV_VERSION=$DEV_VERSION" >> "$GITHUB_ENV"
 
-      - name: "Run NextTrace install"
+      - name: "NextTrace run test"
         run: |
           set -x
           bash nxtrace.sh --debug

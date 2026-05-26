@@ -7,13 +7,13 @@ on:
     paths:
       - "core/xray/**"
       - "!core/xray/**/*.md"
-      - ".github/workflows/xray.yaml"
+      - ".github/workflows/build-xray.yml"
   pull_request:
     types: [opened, reopened, synchronize]
     paths:
       - "core/xray/**"
       - "!core/xray/**/*.md"
-      - ".github/workflows/xray.yaml"
+      - ".github/workflows/build-xray.yml"
   schedule:
     - cron: "0 16 * * *"
   workflow_dispatch:

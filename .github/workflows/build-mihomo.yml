@@ -7,13 +7,13 @@ on:
     paths:
       - "core/mihomo/**"
       - "!core/mihomo/**/*.md"
-      - ".github/workflows/mihomo.yaml"
+      - ".github/workflows/build-mihomo.yml"
   pull_request:
     types: [opened, reopened, synchronize]
     paths:
       - "core/mihomo/**"
       - "!core/mihomo/**/*.md"
-      - ".github/workflows/mihomo.yaml"
+      - ".github/workflows/build-mihomo.yml"
   schedule:
     - cron: "0 16 * * *"
   workflow_dispatch:

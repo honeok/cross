@@ -19,7 +19,6 @@ updates:
 
   - package-ecosystem: "docker"
     directories:
-      - "/core/3x-ui"
       - "/core/mihomo"
       - "/core/sing-box"
       - "/core/xray"
