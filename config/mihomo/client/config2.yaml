@@ -69,6 +69,7 @@ ntp:
   interval: 30
 
 ## Tun配置
+# https://github.com/mihomo-party-org/clash-party/issues/453
 # https://github.com/clash-verge-rev/clash-verge-rev/issues/819
 tun:
   enable: true
