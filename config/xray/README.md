@@ -1,6 +1,6 @@
 # Xray
 
-[![GitHub Release](https://img.shields.io/github/v/release/XTLS/Xray-core.svg?logo=github)](https://github.com/XTLS/Xray-core/releases)
+[![GitHub Release](https://img.shields.io/github/v/tag/XTLS/Xray-core.svg?label=release&logo=github)](https://github.com/XTLS/Xray-core/releases)
 [![GitHub Release](https://img.shields.io/github/v/release/233boy/Xray.svg?logo=github)](https://github.com/233boy/Xray/releases)
 [![GitHub Releases Stats](https://img.shields.io/github/downloads/XTLS/Xray-core/total.svg?&logo=github)](https://somsubhra.github.io/github-release-stats/?username=XTLS&repository=Xray-core)
 

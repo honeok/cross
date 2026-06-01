@@ -1,6 +1,6 @@
 # Xray
 
-[![GitHub Release](https://img.shields.io/github/v/release/XTLS/Xray-core.svg?logo=github)](https://github.com/XTLS/Xray-core/releases)
+[![GitHub Release](https://img.shields.io/github/v/tag/XTLS/Xray-core.svg?label=release&logo=github)](https://github.com/XTLS/Xray-core/releases)
 [![Docker Pulls](https://img.shields.io/docker/pulls/honeok/xray.svg?logo=docker&color=blue&logoColor=white)](https://hub.docker.com/r/honeok/xray)
 [![Docker Image Size](https://img.shields.io/docker/image-size/honeok/xray.svg?logo=docker&color=blue&logoColor=white)](https://hub.docker.com/r/honeok/xray)
 [![Docker Image Version](https://img.shields.io/docker/v/honeok/xray.svg?logo=docker&color=blue&logoColor=white)](https://hub.docker.com/r/honeok/xray)
@@ -27,17 +27,10 @@ docker pull honeok/xray
 
 ## Start a container
 
-First, you must create a configuration file on your localhost:
+First, create and edit `config.json` on your host. You must provide a valid
+Xray configuration manually.
 
-This file can be empty.
-
-```shell
-touch "$PWD/config.json"
-```
-
-Next, create `docker-compose.yaml`.
-
-Add the following content to the `docker-compose.yaml` file.
+Next, create `docker-compose.yaml` in the same directory:
 
 ```shell
 tee docker-compose.yaml >/dev/null <<'EOF'
@@ -48,24 +41,17 @@ services:
     restart: unless-stopped
     volumes:
       - $PWD/config.json:/etc/xray/config.json
-      - $PWD/conf:/etc/xray/conf
     network_mode: host
 EOF
 ```
 
-Finally, run the following command to start the container.
+Start the container:
 
 ```shell
 docker compose up -d
 ```
 
-Get the randomly generated `REALITY` configuration by viewing the container log.
-
-```shell
-docker logs -f xray
-```
-
-For reference, you can check the [Configuration][6] for Xray-core.
+For reference, check the [Configuration][6] for Xray-core.
 
 **Note**: The port you configured must be opened in the firewall.
 
