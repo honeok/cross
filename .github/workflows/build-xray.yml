@@ -3,13 +3,12 @@ name: "Build Xray"
 
 on:
   push:
-    branches: [master, release]
+    branches: [master, dev]
     paths:
       - "core/xray/**"
       - "!core/xray/**/*.md"
       - ".github/workflows/build-xray.yml"
   pull_request:
-    types: [opened, reopened, synchronize]
     paths:
       - "core/xray/**"
       - "!core/xray/**/*.md"
@@ -23,6 +22,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  WORK_DIR: core/xray
+  SRC_DIR: core/xray/src
   DOCKERHUB_REPO: ${{ secrets.DOCKER_USERNAME || github.repository_owner }}/xray
 
 jobs:
@@ -35,29 +36,37 @@ jobs:
       xray_version: ${{ steps.vers.outputs.xray_version }}
 
     steps:
-      - name: "Fetch Versions and Decide"
+      - name: "Resolve upstream versions"
         id: vers
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -eEuxo pipefail
+
           RENEW="false"
-          LATEST_TAG="$(gh release view -R XTLS/Xray-core --json tagName -q .tagName)"
-          LATEST_VER=${LATEST_TAG#v}
-          CURRENT_VER="$(skopeo list-tags "docker://docker.io/$DOCKERHUB_REPO" 2>/dev/null | jq -r '.Tags[] | select(. != "latest")' | sort -rV | head -n1 || true)"
-          if [[ "$(printf '%s\n%s\n' "$LATEST_VER" "$CURRENT_VER" | sort -V | head -n1)" != "$LATEST_VER" ]] || [[ -z "$CURRENT_VER" && -n "$LATEST_VER" ]]; then
+          LATEST_TAG="$(gh api 'repos/XTLS/Xray-core/tags?per_page=100' --jq '.[].name' | sort -V | tail -1)"
+          LATEST_VER="${LATEST_TAG#v}"
+          CURRENT_VER="$(skopeo list-tags "docker://docker.io/$DOCKERHUB_REPO" 2>/dev/null | jq -r '.Tags[]' | sed -nE '/^[0-9]+\.[0-9]+\.[0-9]+$/p' | sort -V | tail -n1 || true)"
+
+          if [[ "$(printf '%s\n%s\n' "$LATEST_VER" "$CURRENT_VER" | sort -V | head -n 1)" != "$LATEST_VER" ]] || [[ -z "$CURRENT_VER" && -n "$LATEST_VER" ]]; then
             echo "Build required."
             RENEW="true"
+          else
+            echo "Build skipped."
           fi
-          echo "renew=${RENEW}" >> "$GITHUB_OUTPUT"
-          echo "xray_tag=${LATEST_TAG}" >> "$GITHUB_OUTPUT"
-          echo "xray_version=${LATEST_VER}" >> "$GITHUB_OUTPUT"
 
-  release:
+          echo "renew=$RENEW" >> "$GITHUB_OUTPUT"
+          echo "xray_tag=$LATEST_TAG" >> "$GITHUB_OUTPUT"
+          echo "xray_version=$LATEST_VER" >> "$GITHUB_OUTPUT"
+
+  build-binary:
     name: "Build binary"
     runs-on: ubuntu-latest
     needs: [check]
     if: needs.check.outputs.renew == 'true' || github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request'
+    defaults:
+      run:
+        shell: bash
     strategy:
       fail-fast: true
       matrix:
@@ -79,58 +88,65 @@ jobs:
     steps:
       - name: "Checkout repository"
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
-      - name: "Clone source code"
-        working-directory: core/xray
-        run: git clone --depth=1 --branch ${{ needs.check.outputs.xray_tag }} https://github.com/XTLS/Xray-core.git src
+      - name: "Checkout Xray-core repository"
+        uses: actions/checkout@v6
+        with:
+          repository: XTLS/Xray-core
+          ref: ${{ needs.check.outputs.xray_tag }}
+          path: ${{ env.SRC_DIR }}
+          persist-credentials: false
 
       - name: "Setup Go"
         uses: actions/setup-go@v6
         with:
-          go-version-file: core/xray/src/go.mod
+          go-version-file: ${{ env.SRC_DIR }}/go.mod
           check-latest: true
-          cache-dependency-path: core/xray/src/go.sum
+          cache-dependency-path: ${{ env.SRC_DIR }}/go.sum
 
-      - name: "Download gomod"
-        working-directory: core/xray/src
+      - name: "Download dependencies"
+        working-directory: ${{ env.SRC_DIR }}
         run: go mod download
 
-      - name: "Build Xray-core"
-        working-directory: core/xray/src
+      - name: "Compile Xray"
+        working-directory: ${{ env.SRC_DIR }}
         run: |
-          set -eEuxo pipefail
-          COMMID="$(git rev-parse --short HEAD)"
+          set -Eexuo pipefail
 
-          echo "GOOS: $GOOS, GOARCH: $GOARCH, GOARM: $GOARM"
+          short_id="$(git rev-parse --short HEAD)"
+          echo "GOOS: ${GOOS} GOARCH: ${GOARCH} GOARM: ${GOARM:-}"
+
           go build -v -trimpath -o xray -buildvcs=false -gcflags="all=-l=4" \
-          -ldflags="-X github.com/xtls/xray-core/core.build=${COMMID} -s -w -buildid=" \
-          ./main
+            -ldflags="-X github.com/xtls/xray-core/core.build=${short_id} -s -w -buildid=" \
+            ./main
 
       - name: "Prepare assets"
-        working-directory: core/xray/src
+        working-directory: ${{ env.SRC_DIR }}
         run: |
-          set -eEuxo pipefail
-          PLATFORM_PAIR=$(awk -F/ '{print $1"-"$2$3}' <<< "${{ matrix.platform }}")
+          set -Eexuo pipefail
+
+          PLATFORM_PAIR="$(awk -F/ '{print $1"-"$2$3}' <<< "${{ matrix.platform }}")"
+          BINARY_NAME="xray-${GOARCH}${GOARM:+v${GOARM}}"
+          mv -f -- xray "$BINARY_NAME"
+          chmod 0755 "$BINARY_NAME"
+          echo "BINARY_NAME=$BINARY_NAME" >> "$GITHUB_ENV"
           echo "PLATFORM_PAIR=$PLATFORM_PAIR" >> "$GITHUB_ENV"
-          BINARY_NAME="xray-$GOARCH"
-          if [ -n "$GOARM" ]; then
-            BINARY_NAME="${BINARY_NAME}v${GOARM}"
-          fi
-          mv xray "$BINARY_NAME"
-          echo "BINARY_NAME=${BINARY_NAME}" >> "$GITHUB_ENV"
 
       - name: "Upload artifact"
         uses: actions/upload-artifact@v7
         with:
           name: xray-${{ env.PLATFORM_PAIR }}
-          path: core/xray/src/${{ env.BINARY_NAME }}
+          path: ${{ env.SRC_DIR }}/${{ env.BINARY_NAME }}
           if-no-files-found: error
           retention-days: 1
 
-  build:
+  build-image:
     name: "Build image"
     runs-on: ubuntu-latest
-    needs: [check, release]
+    needs: [check, build-binary]
+    if: needs.check.outputs.renew == 'true' || github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request'
     strategy:
       fail-fast: true
       matrix:
@@ -148,7 +164,7 @@ jobs:
       - name: "Checkout repository"
         uses: actions/checkout@v6
 
-      - name: "Prepare"
+      - name: "Set platform pair"
         run: |
           PLATFORM_PAIR=$(awk -F/ '{print $1"-"$2$3}' <<< "${{ matrix.platform }}")
           echo "PLATFORM_PAIR=$PLATFORM_PAIR" >> "$GITHUB_ENV"
@@ -157,24 +173,20 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: xray-${{ env.PLATFORM_PAIR }}
-          path: core/xray
+          path: ${{ env.WORK_DIR }}
 
-      - name: "Download geodat"
-        working-directory: core/xray
+      - name: "Prepare build context"
+        working-directory: ${{ env.WORK_DIR }}
         run: |
-          set -eEuxo pipefail
-          declare -a GEO_FILES=("geoip" "geosite")
-          for GEO_FILE in "${GEO_FILES[@]}"; do
-            curl -L -O "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/$GEO_FILE.dat"
-            curl -L -O "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/$GEO_FILE.dat.sha256sum"
-            sha256sum -c "$GEO_FILE.dat.sha256sum"
+          set -Eexuo pipefail
+
+          test -f xray*
+          chmod 0755 xray*
+          for g in geoip geosite; do
+            curl -L -O "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/$g.dat"
+            curl -L -O "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/$g.dat.sha256sum"
+            sha256sum -c "$g.dat.sha256sum"
           done
-
-      - name: "Prepare binary"
-        working-directory: core/xray
-        run: |
-          ls -la xray-*
-          chmod +x xray-*
 
       - name: "Setup Docker QEMU"
         uses: docker/setup-qemu-action@v4
@@ -184,7 +196,7 @@ jobs:
 
       - name: "Login to DockerHub"
         uses: docker/login-action@v4
-        if: ${{ github.event_name != 'pull_request' }}
+        if: ${{ github.event_name != 'pull_request' && github.ref_name == 'master' }}
         with:
           registry: docker.io
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -199,27 +211,25 @@ jobs:
             type=raw,value=${{ needs.check.outputs.xray_version }}
             type=raw,value=latest
           labels: |
-            org.opencontainers.image.description=Xray, Penetrates Everything. Also the best v2ray-core. Where the magic happens. An open platform for various uses.
-            org.opencontainers.image.source=https://github.com/XTLS/Xray-core
             org.opencontainers.image.title=Xray
+            org.opencontainers.image.description=Xray, Penetrates Everything. Also the best v2ray-core. Where the magic happens. An open platform for various uses.
             org.opencontainers.image.url=https://xtls.github.io
+            org.opencontainers.image.source=https://github.com/XTLS/Xray-core
+            org.opencontainers.image.version=${{ needs.check.outputs.xray_version }}
+            org.opencontainers.image.created={{commit_date 'YYYY-MM-DDTHH:mm:ss.SSS[Z]'}}
+            org.opencontainers.image.licenses=MPL-2.0
 
       - name: "Build and export"
         id: build
         uses: docker/build-push-action@v7
         with:
-          context: core/xray/
+          context: ${{ env.WORK_DIR }}
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
-          outputs: >
-            type=image,
-            name=${{ env.DOCKERHUB_REPO }},
-            push-by-digest=${{ github.ref_name == github.event.repository.default_branch }},
-            name-canonical=${{ github.ref_name == github.event.repository.default_branch }},
-            push=${{ github.ref_name == github.event.repository.default_branch }}
+          outputs: type=image,name=${{ env.DOCKERHUB_REPO }},push-by-digest=${{ github.event_name != 'pull_request' && github.ref_name == 'master' }},name-canonical=${{ github.event_name != 'pull_request' && github.ref_name == 'master' }},push=${{ github.event_name != 'pull_request' && github.ref_name == 'master' }}
 
       - name: "Export digest"
-        if: ${{ github.ref_name == github.event.repository.default_branch }}
+        if: ${{ github.event_name != 'pull_request' && github.ref_name == 'master' }}
         run: |
           rm -rf /tmp/digests
           mkdir -p /tmp/digests
@@ -227,7 +237,7 @@ jobs:
           touch "/tmp/digests/${digest#sha256:}"
 
       - name: "Upload artifact"
-        if: ${{ github.ref_name == github.event.repository.default_branch }}
+        if: ${{ github.event_name != 'pull_request' && github.ref_name == 'master' }}
         uses: actions/upload-artifact@v7
         with:
           name: digest-${{ env.PLATFORM_PAIR }}
@@ -235,11 +245,11 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  merge:
+  merge-manifest:
     runs-on: ubuntu-latest
     name: "Merge manifest"
-    needs: [check, build]
-    if: ${{ github.ref_name == github.event.repository.default_branch }}
+    needs: [check, build-image]
+    if: ${{ github.event_name != 'pull_request' && github.ref_name == 'master' }}
 
     steps:
       - name: "Download digests"
@@ -268,10 +278,13 @@ jobs:
             type=raw,value=${{ needs.check.outputs.xray_version }}
             type=raw,value=latest
           labels: |
-            org.opencontainers.image.description=Xray, Penetrates Everything. Also the best v2ray-core. Where the magic happens. An open platform for various uses.
-            org.opencontainers.image.source=https://github.com/XTLS/Xray-core
             org.opencontainers.image.title=Xray
+            org.opencontainers.image.description=Xray, Penetrates Everything. Also the best v2ray-core. Where the magic happens. An open platform for various uses.
             org.opencontainers.image.url=https://xtls.github.io
+            org.opencontainers.image.source=https://github.com/XTLS/Xray-core
+            org.opencontainers.image.version=${{ needs.check.outputs.xray_version }}
+            org.opencontainers.image.created={{commit_date 'YYYY-MM-DDTHH:mm:ss.SSS[Z]'}}
+            org.opencontainers.image.licenses=MPL-2.0
 
       - name: "Create manifest list and push"
         working-directory: /tmp/digests
@@ -281,13 +294,13 @@ jobs:
             $(printf '${{ env.DOCKERHUB_REPO }}@sha256:%s ' *)
 
       - name: "Inspect image"
-        run: |
-          docker buildx imagetools inspect ${{ env.DOCKERHUB_REPO }}:${{ needs.check.outputs.xray_version }}
+        run: docker buildx imagetools inspect ${{ env.DOCKERHUB_REPO }}:${{ needs.check.outputs.xray_version }}
 
   sync:
-    name: "Sync readme"
+    name: "Sync readme to dockerhub"
     runs-on: ubuntu-latest
-    needs: [merge]
+    needs: [merge-manifest]
+    if: ${{ github.event_name != 'pull_request' && github.ref_name == 'master' }}
 
     steps:
       - name: "Checkout repository"
@@ -299,5 +312,5 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: ${{ env.DOCKERHUB_REPO }}
-          readme-filepath: core/xray/README.md
+          readme-filepath: ${{ WORK_DIR }}/README.md
           enable-url-completion: false
