@@ -312,5 +312,5 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: ${{ env.DOCKERHUB_REPO }}
-          readme-filepath: ${{ WORK_DIR }}/README.md
+          readme-filepath: ${{ env.WORK_DIR }}/README.md
           enable-url-completion: false
