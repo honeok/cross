@@ -14,7 +14,7 @@ on:
       - "!core/xray/**/*.md"
       - ".github/workflows/build-xray.yml"
   schedule:
-    - cron: "0 16 * * *"
+    - cron: "11 16 * * *"
   workflow_dispatch:
 
 concurrency:
