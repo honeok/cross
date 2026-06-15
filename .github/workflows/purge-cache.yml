@@ -3,7 +3,7 @@ name: "Purge cdn cache"
 
 on:
   push:
-    branches: [master, release]
+    branches: [master, dev]
     paths:
       - "**/*.sh"
   schedule:

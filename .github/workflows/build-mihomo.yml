@@ -3,7 +3,7 @@ name: "Build Mihomo"
 
 on:
   push:
-    branches: [master, release]
+    branches: [master, dev]
     paths:
       - "core/mihomo/**"
       - "!core/mihomo/**/*.md"

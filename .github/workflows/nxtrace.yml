@@ -3,7 +3,7 @@ name: "NextTrace run test"
 
 on:
   push:
-    branches: [master, release]
+    branches: [master, dev]
     paths: ["**/nxtrace.*"]
   workflow_dispatch:
 

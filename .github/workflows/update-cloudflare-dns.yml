@@ -8,8 +8,7 @@ on:
       - ".github/workflows/update-cloudflare-dns.yml"
       - "scripts/update-cloudflare-dns.sh"
   schedule:
-    # - cron: "11 * * * *"
-    - cron: "*/5 * * * *"
+    - cron: "11 * * * *"
   workflow_dispatch:
 
 concurrency:
