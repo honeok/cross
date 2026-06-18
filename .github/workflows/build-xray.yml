@@ -87,12 +87,12 @@ jobs:
 
     steps:
       - name: "Checkout repository"
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: "Checkout Xray-core repository"
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: XTLS/Xray-core
           ref: ${{ needs.check.outputs.xray_tag }}
@@ -162,7 +162,7 @@ jobs:
 
     steps:
       - name: "Checkout repository"
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: "Set platform pair"
         run: |
@@ -304,7 +304,7 @@ jobs:
 
     steps:
       - name: "Checkout repository"
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: "Sync readme to dockerhub"
         uses: peter-evans/dockerhub-description@v5
