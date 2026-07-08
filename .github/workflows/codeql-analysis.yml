@@ -16,14 +16,14 @@ concurrency:
 
 jobs:
   codeql-analysis:
-    name: "Codeql analysis ${{ matrix.language }}"
+    name: "Codeql analysis"
     runs-on: ubuntu-latest
     permissions:
-      contents: read
       actions: read
+      contents: read
       security-events: write
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         language: ["actions"]
 
