@@ -3,15 +3,10 @@ name: "Run shellcheck"
 
 on:
   push:
-    branches:
-      - "*"
-    paths:
-      - "**/*.sh"
-      - ".github/workflows/shellcheck.yml"
+    branches: ["*"]
+    paths: ["**/*.sh"]
   pull_request:
-    paths:
-      - "**/*.sh"
-      - ".github/workflows/shellcheck.yml"
+    paths: ["**/*.sh"]
   workflow_dispatch:
 
 concurrency:
