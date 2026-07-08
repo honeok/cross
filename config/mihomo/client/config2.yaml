@@ -54,7 +54,7 @@ keep-alive-idle: 600 # 设置TCP连接的空闲超时时间为600秒
 
 # 缓解移动设备耗电问题
 # https://github.com/vernesong/OpenClash/issues/2614
-keep-alive-interval: 1800 # 设置TCP保活探测的间隔时间
+keep-alive-interval: 30 # 设置TCP保活探测的间隔时间
 
 profile:
   store-selected: true # 存储select选择记录
@@ -165,7 +165,7 @@ dns:
   # 配置查询域名使用的DNS服务器
   nameserver-policy:
     "rule-set:cn-domain,private-domain": *dns-cn
-    "rule-set:hagezi-domain": "rcode://success"
+    # "rule-set:hagezi-domain,geosite:category-ads-all": "rcode://success"
 
 ## 节点信息
 proxies:
@@ -328,7 +328,7 @@ rules:
   - RULE-SET,httpdns-cn-domain,REJECT # 国内 HTTPDNS 劫持
   - RULE-SET,winspy-domain,REJECT # Windows 隐私追踪
   - RULE-SET,awaads-domain,REJECT # 广告拦截
-  - RULE-SET,hagezi-domain,REJECT # 广告恶意域名拦截
+  # - RULE-SET,hagezi-domain,REJECT # 广告恶意域名拦截
   # - RULE-SET,stun-domain,REJECT # STUN 拦截
   - RULE-SET,reject-list,REJECT # 拦截补充
 
@@ -410,7 +410,7 @@ rule-providers:
   gitlab-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/gitlab.mrs" }
   google-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/google.mrs" }
   google-cn-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/wwqgtxx/clash-rules@release/google.mrs" }
-  hagezi-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MiHomoer/MiHomo-Hagezi@release/HageziPro.mrs" }
+  # hagezi-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MiHomoer/MiHomo-Hagezi@release/HageziPro.mrs" }
   httpdns-cn-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/category-httpdns-cn.mrs" }
   icloudprivaterelay-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/icloudprivaterelay.mrs" }
   instagram-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/instagram.mrs" }
