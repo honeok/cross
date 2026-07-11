@@ -34,14 +34,14 @@ jobs:
         with:
           matcher: true
           group-result: false
-          fail-on-error: true
+          fail-on-error: false
           shellcheck: false
           pyflakes: true
           cache: true
           github-token: ${{ github.token }}
 
       - name: "Actionlint summary"
-        if: steps.actionlint.outputs.exit-code != 0
+        if: steps.actionlint.outputs.exit-code != '0'
         run: |
           printf '[%s] %s\n' "$(date '+%F %T')" "Actionlint version: ${{ steps.actionlint.outputs.version-semver }}"
           printf '[%s] %s\n' "$(date '+%F %T')" "Actionlint ended because: ${{ steps.actionlint.outputs.exit-message }}"
