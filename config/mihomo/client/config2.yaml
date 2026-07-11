@@ -112,15 +112,15 @@ dns-cn: &dns-cn
   - https://doh.18bit.cn/dns-query
 
 dns-not-cn: &dns-not-cn
-  - https://cloudflare-dns.com/dns-query#🚀 默认代理
-  - https://dns.google/dns-query#🚀 默认代理
-  - https://doh.opendns.com/dns-query#🚀 默认代理 # Cisco
-  - https://dns.quad9.net/dns-query#🚀 默认代理
-  - https://wikimedia-dns.org/dns-query#🚀 默认代理 # Wikimedia 公共 DoH
-  - https://dns.adguard-dns.com/dns-query#🚀 默认代理 # AdGuard 过滤版
-  - https://doh.dns.sb/dns-query#🚀 默认代理 # xTom
-  - https://dns.rabbitdns.org/dns-query#🚀 默认代理
-  - https://doh-sg.blahdns.com/dns-query#🚀 默认代理 # BlahDNS 新加坡节点
+  - https://cloudflare-dns.com/dns-query
+  - https://dns.google/dns-query
+  - https://doh.opendns.com/dns-query # Cisco
+  - https://dns.quad9.net/dns-query
+  - https://wikimedia-dns.org/dns-query # Wikimedia 公共 DoH
+  - https://dns.adguard-dns.com/dns-query # AdGuard 过滤版
+  - https://doh.dns.sb/dns-query # xTom
+  - https://dns.rabbitdns.org/dns-query
+  - https://doh-sg.blahdns.com/dns-query # BlahDNS 新加坡节点
 
 # https://www.nodeseek.com/post-609424-3#24
 dns:
