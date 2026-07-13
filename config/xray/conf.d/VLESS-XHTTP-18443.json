@@ -11,7 +11,7 @@
             "id": "827867e4-dd69-44f0-8ac0-3e89f6e54935"
           }
         ],
-        "decryption": "none"
+        "decryption": "./xray vlessenc"
       },
       "streamSettings": {
         "network": "xhttp",
@@ -27,7 +27,7 @@
           ]
         },
         "xhttpSettings": {
-          "host": "",
+          "host": "www.google.com",
           "path": "/apis/networking.k8s.io/v1/namespaces/default/ingresses",
           "mode": "auto",
           "xPaddingObfsMode": true,
