@@ -1,0 +1,35 @@
+{
+  "inbounds": [
+    {
+      "tag": "VLESS-REALITY-443.json",
+      "port": 443,
+      "listen": "::",
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "id": "uuid",
+            "flow": "xtls-rprx-vision"
+          }
+        ],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "raw",
+        "security": "reality",
+        "realitySettings": {
+          "target": "www.google.com:443",
+          "serverNames": ["www.google.com"],
+          "privateKey": "./xray x25519",
+          "minClientVer": "1.8.2",
+          "shortIds": ["openssl rand -hex 8"]
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls", "quic"],
+        "routeOnly": true
+      }
+    }
+  ]
+}
