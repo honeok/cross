@@ -1,5 +1,6 @@
+# https://raw.githubusercontent.com/MetaCubeX/mihomo/Meta/.github/release/mihomo.service
 [Unit]
-Description=mihomo Daemon, Another Clash Kernel.
+Description=Mihomo Daemon, Another Clash Kernel.
 Documentation=https://wiki.metacubex.one
 After=network.target nss-lookup.target network-online.target
 Wants=network-online.target

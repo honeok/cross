@@ -1,0 +1,58 @@
+# SPDX-License-Identifier: GPL-2.0
+# Copyright (c) 2026 honeok <i@honeok.com>
+
+---
+mode: rule
+geox-url:
+  geoip: "https://cdn.jsdelivr.net/gh/honeokX/clash-rules@release/geoip.dat"
+  geosite: "https://cdn.jsdelivr.net/gh/honeokX/clash-rules@release/geosite.dat"
+
+geodata-mode: true
+geodata-loader: standard # geo 文件加载模式 standard: 标准加载器 memconservative: 专为内存受限设备优化的加载器 (默认值)
+geo-auto-update: true # 是否自动更新 geodata
+geo-update-interval: 24 # 更新间隔 单位: 小时
+
+log-level: warning # 日志等级 silent/error/warning/info/debug
+ipv6: true # IPv6 总开关, 关闭阻断所有 IPv6 链接和屏蔽 DNS 请求 AAAA 记录
+
+profile:
+  store-selected: false
+  store-fake-ip: false
+
+listeners:
+  # Shadowsocks
+  # cipher 支持:
+  # aes-128-gcm aes-192-gcm aes-256-gcm
+  # aes-128-cfb aes-192-cfb aes-256-cfb
+  # aes-128-ctr aes-192-ctr aes-256-ctr
+  # rc4-md5 chacha20-ietf xchacha20
+  # chacha20-ietf-poly1305 xchacha20-ietf-poly1305
+  # 2022-blake3-aes-128-gcm 2022-blake3-aes-256-gcm 2022-blake3-chacha20-poly1305
+  - name: "Shadowsocks-IN"
+    type: shadowsocks
+    port: 10813
+    listen: "::"
+    password: "openssl rand -base64 32"
+    cipher: chacha20-ietf-poly1305
+
+  # VLESS + REALITY + Vision
+  - name: "VLESS-REALITY-IN"
+    type: vless
+    port: 10817
+    listen: "::"
+    users:
+      - uuid: "cat /proc/sys/kernel/random/uuid"
+        flow: xtls-rprx-vision
+    reality-config:
+      dest: www.tesla.com:443
+      private-key: "mihomo generate reality-keypair"
+      short-id: ["openssl rand -hex 8"]
+      server-names: ["www.tesla.com"]
+
+rules:
+  - GEOSITE,category-ads-all,REJECT
+  - GEOSITE,meituan,REJECT
+  - DOMAIN-SUFFIX,ping0.cc,REJECT
+  - GEOIP,private,REJECT
+  - GEOIP,CN,REJECT
+  - MATCH,DIRECT
