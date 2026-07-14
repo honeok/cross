@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0
 # Copyright (c) 2026 honeok <i@honeok.com>
 
+---
 ## 全局配置
 mixed-port: 7890 # HTTP(S)和SOCKS代理混合端口
 # redir-port: 7892 # 透明代理端口 用于 Linux 和 MacOS
@@ -78,6 +79,7 @@ tun:
   auto-detect-interface: true # 自动识别出口网卡
   auto-route: true # 配置路由表
   auto-redirect: true
+  disable-icmp-forwarding: true # 禁用 ICMP 转发, 防止某些情况下的 ICMP 环回问题, ping 将不会显示真实的延迟
 
 ## 域名嗅探
 sniffer:
@@ -277,12 +279,12 @@ island: &island { type: select, include-all: true, proxies: [DIRECT], filter: "(
 
 ## 代理分组
 proxy-groups:
-  #------------------------基础分组------------------------#
+  # ------------------------基础分组------------------------#
   - { name: 🚀 默认代理, type: select, include-all: true, proxies: [♻️ 自动选择, 🔯 故障转移, 🇭🇰 香港自动, 🇹🇼 台湾自动, 🇸🇬 狮城自动, 🇯🇵 日本自动, 🇰🇷 韩国自动, 🇺🇸 美国自动, 🇬🇧 英国自动, 🇳🇱 荷兰自动, 🇩🇪 德国自动], icon: *proxy-icon }
   - { name: ♻️ 自动选择, type: url-test, include-all: true, tolerance: 100, interval: 300, icon: *auto-icon }
   - { name: 🔯 故障转移, type: fallback, include-all: true, interval: 300, icon: *fallback-icon }
 
-  #------------------------场景分组------------------------#
+  # ------------------------场景分组------------------------#
   - { name: 🤖 AI, <<: *specific, icon: *ai-icon }
   - { name: 🍀 Google, <<: *proxy, icon: *google-icon }
   - { name: 👨‍💻 GitHub, <<: *proxy, icon: *github-icon }
@@ -302,7 +304,7 @@ proxy-groups:
   - { name: 🎮 Games, <<: *main, icon: *game-icon }
   - { name: ✈️ Speedtest, <<: *main, icon: *speedtest-icon }
 
-  #------------------------地区分组------------------------#
+  # ------------------------地区分组------------------------#
   - { name: 🇭🇰 香港自动, type: url-test, include-all: true, tolerance: 100, interval: 300, filter: "(?i)(🇭🇰|香港|\\bHK\\b|\\bHKG\\b|Hong\\s?Kong)" }
   - { name: 🇹🇼 台湾自动, type: url-test, include-all: true, tolerance: 100, interval: 300, filter: "(?i)(🇹🇼|台湾|台灣|\\bTW\\b|\\bTWN\\b|Taiwan)" }
   - { name: 🇸🇬 狮城自动, type: url-test, include-all: true, tolerance: 100, interval: 300, filter: "(?i)(🇸🇬|新加坡|狮城|\\bSG\\b|\\bSGP\\b|Singapore)" }
@@ -313,7 +315,7 @@ proxy-groups:
   - { name: 🇳🇱 荷兰自动, type: url-test, include-all: true, tolerance: 100, interval: 300, filter: "(?i)(🇳🇱|荷兰|\\bNL\\b|\\bNLD\\b|Netherlands|Holland)" }
   - { name: 🇩🇪 德国自动, type: url-test, include-all: true, tolerance: 100, interval: 300, filter: "(?i)(🇩🇪|德国|\\bDE\\b|\\bDEU\\b|Germany)" }
 
-  #------------------------特殊分组------------------------#
+  # ------------------------特殊分组------------------------#
   - { name: 🎯 全球直连, type: select, proxies: [DIRECT, 🚀 默认代理], icon: *direct-icon }
   - { name: 🎣 漏网之鱼, <<: *main, icon: *fish-icon }
 
