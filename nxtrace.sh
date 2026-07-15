@@ -9,7 +9,7 @@
 set -eE
 
 # MAJOR.MINOR.PATCH
-readonly SCRIPT_VERSION='v1.0.0'
+readonly SCRIPT_VERSION='v1.1.0'
 
 _red() {
     printf "\033[31m%b\033[0m\n" "$*"
@@ -45,17 +45,14 @@ _italic() {
 }
 
 # 各变量默认值
-TEMP_DIR="$(mktemp -d)"
-GITHUB_PROXY="${GITHUB_PROXY:-}"
-GITHUB_PROXYS=('' 'https://v6.gh-proxy.org/' 'https://hub.glowp.xyz/' 'https://proxy.vvvv.ee/')
+TEMP_DIR="$(mktemp -d 2> /dev/null)"
+GITHUB_PROXY="https://v6.gh-proxy.org/"
 
 trap 'rm -rf "${TEMP_DIR:?}" > /dev/null 2>&1' INT TERM EXIT
 
 VERSION="${VERSION#v}"
 
-# 安装渠道来源:
-#   * stable
-#   * dev
+# 安装渠道来源: * stable 稳定版 * dev 开发版
 DEFAULT_CHANNEL_VALUE="stable"
 if [ -z "$CHANNEL" ]; then
     CHANNEL="$DEFAULT_CHANNEL_VALUE"
@@ -73,7 +70,7 @@ die() {
 usage_and_exit() {
     _italic "$(_cyan "Script Version: $SCRIPT_VERSION")"
     tee >&2 <<- 'EOF'
-Usage: ./nxtrace.sh [Options]
+Usage: bash nxtrace.sh [Options]
 
 Options:
     -h, --help          Show this help message and exit
@@ -83,12 +80,12 @@ Options:
 
 Examples:
     # Install stable version
-    ./nxtrace.sh
+    bash nxtrace.sh
 
     # Install specific version from dev channel
-    ./nxtrace.sh --channel dev --version <ver>
+    bash nxtrace.sh --channel dev --version <ver>
 EOF
-    exit 91
+    exit 1
 }
 
 cd "$TEMP_DIR" > /dev/null 2>&1 || die "Can't access temporary work dir."
@@ -141,26 +138,44 @@ is_have_cmd() {
 }
 
 curl() {
-    local RET
+    local rc
     # 添加 --fail 不然404退出码也为0
     # 32位cygwin已停止更新, 证书可能有问题, 添加 --insecure
     # centos7 curl 不支持 --retry-connrefused --retry-all-errors 因此手动 retry
     for ((i = 1; i <= 5; i++)); do
         command curl --connect-timeout 10 --fail --insecure "$@"
-        RET="$?"
-        if [ "$RET" -eq 0 ]; then
+        rc="$?"
+        if [ "$rc" -eq 0 ]; then
             return
         else
             # 403 404 错误或达到重试次数
-            if [ "$RET" -eq 22 ] || [ "$i" -eq 5 ]; then
-                return "$RET"
+            if [ "$rc" -eq 22 ] || [ "$i" -eq 5 ]; then
+                return "$rc"
             fi
             sleep 1
         fi
     done
 }
 
-is_ci() {
+is_in_china() {
+    if [ -z "$COUNTRY" ]; then
+        if ! COUNTRY="$(curl -L http://www.qualcomm.cn/cdn-cgi/trace | grep '^loc=' | cut -d= -f2 | grep .)"; then
+            die "Can not get location."
+        fi
+        echo >&2 "Location: $COUNTRY"
+    fi
+    [ "$COUNTRY" = CN ]
+}
+
+has_ipv4() {
+    ip -4 route get 151.101.65.1 > /dev/null 2>&1
+}
+
+has_ipv6() {
+    ip -6 route get 2a04:4e42:200::485 > /dev/null 2>&1
+}
+
+is_in_ci() {
     if [ -n "$GITHUB_ACTIONS" ]; then
         return
     elif [ -n "$GITLAB_CI" ]; then
@@ -178,20 +193,16 @@ is_not_root() {
     [ "$(id -u)" -ne 0 ]
 }
 
-# 检测是否需要启用Github CDN如能直接连通则不使用
 check_cdn() {
-    # GITHUB_PROXYS数组第一个元素为空相当于直连
-    local CHECK_URL STATUS_CODE
-
-    if is_ci; then
+    if is_in_ci; then
+        GITHUB_PROXY=""
+    elif is_in_china; then
         return
+    elif ! has_ipv4 && has_ipv6; then
+        return
+    else
+        GITHUB_PROXY=""
     fi
-
-    for PROXY_URL in "${GITHUB_PROXYS[@]}"; do
-        CHECK_URL="${PROXY_URL}${RELEASES_URL}"
-        STATUS_CODE="$(command curl --connect-timeout 3 --fail --insecure -Ls --output /dev/null --write-out "%{http_code}" "$CHECK_URL")"
-        [ "$STATUS_CODE" = "200" ] && GITHUB_PROXY="$PROXY_URL" && break
-    done
 }
 
 is_darwin() {
@@ -237,8 +248,8 @@ check_arch() {
     fi
 }
 
-do_install() {
-    local SH_C BIN_WORKDIR
+install_nt() {
+    local sh_c work_dir
 
     if is_have_cmd nexttrace; then
         tee >&2 <<- EOF
@@ -248,32 +259,29 @@ do_install() {
         (sleep 5)
     fi
 
-    SH_C="${SH_C:-}"
+    sh_c="${sh_c:-}"
     if is_not_root; then
         if is_have_cmd sudo; then
-            SH_C="sudo"
+            sh_c="sudo"
         else
             die "This installer needs the ability to run commands as root."
         fi
     fi
 
-    check_sys
-    check_arch
-
     [ -n "$VERSION" ] || VERSION="$(curl -Ls "${GITHUB_PROXY}${RELEASES_URL}" | grep '"tag_name":' | sed -E 's/.*"v?([^"]+)".*/\1/' | head -n 1)"
     curl -L "${GITHUB_PROXY}${DOWNLOAD_URL}/releases/download/v${VERSION}/nexttrace_${OS_NAME}_${OS_ARCH}" -o nexttrace || die "NextTrace download failed."
 
     if is_writable "/usr/local/bin"; then
-        BIN_WORKDIR="/usr/local/bin/nexttrace"
+        work_dir="/usr/local/bin/nexttrace"
     else
-        BIN_WORKDIR="/usr/bin/nexttrace"
+        work_dir="/usr/bin/nexttrace"
     fi
 
-    eval "$SH_C install -m 755 ./nexttrace $BIN_WORKDIR"
+    eval "$sh_c install -m 755 ./nexttrace $work_dir"
 
     if is_have_cmd nexttrace; then
         _suc_msg "$(_green "NextTrace is now available on your system.")"
-        eval "$BIN_WORKDIR" --version
+        eval "$work_dir" --version
     else
         die "NextTrace installation failed, please try again"
     fi
@@ -281,4 +289,6 @@ do_install() {
 
 clear
 check_cdn
-do_install
+check_sys
+check_arch
+install_nt
