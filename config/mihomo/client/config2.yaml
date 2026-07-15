@@ -133,7 +133,7 @@ dns:
 
   # 配置不使用fake-ip的域名
   fake-ip-filter:
-    - RULE-SET,fakeip-filter-domain
+    - "rule-set:fakeip-filter-domain"
   fake-ip-filter-mode: blacklist # 配置 fake-ip-filter 的匹配模式 默认为 blacklist 即如果匹配成功不返回 fake-ip
 
   # 配置后面的nameserver fallback和nameserver-policy向dns服务器的连接过程是否遵守遵守rules规则
