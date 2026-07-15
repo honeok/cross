@@ -19,7 +19,24 @@ profile:
   store-selected: false
   store-fake-ip: false
 
+proxies:
+  - name: "DIRECT-V4-PREFER"
+    type: direct
+    ip-version: ipv4-prefer
+
 listeners:
+  # Socks5
+  - name: "Socks5-IN"
+    type: socks
+    port: 10808
+    listen: "::"
+    # proxy: proxy # 如果不为空则直接将该入站流量交由指定 proxy 处理
+    udp: false # 默认值: true
+    # 如果不填写users项, 则遵从全局 authentication 设置, 如果填写会忽略全局设置, 如想跳过该入站的验证可填写 users: []
+    users:
+      - username: "openssl rand -hex 8"
+        password: "openssl rand -base64 32 | tr '/+' '_-'"
+
   # Shadowsocks
   # cipher 支持:
   # aes-128-gcm aes-192-gcm aes-256-gcm
@@ -32,7 +49,8 @@ listeners:
     type: shadowsocks
     port: 10813
     listen: "::"
-    password: "openssl rand -base64 32"
+    # proxy: proxy # 如果不为空则直接将该入站流量交由指定 proxy 处理
+    password: "openssl rand -base64 32 | tr '/+' '_-'"
     cipher: chacha20-ietf-poly1305
 
   # VLESS + REALITY + Vision
@@ -40,6 +58,7 @@ listeners:
     type: vless
     port: 10817
     listen: "::"
+    # proxy: proxy # 如果不为空则直接将该入站流量交由指定 proxy 处理
     users:
       - uuid: "cat /proc/sys/kernel/random/uuid"
         flow: xtls-rprx-vision
@@ -49,10 +68,59 @@ listeners:
       short-id: ["openssl rand -hex 8"]
       server-names: ["www.tesla.com"]
 
+  # VLESS + XHTTP + Encryption
+  - name: "VLESS-XHTTP-Encryption-IN"
+    type: vless
+    port: 10818
+    listen: "::"
+    # proxy: proxy # 如果不为空则直接将该入站流量交由指定 proxy 处理
+    users:
+      - uuid: "cat /proc/sys/kernel/random/uuid"
+        flow: xtls-rprx-vision
+    # 如果不为空则开启 XHTTP 传输层
+    xhttp-config:
+      path: "/apis/networking.k8s.io/v1/namespaces/default/ingresses"
+      host: "www.tesla.com"
+      mode: "auto" # Available: "stream-one" "stream-up" or "packet-up"
+      x-padding-obfs-mode: true
+      x-padding-key: "_dc"
+      x-padding-header: "X-Cache"
+      x-padding-placement: "queryInHeader" # Available: queryInHeader, cookie, header, query
+      x-padding-method: "tokenish" # Available: repeat-x, tokenish
+    # vless encryption 服务端配置:
+    # 使用 mihomo generate vless-x25519 生成传统 X25519 认证 或 mihomo generate vless-mlkem768 生成 ML-KEM-768 后量子认证
+    decryption: "mlkem768x25519plus.native/xorpub/random.600s(300-600s)/0s.(padding len).(padding gap).(X25519 PrivateKey).(ML-KEM-768 Seed)..."
+    # 下面两项如果填写则开启 tls, 需要同时填写
+    certificate: ./certificate.crt # 证书 PEM 格式, 或证书的路径
+    private-key: ./private.key # 证书对应的私钥 PEM 格式, 或私钥路径
+
+  # Hysteria2
+  - name: "Hysteria2-IN"
+    type: hysteria2
+    port: 10820
+    listen: "::"
+    # proxy: proxy # 如果不为空则直接将该入站流量交由指定 proxy 处理
+    users:
+      "openssl rand -hex 8": "openssl rand -base64 32 | tr '/+' '_-'"
+    certificate: ./certificate.crt # 证书 PEM 格式, 或证书的路径
+    private-key: ./private.key # 证书对应的私钥 PEM 格式, 或私钥路径
+    # up 和 down 均不写或为 0 则使用 BBR 流控
+    up: "950 Mbps"
+    down: "150 Mbps"
+    # https://v2.hysteria.network/zh/docs/advanced/Full-Client-Config
+    # 默认 Hysteria 协议伪装为 HTTP/3, 如果你的网络针对性屏蔽了 QUIC 或 HTTP/3 流量 (但允许其他 UDP 流量), 可以使用混淆来解决此问题
+    # obfs: "" # 默认为空 如果填写则开启 obfs, 目前支持 salamander 和 gecko
+    # obfs-password: "openssl rand -base64 32 | tr '/+' '_-'"
+    # bbr-profile: "" # Available: "standard", "conservative", "aggressive". Default: "standard"
+    alpn: ["h3"]
+    ignore-client-bandwidth: false # 允许客户端提交带宽参数, 否则不会协商 Brutal
+    # HTTP3 服务器认证失败时的行为 (URL 字符串配置), 如果 masquerade 未配置则返回 404
+    masquerade: https://www.pornhub.com
+
 rules:
   - GEOSITE,category-ads-all,REJECT
   - GEOSITE,meituan,REJECT
   - DOMAIN-SUFFIX,ping0.cc,REJECT
   - GEOIP,private,REJECT
   - GEOIP,CN,REJECT
-  - MATCH,DIRECT
+  - MATCH,DIRECT-V4-PREFER
