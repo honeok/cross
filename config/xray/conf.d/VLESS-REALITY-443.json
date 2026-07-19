@@ -8,7 +8,7 @@
       "settings": {
         "clients": [
           {
-            "id": "uuid",
+            "id": "./xray uuid",
             "flow": "xtls-rprx-vision"
           }
         ],
