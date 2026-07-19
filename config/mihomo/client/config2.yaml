@@ -125,15 +125,17 @@ dns:
   # ipv6: false # false 将返回AAAA的空结果
   # 指定初始DNS解析服务器 用于解析mihomo自身需要的域名 (如订阅地址、规则集地址) 只能使用纯IP地址
   default-nameserver:
-    - 119.29.29.29
     - 223.5.5.5
+    - 1.12.12.21
   enhanced-mode: fake-ip # 启用Fake-IP模式 or redir-host
 
   fake-ip-range: 198.18.0.1/16 # fake-ip池设置
 
   # 配置不使用fake-ip的域名
   fake-ip-filter:
-    - "rule-set:fakeip-filter-domain"
+    - "rule-set:private-domain"
+    - "rule-set:connectivity-check-domain"
+    - "rule-set:ntp-domain"
   fake-ip-filter-mode: blacklist # 配置 fake-ip-filter 的匹配模式 默认为 blacklist 即如果匹配成功不返回 fake-ip
 
   # 配置后面的nameserver fallback和nameserver-policy向dns服务器的连接过程是否遵守遵守rules规则
@@ -157,7 +159,7 @@ dns:
   # 配置查询域名使用的DNS服务器
   nameserver-policy:
     "rule-set:cn-domain,private-domain": *dns-cn
-    # "rule-set:hagezi-domain,geosite:category-ads-all": "rcode://success"
+    "rule-set:awaads-domain": "rcode://success"
 
 ## 节点信息
 proxies:
@@ -320,11 +322,11 @@ rules:
   - RULE-SET,httpdns-cn-domain,REJECT # 国内 HTTPDNS 劫持
   - RULE-SET,winspy-domain,REJECT # Windows 隐私追踪
   - RULE-SET,awaads-domain,REJECT # 广告拦截
-  # - RULE-SET,hagezi-domain,REJECT # 广告恶意域名拦截
   # - RULE-SET,stun-domain,REJECT # STUN 拦截
   - RULE-SET,reject-list,REJECT # 拦截补充
 
   - RULE-SET,connectivity-check-domain,DIRECT # 连接性检查
+  - RULE-SET,ntp-domain,DIRECT
   - RULE-SET,meituan-domain,DIRECT
   - RULE-SET,direct-list,DIRECT # 直连补充
 
@@ -395,14 +397,12 @@ rule-providers:
   connectivity-check-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/zzwsec/mihomo-rules@main/connectivity-domain.mrs" }
   docker-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/docker.mrs" }
   epicgames-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/epicgames.mrs" }
-  fakeip-filter-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/fakeip-filter.mrs" }
   facebook-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/facebook.mrs" }
   gfw-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/wwqgtxx/clash-rules@release/gfw.mrs" }
   github-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/github.mrs" }
   gitlab-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/gitlab.mrs" }
   google-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/google.mrs" }
   google-cn-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/wwqgtxx/clash-rules@release/google.mrs" }
-  # hagezi-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/MiHomoer/MiHomo-Hagezi@release/HageziPro.mrs" }
   httpdns-cn-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/category-httpdns-cn.mrs" }
   icloudprivaterelay-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/icloudprivaterelay.mrs" }
   instagram-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/instagram.mrs" }
@@ -410,6 +410,7 @@ rule-providers:
   microsoft-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/microsoft.mrs" }
   microsoft-cn-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/microsoft@cn.mrs" }
   netflix-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/netflix.mrs" }
+  ntp-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/category-ntp.mrs" }
   onedrive-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/onedrive.mrs" }
   paypal-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/paypal.mrs" }
   private-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/wwqgtxx/clash-rules@release/private.mrs" }
