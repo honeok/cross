@@ -1,6 +1,9 @@
 {
+  "env": {
+    "XRAY_LOCATION_ASSET": "/etc/xray/bin"
+  },
   "log": {
-    "access": "/var/log/xray/access.log",
+    "access": "none",
     "error": "/var/log/xray/error.log",
     "loglevel": "warning"
   },
@@ -8,8 +11,6 @@
     "servers": [
       "8.8.8.8",
       "1.1.1.1",
-      "2001:4860:4860::8888",
-      "2606:4700:4700::1111",
       {
         "address": "https://8.8.8.8/dns-query",
         "domains": ["geosite:netflix"],
@@ -19,6 +20,19 @@
     ],
     "queryStrategy": "UseIP"
   },
+  "outbounds": [
+    {
+      "tag": "direct",
+      "protocol": "freedom",
+      "settings": {
+        "domainStrategy": "UseIPv4v6"
+      }
+    },
+    {
+      "tag": "block",
+      "protocol": "blackhole"
+    }
+  ],
   "routing": {
     "domainStrategy": "IPIfNonMatch",
     "rules": [
@@ -39,35 +53,12 @@
       }
     ]
   },
-  "policy": {
-    "levels": {
-      "0": {
-        "handshake": 5,
-        "connIdle": 300,
-        "uplinkOnly": 2,
-        "downlinkOnly": 5,
-        "statsUserUplink": false,
-        "statsUserDownlink": false
-      }
-    },
-    "system": {
-      "statsInboundUplink": false,
-      "statsInboundDownlink": false,
-      "statsOutboundUplink": false,
-      "statsOutboundDownlink": false
-    }
-  },
-  "outbounds": [
-    {
-      "tag": "direct",
-      "protocol": "freedom",
-      "settings": {
-        "domainStrategy": "UseIPv4v6"
-      }
-    },
-    {
-      "tag": "block",
-      "protocol": "blackhole"
-    }
-  ]
+  "geodata": {
+    "cron": "0 7 * * *",
+    "outbound": "direct",
+    "assets": [
+      { "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat", "file": "geoip.dat" },
+      { "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat", "file": "geosite.dat" }
+    ]
+  }
 }
