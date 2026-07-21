@@ -1,0 +1,82 @@
+# SPDX-License-Identifier: GPL-2.0
+# Copyright (c) 2026 honeok <i@honeok.com>
+
+# References:
+# https://github.com/MetaCubeX/mihomo/blob/Meta/docs/config.yaml#L369
+
+# 节点信息
+---
+proxies:
+  # Socks5
+  - name: "Socks5"
+    type: socks5
+    server: 151.101.1.1
+    port: 443
+    username: "openssl rand -hex 8"
+    password: "openssl rand -base64 32 | tr '/+' '_-'"
+
+  # Shadowsocks
+  # cipher 支持:
+  # aes-128-gcm aes-192-gcm aes-256-gcm
+  # aes-128-cfb aes-192-cfb aes-256-cfb
+  # aes-128-ctr aes-192-ctr aes-256-ctr
+  # rc4-md5 chacha20-ietf xchacha20
+  # chacha20-ietf-poly1305 xchacha20-ietf-poly1305
+  # 2022-blake3-aes-128-gcm 2022-blake3-aes-256-gcm 2022-blake3-chacha20-poly1305
+  - name: "Shadowsocks"
+    # 链式代理流量走向机制 丨 Mihomo本机 <-> 前置节点 <-> 落地节点 <-> Internet互联网
+    # dialer-proxy: "Proxy" # 链式代理
+    type: ss
+    server: 151.101.1.1
+    port: 443
+    cipher: chacha20-ietf-poly1305
+    password: "openssl rand -base64 32 | tr '/+' '_-'"
+    udp: true
+    udp-over-tcp: true # 是否将 UDP 流量封装到 TCP 中传输
+
+  # VLESS + REALITY + Vision
+  - name: "VLESS-REALITY-Vision"
+    type: vless
+    server: 151.101.1.1
+    port: 443
+    uuid: "./mihomo generate uuid"
+    network: tcp
+    tls: true
+    udp: false
+    flow: xtls-rprx-vision
+    servername: www.example.com
+    reality-opts:
+      public-key: "./mihomo generate reality-keypair"
+      short-id: "openssl rand -hex 8"
+      support-x25519mlkem768: false # 如果服务端支持可手动设置为 true
+    client-fingerprint: firefox
+
+  # VLESS + XHTTP + Encryption + Vision
+  - name: "VLESS-XHTTP-Encryption-Vision"
+    type: vless
+    server: 151.101.1.1
+    port: 443
+    uuid: "./mihomo generate uuid"
+    udp: false
+    tls: true
+    flow: xtls-rprx-vision
+    network: xhttp
+    alpn: [h2, http/1.1] # 默认仅支持 h2 如果开启 h3 模式需要设置 alpn: [h3] 如果开启 http1.1 模式需要设置 alpn: [http/1.1]
+    ech-opts:
+      enable: true
+      # https://github.com/net4people/bbs/issues/529
+      # https://github.com/XTLS/BBS/issues/13#issuecomment-3966039365
+      query-server-name: linuxhandbook.com # Available: labs.cloudflare.dev www.kali.org xanmod.org
+    servername: www.example.com
+    client-fingerprint: firefox
+    encryption: ""
+    # https://github.com/XTLS/BBS/issues/25
+    xhttp-opts:
+      path: "/apis/networking.k8s.io/v1/namespaces/default/ingresses"
+      host: www.example.com
+      mode: auto # Available: "stream-one" "stream-up" or "packet-up"
+      x-padding-obfs-mode: true
+      x-padding-key: "_dc"
+      x-padding-header: "X-Cache"
+      x-padding-placement: "queryInHeader" # Available: queryInHeader cookie header query
+      x-padding-method: "tokenish" # Available: repeat-x tokenish
