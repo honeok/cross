@@ -57,11 +57,12 @@ proxies:
     server: 151.101.1.1
     port: 443
     uuid: "./mihomo generate uuid"
-    udp: false
+    udp: true
     tls: true
     flow: xtls-rprx-vision
     network: xhttp
-    alpn: [h2, http/1.1] # 默认仅支持 h2 如果开启 h3 模式需要设置 alpn: [h3] 如果开启 http1.1 模式需要设置 alpn: [http/1.1]
+    # https://www.nodeseek.com/post-832728-1
+    alpn: [h3] # 默认仅支持 h2, 如果开启 h3 模式需要设置 alpn: [h3] 如果开启 http1.1 模式需要设置 alpn: [http/1.1], 兼容配置 alpn: [h2, http/1.1]
     ech-opts:
       enable: true
       # https://github.com/net4people/bbs/issues/529
