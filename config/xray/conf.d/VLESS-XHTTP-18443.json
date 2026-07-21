@@ -18,7 +18,7 @@
         "network": "xhttp",
         "security": "tls",
         "tlsSettings": {
-          "serverName": "www.google.com",
+          "serverName": "www.example.com",
           "alpn": ["h2", "http/1.1"],
           "certificates": [
             {
@@ -28,7 +28,7 @@
           ]
         },
         "xhttpSettings": {
-          "host": "www.google.com",
+          "host": "www.example.com",
           "path": "/apis/networking.k8s.io/v1/namespaces/default/ingresses",
           "mode": "auto",
           "xPaddingObfsMode": true,
@@ -41,7 +41,6 @@
       "sniffing": {
         "enabled": true,
         "destOverride": ["http", "tls", "quic"],
-        "metadataOnly": false,
         "routeOnly": true
       }
     }

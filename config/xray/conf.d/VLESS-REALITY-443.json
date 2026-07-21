@@ -18,8 +18,8 @@
         "network": "raw",
         "security": "reality",
         "realitySettings": {
-          "target": "www.google.com:443",
-          "serverNames": ["www.google.com"],
+          "target": "www.example.com:443",
+          "serverNames": ["www.example.com"],
           "privateKey": "./xray x25519",
           "minClientVer": "1.8.2",
           "shortIds": ["openssl rand -hex 8"]
