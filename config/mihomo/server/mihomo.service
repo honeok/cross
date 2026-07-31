@@ -2,8 +2,8 @@
 [Unit]
 Description=Mihomo Daemon, Another Clash Kernel.
 Documentation=https://wiki.metacubex.one
-After=network.target nss-lookup.target network-online.target
 Wants=network-online.target
+After=network-online.target
 
 [Service]
 Type=simple
