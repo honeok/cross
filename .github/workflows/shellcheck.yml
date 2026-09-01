@@ -3,7 +3,7 @@ name: "Run shellcheck"
 
 on:
   push:
-    branches: ["*"]
+    branches: ["**"]
     paths: ["**/*.sh"]
   pull_request:
     paths: ["**/*.sh"]

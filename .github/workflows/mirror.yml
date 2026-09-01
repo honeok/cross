@@ -1,17 +1,31 @@
 ---
-name: "GitHub Actions Mirror"
+name: "Repository mirrors"
 
 on:
   push:
     branches: [master]
-  schedule:
-    - cron: "11 16 * * *"
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
-  mirror2framagit:
-    name: "Mirror to framagit"
+  mirror:
+    name: "Mirror to ${{ matrix.name }}"
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: codeberg
+            host: codeberg.org
+          - name: framagit
+            host: framagit.org
 
     steps:
       - name: "Checkout repository"
@@ -19,28 +33,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: "Mirror to framagit"
+      - name: "Mirror to ${{ matrix.name }}"
         uses: yesolutions/mirror-action@master
         with:
-          REMOTE: git@framagit.org:${{ github.repository }}.git
+          REMOTE: git@${{ matrix.host }}:${{ github.repository }}.git
           GIT_SSH_PRIVATE_KEY: ${{ secrets.SYNC_PRIVATE_KEY }}
-          PUSH_ALL_REFS: false
           GIT_SSH_NO_VERIFY_HOST: true
-
-  mirror2codeberg:
-    name: "Mirror to codeberg"
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: "Checkout repository"
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: "Mirror to codeberg"
-        uses: yesolutions/mirror-action@master
-        with:
-          REMOTE: git@codeberg.org:${{ github.repository }}.git
-          GIT_SSH_PRIVATE_KEY: ${{ secrets.SYNC_PRIVATE_KEY }}
           PUSH_ALL_REFS: false
-          GIT_SSH_NO_VERIFY_HOST: true
+          GIT_PUSH_ARGS: "--force --prune"
