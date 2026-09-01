@@ -1,24 +1,8 @@
 {
-  "env": {
-    "XRAY_LOCATION_ASSET": "/etc/xray/bin"
-  },
   "log": {
     "access": "none",
     "error": "/var/log/xray/error.log",
     "loglevel": "warning"
-  },
-  "dns": {
-    "servers": [
-      "8.8.8.8",
-      "1.1.1.1",
-      {
-        "address": "https://8.8.8.8/dns-query",
-        "domains": ["geosite:netflix"],
-        "skipFallback": true,
-        "queryStrategy": "UseIPv4"
-      }
-    ],
-    "queryStrategy": "UseIP"
   },
   "outbounds": [
     {
@@ -51,14 +35,6 @@
         "ip": ["geoip:private", "geoip:cn"],
         "outboundTag": "block"
       }
-    ]
-  },
-  "geodata": {
-    "cron": "0 7 * * *",
-    "outbound": "direct",
-    "assets": [
-      { "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat", "file": "geoip.dat" },
-      { "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat", "file": "geosite.dat" }
     ]
   }
 }
