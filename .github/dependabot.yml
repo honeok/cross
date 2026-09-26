@@ -4,8 +4,8 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "daily"
-      time: "00:00"
+      interval: "cron"
+      cronjob: "0 0 * * *"
       timezone: "Asia/Shanghai"
     open-pull-requests-limit: 10
     target-branch: "dev"
@@ -23,8 +23,8 @@ updates:
       - "/core/sing-box"
       - "/core/xray"
     schedule:
-      interval: "daily"
-      time: "00:00"
+      interval: "cron"
+      cronjob: "0 0 * * *"
       timezone: "Asia/Shanghai"
     open-pull-requests-limit: 10
     target-branch: "dev"
