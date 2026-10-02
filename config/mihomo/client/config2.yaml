@@ -74,11 +74,12 @@ ntp:
 # https://github.com/clash-verge-rev/clash-verge-rev/issues/819
 tun:
   enable: true
-  stack: mixed # system/gvisor/mixed
+  stack: mips # system gvisor mixed mips, 默认值为 mips
   dns-hijack: ["any:53", "tcp://any:53"] # 需要劫持的DNS
   auto-detect-interface: true # 自动识别出口网卡
   auto-route: true # 配置路由表
   auto-redirect: true
+  congestion-controller: bbr3 # tcp 拥塞控制算法, 可选 cubic reno bbr bbr3, 仅在 mips 网络栈有效
 
 ## 域名嗅探
 sniffer:
