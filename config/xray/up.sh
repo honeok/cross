@@ -97,7 +97,7 @@ to_lower() {
 }
 
 check_root() {
-    if [ "$EUID" -ne 0 ] || [ "$(id -ru)" -ne 0 ]; then
+    if [ "$EUID" -ne 0 ]; then
         die "This script must be run as root."
     fi
 }
@@ -153,16 +153,16 @@ update_core() {
 
 # 更新 geofile
 update_geo() {
-    local -a geo_path
-    local path geo_file
-    geo_path=("geoip/geoip-full" "geosite/geosite")
+    local -a geo_paths
+    local geo_path geo_file
+    geo_paths=("geoip/geoip-full" "geosite/geosite")
 
     # 下载数据文件和校验文件
-    for path in "${geo_path[@]}"; do
-        geo_file="${path##*/}.dat"
+    for geo_path in "${geo_paths[@]}"; do
+        geo_file="${geo_path##*/}.dat"
 
-        curl -L "https://github.com/XTLS/Xray-rules-dat/raw/release/$path.dat" -o "$geo_file"
-        curl -L "https://github.com/XTLS/Xray-rules-dat/raw/release/$path.dat.sha256sum" -o "$geo_file.sha256sum"
+        curl -L "https://github.com/XTLS/Xray-rules-dat/raw/release/$geo_path.dat" -o "$geo_file"
+        curl -L "https://github.com/XTLS/Xray-rules-dat/raw/release/$geo_path.dat.sha256sum" -o "$geo_file.sha256sum"
         sha256sum -c "$geo_file.sha256sum" > /dev/null 2>&1
     done
 
