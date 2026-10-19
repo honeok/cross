@@ -8,7 +8,6 @@
 # https://github.com/233boy/Xray
 # https://github.com/XTLS/Xray-core
 # https://github.com/bin456789/reinstall
-# https://github.com/Loyalsoldier/v2ray-rules-dat
 
 set -eE
 
@@ -70,22 +69,19 @@ install_pkg() {
 }
 
 curl() {
-    local RET
+    local i rc
 
     is_have_cmd curl || install_pkg curl
-
     # 添加 --fail 不然404退出码也为0
     # 32位cygwin已停止更新, 证书可能有问题, 添加 --insecure
     # centos7 curl 不支持 --retry-connrefused --retry-all-errors 因此手动 retry
-    for ((i = 1; i <= 5; i++)); do
-        command curl --connect-timeout 10 --fail --insecure "$@"
-        RET="$?"
-        if [ "$RET" -eq 0 ]; then
-            return
+    for ((i = 1; i <= 3; i++)); do
+        if command curl --connect-timeout 10 --fail --insecure "$@"; then
+            return 0
         else
-            # 403 404 错误或达到重试次数
-            if [ "$RET" -eq 22 ] || [ "$i" -eq 5 ]; then
-                return "$RET"
+            rc="$?"
+            if ((rc == 22 || i == 3)); then
+                return "$rc"
             fi
             sleep 1
         fi
@@ -96,6 +92,10 @@ is_in_alpine() {
     [ -f /etc/alpine-release ]
 }
 
+to_lower() {
+    tr '[:upper:]' '[:lower:]'
+}
+
 check_root() {
     if [ "$EUID" -ne 0 ] || [ "$(id -ru)" -ne 0 ]; then
         die "This script must be run as root."
@@ -104,104 +104,103 @@ check_root() {
 
 # 安装必要的软件包
 check_cmd() {
-    local -a INSTALL_PKG
-    INSTALL_PKG=("curl" "unzip")
+    local -a pkgs
+    pkgs=("curl" "unzip")
 
-    for pkg in "${INSTALL_PKG[@]}"; do
+    for pkg in "${pkgs[@]}"; do
         if ! is_have_cmd "$pkg" > /dev/null 2>&1; then
             install_pkg "$pkg"
         fi
     done
 }
 
-# 更新xray内核
+# 更新 xray 内核
 update_core() {
-    local LATEST_VER CURRENT_VER OS_NAME OS_ARCH
-    local -a CORE_FILES
+    local latest_ver current_ver os_name os_arch core_file
+    local -a core_files
 
-    LATEST_VER="$(curl -Ls https://api.github.com/repos/XTLS/Xray-core/releases | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p' | sort -rV | head -n1)"
-    CURRENT_VER="$("$CORE_BIN" version 2> /dev/null | head -n1 | sed -n 's/^Xray \([0-9.]\+\).*/\1/p')"
-    OS_NAME="$(uname -s 2> /dev/null | sed 's/.*/\L&/')"
+    latest_ver="$(curl -Ls https://api.github.com/repos/XTLS/Xray-core/releases | sed -nE 's/.*"tag_name": *"v([^"]+)".*/\1/p' | sort -V | tail -n 1)"
+    current_ver="$("$CORE_BIN" version 2> /dev/null | head -n 1 | sed -n 's/^Xray \([0-9.]\+\).*/\1/p')"
+    os_name="$(uname -s 2> /dev/null | to_lower)"
 
-    if [[ "$(printf '%s\n%s\n' "$LATEST_VER" "$CURRENT_VER" | sort -V | head -n1)" == "$LATEST_VER" ]]; then
+    if [[ "$(printf '%s\n%s\n' "$latest_ver" "$current_ver" | sort -V | head -n 1)" == "$latest_ver" ]]; then
         return
     fi
 
-    case "$(uname -m 2> /dev/null)" in
-    amd64 | x86_64) OS_ARCH="64" ;;
-    arm64 | armv8 | aarch64) OS_ARCH="arm64-v8a" ;;
+    case "$(uname -m 2> /dev/null | to_lower)" in
+    amd64 | x86_64) os_arch="64" ;;
+    arm64 | aarch64) os_arch="arm64-v8a" ;;
     *) die "unsupported cpu architecture." ;;
     esac
 
     # 下载内核文件和校验文件
-    CORE_FILES=("Xray-$OS_NAME-$OS_ARCH.zip" "Xray-$OS_NAME-$OS_ARCH.zip.dgst")
+    core_files=("Xray-$os_name-$os_arch.zip" "Xray-$os_name-$os_arch.zip.dgst")
 
     # 拼接下载链接
-    for CORE_FILE in "${CORE_FILES[@]}"; do
-        if ! curl -L -O "https://github.com/XTLS/Xray-core/releases/download/v$LATEST_VER/$CORE_FILE"; then
-            die "download failed."
-        fi
+    for core_file in "${core_files[@]}"; do
+        curl -L -O "https://github.com/XTLS/Xray-core/releases/download/v$latest_ver/$core_file" || die "download failed."
     done
 
     # 哈希校验
-    if [[ "$(sha256sum "Xray-$OS_NAME-$OS_ARCH.zip" | awk '{print $1}')" != "$(grep '^SHA2-256=' "Xray-$OS_NAME-$OS_ARCH.zip.dgst" | sed 's/^SHA2-256= *//' | tr -d ' \t')" ]]; then
+    if [[ "$(sha256sum "Xray-$os_name-$os_arch.zip" | awk '{print $1}')" != "$(grep '^SHA2-256=' "Xray-$os_name-$os_arch.zip.dgst" | sed 's/^SHA2-256= *//' | tr -d ' \t')" ]]; then
         die "sha256 checksum mismatch."
     fi
 
-    unzip -qo "Xray-$OS_NAME-$OS_ARCH.zip" -d "$CORE_DIR/bin"
+    unzip -qo "Xray-$os_name-$os_arch.zip" -d "$CORE_DIR/bin"
     chmod +x "$CORE_BIN" > /dev/null 2>&1
     rm -f "${CORE_DIR:?}"/bin/{LICENSE,README.md} > /dev/null 2>&1 || true
 }
 
-# 更新geofile
+# 更新 geofile
 update_geo() {
-    local -a GEO_FILES
-    # 定义下载文件列表
-    GEO_FILES=("geoip" "geosite")
+    local -a geo_path
+    local path geo_file
+    geo_path=("geoip/geoip-full" "geosite/geosite")
 
     # 下载数据文件和校验文件
-    for GEO_FILE in "${GEO_FILES[@]}"; do
-        curl -L -O "https://fastly.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/$GEO_FILE.dat"
-        curl -L -O "https://fastly.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/$GEO_FILE.dat.sha256sum"
-        sha256sum -c "$GEO_FILE.dat.sha256sum" > /dev/null 2>&1
+    for path in "${geo_path[@]}"; do
+        geo_file="${path##*/}.dat"
+
+        curl -L "https://github.com/XTLS/Xray-rules-dat/raw/release/$path.dat" -o "$geo_file"
+        curl -L "https://github.com/XTLS/Xray-rules-dat/raw/release/$path.dat.sha256sum" -o "$geo_file.sha256sum"
+        sha256sum -c "$geo_file.sha256sum" > /dev/null 2>&1
     done
 
+    # 重命名 geoip 文件
+    mv -f geoip-full.dat geoip.dat
     if [ -d "$CORE_DIR/bin" ]; then
         mv -f ./*.dat "$CORE_DIR/bin/" > /dev/null 2>&1
     fi
 }
 
-# 更新233boy xray脚本
+# 更新 233boy xray 脚本
 update_sh() {
-    local LATEST_VER CURRENT_VER
-    LATEST_VER="$(curl -Ls https://api.github.com/repos/233boy/Xray/releases | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p' | sort -rV | head -n1)"
-    CURRENT_VER="$(sed -n 's/^is_sh_ver=v\(.*\)/\1/p' "$CORE_DIR/sh/xray.sh")"
+    local latest_ver current_ver
+    latest_ver="$(curl -Ls https://api.github.com/repos/233boy/Xray/releases | sed -nE 's/.*"tag_name": *"v([^"]+)".*/\1/p' | sort -V | tail -n 1)"
+    current_ver="$(sed -n 's/^is_sh_ver=v\(.*\)/\1/p' "$CORE_DIR/sh/xray.sh")"
 
-    if [[ "$(printf '%s\n%s\n' "$LATEST_VER" "$CURRENT_VER" | sort -V | head -n1)" == "$LATEST_VER" ]]; then
+    if [[ "$(printf '%s\n%s\n' "$latest_ver" "$current_ver" | sort -V | head -n 1)" == "$latest_ver" ]]; then
         return
     fi
 
-    if ! curl -L -O "https://github.com/233boy/Xray/releases/download/v$LATEST_VER/code.zip"; then
-        die "download failed."
-    fi
+    curl -L -O "https://github.com/233boy/Xray/releases/download/v$latest_ver/code.zip" || die "download failed."
     unzip -qo code.zip -d "$SCRIPT_DIR"
     sed -i '/^get_ip() {/,/^}/ s#one.one.one.one#www.qualcomm.cn#g' "$SCRIPT_DIR/src/core.sh" > /dev/null 2>&1
-    sed -i 's#chrome#firefox#g' "$SCRIPT_DIR/src/core.sh" > /dev/null 2>&1
     chmod +x "$SCRIPT_BIN" > /dev/null 2>&1
     rm -f "${SCRIPT_DIR:?}"/{LICENSE,README.md} > /dev/null 2>&1 || true
 }
 
 restart_xray() {
-    local RESTART_CMD
+    local restart_cmd
 
     if is_in_alpine; then
-        RESTART_CMD="/etc/init.d/xray restart"
+        restart_cmd="service xray restart"
     else
-        RESTART_CMD="systemctl restart xray.service"
+        restart_cmd="systemctl restart xray.service"
     fi
 
     for ((i = 1; i <= 3; i++)); do
-        if eval "$RESTART_CMD" > /dev/null 2>&1; then
+        if eval "$restart_cmd" > /dev/null 2>&1; then
             return
         fi
     done
