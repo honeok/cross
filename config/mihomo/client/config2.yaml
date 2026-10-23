@@ -24,10 +24,10 @@ mode: rule
 
 # 自定义 geodata url
 geox-url:
-  geoip: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-geodata/geoip-all.dat"
-  geosite: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-geodata/geosite-all.dat"
-  mmdb: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-geodata/Country-all.mmdb"
-  asn: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-geodata/Country-ASN-all.mmdb"
+  geoip: "https://cdn.jsdmirror.com/gh/DustinWin/ruleset_geodata@mihomo-geodata/geoip-all.dat"
+  geosite: "https://cdn.jsdmirror.com/gh/DustinWin/ruleset_geodata@mihomo-geodata/geosite-all.dat"
+  mmdb: "https://cdn.jsdmirror.com/gh/DustinWin/ruleset_geodata@mihomo-geodata/Country-all.mmdb"
+  asn: "https://cdn.jsdmirror.com/gh/DustinWin/ruleset_geodata@mihomo-geodata/Country-ASN-all.mmdb"
 
 geodata-mode: true
 geodata-loader: memconservative # geo 文件加载模式 standard: 标准加载器 memconservative: 专为内存受限设备优化的加载器 (默认值)
@@ -189,29 +189,29 @@ proxy-providers:
     url: "url2"
 
 ## Icon 锚点
-proxy-icon: &proxy-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/svg/proxy.svg"
-auto-icon: &auto-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/svg/auto.svg"
-fallback-icon: &fallback-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/svg/fallback.svg"
-ai-icon: &ai-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/svg/openai.svg"
-google-icon: &google-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/svg/google.svg"
-github-icon: &github-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/svg/github.svg"
-gitlab-icon: &gitlab-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/svg/gitlab.svg"
-docker-icon: &docker-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/svg/docker.svg"
-microsoft-icon: &microsoft-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/svg/microsoft.svg"
-onedrive-icon: &onedrive-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/svg/onedrive.svg"
-apple-icon: &apple-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/svg/apple.svg"
-paypal-icon: &paypal-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/svg/paypal.svg"
-telegram-icon: &telegram-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/svg/telegram.svg"
-twitter-icon: &twitter-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/svg/twitter.svg"
-meta-icon: &meta-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/svg/meta.svg"
-bilibili-icon: &bilibili-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/svg/bilibili.svg"
-netflix-icon: &netflix-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/svg/netflix.svg"
-spotify-icon: &spotify-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/svg/spotify.svg"
-tiktok-icon: &tiktok-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/svg/tiktok.svg"
-game-icon: &game-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/svg/game.svg"
-speedtest-icon: &speedtest-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/svg/speedtest.svg"
-direct-icon: &direct-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/svg/direct.svg"
-fish-icon: &fish-icon "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/icons/svg/fish.svg"
+proxy-icon: &proxy-icon "https://cdn.jsdmirror.com/gh/honeok/cross@master/config/mihomo/icons/svg/proxy.svg"
+auto-icon: &auto-icon "https://cdn.jsdmirror.com/gh/honeok/cross@master/config/mihomo/icons/svg/auto.svg"
+fallback-icon: &fallback-icon "https://cdn.jsdmirror.com/gh/honeok/cross@master/config/mihomo/icons/svg/fallback.svg"
+ai-icon: &ai-icon "https://cdn.jsdmirror.com/gh/honeok/cross@master/config/mihomo/icons/svg/openai.svg"
+google-icon: &google-icon "https://cdn.jsdmirror.com/gh/honeok/cross@master/config/mihomo/icons/svg/google.svg"
+github-icon: &github-icon "https://cdn.jsdmirror.com/gh/honeok/cross@master/config/mihomo/icons/svg/github.svg"
+gitlab-icon: &gitlab-icon "https://cdn.jsdmirror.com/gh/honeok/cross@master/config/mihomo/icons/svg/gitlab.svg"
+docker-icon: &docker-icon "https://cdn.jsdmirror.com/gh/honeok/cross@master/config/mihomo/icons/svg/docker.svg"
+microsoft-icon: &microsoft-icon "https://cdn.jsdmirror.com/gh/honeok/cross@master/config/mihomo/icons/svg/microsoft.svg"
+onedrive-icon: &onedrive-icon "https://cdn.jsdmirror.com/gh/honeok/cross@master/config/mihomo/icons/svg/onedrive.svg"
+apple-icon: &apple-icon "https://cdn.jsdmirror.com/gh/honeok/cross@master/config/mihomo/icons/svg/apple.svg"
+paypal-icon: &paypal-icon "https://cdn.jsdmirror.com/gh/honeok/cross@master/config/mihomo/icons/svg/paypal.svg"
+telegram-icon: &telegram-icon "https://cdn.jsdmirror.com/gh/honeok/cross@master/config/mihomo/icons/svg/telegram.svg"
+twitter-icon: &twitter-icon "https://cdn.jsdmirror.com/gh/honeok/cross@master/config/mihomo/icons/svg/twitter.svg"
+meta-icon: &meta-icon "https://cdn.jsdmirror.com/gh/honeok/cross@master/config/mihomo/icons/svg/meta.svg"
+bilibili-icon: &bilibili-icon "https://cdn.jsdmirror.com/gh/honeok/cross@master/config/mihomo/icons/svg/bilibili.svg"
+netflix-icon: &netflix-icon "https://cdn.jsdmirror.com/gh/honeok/cross@master/config/mihomo/icons/svg/netflix.svg"
+spotify-icon: &spotify-icon "https://cdn.jsdmirror.com/gh/honeok/cross@master/config/mihomo/icons/svg/spotify.svg"
+tiktok-icon: &tiktok-icon "https://cdn.jsdmirror.com/gh/honeok/cross@master/config/mihomo/icons/svg/tiktok.svg"
+game-icon: &game-icon "https://cdn.jsdmirror.com/gh/honeok/cross@master/config/mihomo/icons/svg/game.svg"
+speedtest-icon: &speedtest-icon "https://cdn.jsdmirror.com/gh/honeok/cross@master/config/mihomo/icons/svg/speedtest.svg"
+direct-icon: &direct-icon "https://cdn.jsdmirror.com/gh/honeok/cross@master/config/mihomo/icons/svg/direct.svg"
+fish-icon: &fish-icon "https://cdn.jsdmirror.com/gh/honeok/cross@master/config/mihomo/icons/svg/fish.svg"
 
 ## 代理分组锚点
 main: &main { type: select, include-all: true, proxies: [🚀 默认代理, ♻️ 自动选择, 🔯 故障转移, 🇭🇰 香港自动, 🇹🇼 台湾自动, 🇸🇬 狮城自动, 🇯🇵 日本自动, 🇰🇷 韩国自动, 🇺🇸 美国自动, 🇬🇧 英国自动, 🇳🇱 荷兰自动, 🇩🇪 德国自动, DIRECT] }
@@ -334,52 +334,52 @@ rule-anchor:
 
 ## 规则集订阅
 rule-providers:
-  direct-list: { <<: *class, url: "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/rules/direct.list" }
-  reject-list: { <<: *class, url: "https://fastly.jsdelivr.net/gh/honeok/cross@master/config/mihomo/rules/reject.list" }
+  direct-list: { <<: *class, url: "https://cdn.jsdmirror.com/gh/honeok/cross@master/config/mihomo/rules/direct.list" }
+  reject-list: { <<: *class, url: "https://cdn.jsdmirror.com/gh/honeok/cross@master/config/mihomo/rules/reject.list" }
 
-  ai-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/category-ai-!cn.mrs" }
-  awaads-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/TG-Twilight/AWAvenue-Ads-Rule@main/Filters/AWAvenue-Ads-Rule-Clash.mrs" }
-  apple-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/apple.mrs" }
-  apple-cn-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/apple-cn.mrs" }
-  bilibili-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/bilibili.mrs" }
-  bytedance-!cn-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/bytedance@!cn.mrs" }
-  cn-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/cn.mrs" }
-  connectivity-check-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/zzwsec/mihomo-rules@main/connectivity-domain.mrs" }
-  docker-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/docker.mrs" }
-  epicgames-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/epicgames.mrs" }
-  facebook-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/facebook.mrs" }
-  gfw-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/wwqgtxx/clash-rules@release/gfw.mrs" }
-  github-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/github.mrs" }
-  gitlab-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/gitlab.mrs" }
-  google-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/google.mrs" }
-  google-cn-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/wwqgtxx/clash-rules@release/google.mrs" }
-  httpdns-cn-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/category-httpdns-cn.mrs" }
-  icloudprivaterelay-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/icloudprivaterelay.mrs" }
-  instagram-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/instagram.mrs" }
-  meituan-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/meituan.mrs" }
-  microsoft-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/microsoft.mrs" }
-  microsoft-cn-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/microsoft@cn.mrs" }
-  netflix-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/netflix.mrs" }
-  ntp-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/category-ntp.mrs" }
-  onedrive-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/onedrive.mrs" }
-  paypal-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/paypal.mrs" }
-  private-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/wwqgtxx/clash-rules@release/private.mrs" }
-  proxy-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/wwqgtxx/clash-rules@release/proxy.mrs" }
-  speedtest-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/ookla-speedtest.mrs" }
-  spotify-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/spotify.mrs" }
-  steam-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/steam.mrs" }
-  # stun-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/Kwisma/rules@main/rules/mihomo/STUN/STUN_Domain.mrs" }
-  telegram-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/telegram.mrs" }
-  threads-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/threads.mrs" }
-  tiktok-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/tiktok.mrs" }
-  twitter-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/twitter.mrs" }
-  whatsapp-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/whatsapp.mrs" }
-  winspy-domain: { <<: *domain, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geosite/win-spy.mrs" }
+  ai-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/honeokX/clash-rules@meta/geo/geosite/category-ai-!cn.mrs" }
+  awaads-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/TG-Twilight/AWAvenue-Ads-Rule@main/Filters/AWAvenue-Ads-Rule-Clash.mrs" }
+  apple-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/honeokX/clash-rules@meta/geo/geosite/apple.mrs" }
+  apple-cn-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/honeokX/clash-rules@meta/geo/geosite/apple-cn.mrs" }
+  bilibili-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/DustinWin/ruleset_geodata@mihomo-ruleset/bilibili.mrs" }
+  bytedance-!cn-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/honeokX/clash-rules@meta/geo/geosite/bytedance@!cn.mrs" }
+  cn-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/DustinWin/ruleset_geodata@mihomo-ruleset/cn.mrs" }
+  connectivity-check-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/zzwsec/mihomo-rules@main/connectivity-domain.mrs" }
+  docker-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/honeokX/clash-rules@meta/geo/geosite/docker.mrs" }
+  epicgames-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/honeokX/clash-rules@meta/geo/geosite/epicgames.mrs" }
+  facebook-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/honeokX/clash-rules@meta/geo/geosite/facebook.mrs" }
+  gfw-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/wwqgtxx/clash-rules@release/gfw.mrs" }
+  github-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/honeokX/clash-rules@meta/geo/geosite/github.mrs" }
+  gitlab-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/honeokX/clash-rules@meta/geo/geosite/gitlab.mrs" }
+  google-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/honeokX/clash-rules@meta/geo/geosite/google.mrs" }
+  google-cn-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/wwqgtxx/clash-rules@release/google.mrs" }
+  httpdns-cn-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/honeokX/clash-rules@meta/geo/geosite/category-httpdns-cn.mrs" }
+  icloudprivaterelay-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/honeokX/clash-rules@meta/geo/geosite/icloudprivaterelay.mrs" }
+  instagram-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/honeokX/clash-rules@meta/geo/geosite/instagram.mrs" }
+  meituan-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/honeokX/clash-rules@meta/geo/geosite/meituan.mrs" }
+  microsoft-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/honeokX/clash-rules@meta/geo/geosite/microsoft.mrs" }
+  microsoft-cn-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/honeokX/clash-rules@meta/geo/geosite/microsoft@cn.mrs" }
+  netflix-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/DustinWin/ruleset_geodata@mihomo-ruleset/netflix.mrs" }
+  ntp-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/honeokX/clash-rules@meta/geo/geosite/category-ntp.mrs" }
+  onedrive-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/honeokX/clash-rules@meta/geo/geosite/onedrive.mrs" }
+  paypal-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/honeokX/clash-rules@meta/geo/geosite/paypal.mrs" }
+  private-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/wwqgtxx/clash-rules@release/private.mrs" }
+  proxy-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/wwqgtxx/clash-rules@release/proxy.mrs" }
+  speedtest-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/honeokX/clash-rules@meta/geo/geosite/ookla-speedtest.mrs" }
+  spotify-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/DustinWin/ruleset_geodata@mihomo-ruleset/spotify.mrs" }
+  steam-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/honeokX/clash-rules@meta/geo/geosite/steam.mrs" }
+  # stun-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/Kwisma/rules@main/rules/mihomo/STUN/STUN_Domain.mrs" }
+  telegram-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/honeokX/clash-rules@meta/geo/geosite/telegram.mrs" }
+  threads-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/honeokX/clash-rules@meta/geo/geosite/threads.mrs" }
+  tiktok-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/DustinWin/ruleset_geodata@mihomo-ruleset/tiktok.mrs" }
+  twitter-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/honeokX/clash-rules@meta/geo/geosite/twitter.mrs" }
+  whatsapp-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/honeokX/clash-rules@meta/geo/geosite/whatsapp.mrs" }
+  winspy-domain: { <<: *domain, url: "https://cdn.jsdmirror.com/gh/honeokX/clash-rules@meta/geo/geosite/win-spy.mrs" }
 
-  apple-ip: { <<: *ip, url: "https://fastly.jsdelivr.net/gh/Keviin560/Shunt_Rules@main/rule/Mihomo/Apple_IP.mrs" }
-  cn-ip: { <<: *ip, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/cnip.mrs" }
-  google-ip: { <<: *ip, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geoip/google.mrs" }
-  netflix-ip: { <<: *ip, url: "https://fastly.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/netflixip.mrs" }
-  private-ip: { <<: *ip, url: "https://fastly.jsdelivr.net/gh/wwqgtxx/clash-rules@release/lancidr.mrs" }
-  telegram-ip: { <<: *ip, url: "https://fastly.jsdelivr.net/gh/wwqgtxx/clash-rules@release/telegramcidr.mrs" }
-  twitter-ip: { <<: *ip, url: "https://fastly.jsdelivr.net/gh/honeokX/clash-rules@meta/geo/geoip/twitter.mrs" }
+  apple-ip: { <<: *ip, url: "https://cdn.jsdmirror.com/gh/Keviin560/Shunt_Rules@main/rule/Mihomo/Apple_IP.mrs" }
+  cn-ip: { <<: *ip, url: "https://cdn.jsdmirror.com/gh/DustinWin/ruleset_geodata@mihomo-ruleset/cnip.mrs" }
+  google-ip: { <<: *ip, url: "https://cdn.jsdmirror.com/gh/honeokX/clash-rules@meta/geo/geoip/google.mrs" }
+  netflix-ip: { <<: *ip, url: "https://cdn.jsdmirror.com/gh/DustinWin/ruleset_geodata@mihomo-ruleset/netflixip.mrs" }
+  private-ip: { <<: *ip, url: "https://cdn.jsdmirror.com/gh/wwqgtxx/clash-rules@release/lancidr.mrs" }
+  telegram-ip: { <<: *ip, url: "https://cdn.jsdmirror.com/gh/wwqgtxx/clash-rules@release/telegramcidr.mrs" }
+  twitter-ip: { <<: *ip, url: "https://cdn.jsdmirror.com/gh/honeokX/clash-rules@meta/geo/geoip/twitter.mrs" }
